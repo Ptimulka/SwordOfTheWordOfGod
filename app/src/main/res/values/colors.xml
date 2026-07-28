@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="game_button_yellow_dark">#AE8B09</color>
+    <color name="game_button_yellow_light">#F5CF41</color>
+    <color name="game_button_red_dark">#760606</color>
+    <color name="game_button_red_light">#A4222F</color>
+    <color name="game_button_grey_dark">#5F5E58</color>
+    <color name="game_button_grey_light">#A8A28E</color>
+    <color name="level_button_number">#4D3102</color>
+    <color name="level_button_number_grey">#211908</color>
+    <color name="record_gold">#FFAA00</color>
+    <color name="correct_answer_green">#4CAF50</color>
+    <color name="wrong_answer_highlight">#FFCDD2</color>
+    <color name="diff_delete_yellow">#FFF9C4</color>
+    <color name="diff_correct_green">#C8E6C9</color>
+    <color name="toast_text">#DD1A1A1A</color>
+</resources>

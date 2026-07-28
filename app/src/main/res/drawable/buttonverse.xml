@@ -1,0 +1,44 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="137.38dp"
+    android:height="145.04dp"
+    android:viewportWidth="137.38"
+    android:viewportHeight="145.04">
+  <path
+      android:pathData="M1.35,82.03a67.81,63.01 0,1 0,135.63 0a67.81,63.01 0,1 0,-135.63 0z"
+      android:fillColor="@color/game_button_yellow_dark"/>
+  <path
+      android:pathData="M3.18,64.27a65.51,61.09 0,1 0,131.02 0a65.51,61.09 0,1 0,-131.02 0z"
+      android:strokeWidth="6.365"
+      android:fillColor="@color/game_button_yellow_light"
+      android:strokeColor="@color/level_button_number"/>
+  <path
+      android:pathData="M27.91,36.04l81.52,0l0,1.93l-81.52,0z"
+      android:strokeWidth="5.23"
+      android:fillColor="@color/level_button_number"
+      android:strokeColor="@color/level_button_number"/>
+  <path
+      android:pathData="M28.7,47.7l81.52,0l0,1.93l-81.52,0z"
+      android:strokeWidth="5.23"
+      android:fillColor="@color/level_button_number"
+      android:strokeColor="@color/level_button_number"/>
+  <path
+      android:pathData="M28.07,59.31l81.52,0l0,1.93l-81.52,0z"
+      android:strokeWidth="5.23"
+      android:fillColor="@color/level_button_number"
+      android:strokeColor="@color/level_button_number"/>
+  <path
+      android:pathData="M28.07,70.59l81.52,0l0,1.93l-81.52,0z"
+      android:strokeWidth="5.23"
+      android:fillColor="@color/level_button_number"
+      android:strokeColor="@color/level_button_number"/>
+  <path
+      android:pathData="M28.07,81.88l81.52,0l0,1.93l-81.52,0z"
+      android:strokeWidth="5.23"
+      android:fillColor="@color/level_button_number"
+      android:strokeColor="@color/level_button_number"/>
+  <path
+      android:pathData="M28.07,93.16l81.52,0l0,1.93l-81.52,0z"
+      android:strokeWidth="5.23"
+      android:fillColor="@color/level_button_number"
+      android:strokeColor="@color/level_button_number"/>
+</vector>

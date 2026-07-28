@@ -1,0 +1,22 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="137.38dp"
+    android:height="145.04dp"
+    android:viewportWidth="137.38"
+    android:viewportHeight="145.04">
+  <!-- Scaled so the heart fills the whole viewport, keeping the retention fill level accurate -->
+  <group
+      android:pivotX="68.69"
+      android:pivotY="74.51"
+      android:scaleX="1.16"
+      android:scaleY="1.215"
+      android:translateY="-1.99">
+    <path
+        android:pathData="M68.69,53C68.69,53 61.69,32 40.69,32C12.69,32 12.69,67 12.69,67C12.69,88 40.69,109 68.69,134.2C96.69,109 124.69,88 124.69,67C124.69,67 124.69,32 96.69,32C75.69,32 68.69,53 68.69,53Z"
+        android:fillColor="@color/game_button_grey_dark"/>
+    <path
+        android:pathData="M68.69,39C68.69,39 61.69,18 40.69,18C12.69,18 12.69,53 12.69,53C12.69,74 40.69,95 68.69,120.2C96.69,95 124.69,74 124.69,53C124.69,53 124.69,18 96.69,18C75.69,18 68.69,39 68.69,39Z"
+        android:strokeWidth="6.365"
+        android:fillColor="@color/game_button_grey_light"
+        android:strokeColor="@color/level_button_number_grey"/>
+  </group>
+</vector>

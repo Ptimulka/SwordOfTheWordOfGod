@@ -1,0 +1,196 @@
+<resources>
+    <!-- General App Strings -->
+    <string name="app_name">Miecz Słowa Bożego</string>
+    <string name="ok_button">OK</string>
+    <string name="close_button">Zamknij</string>
+    <string name="cancel_button">Anuluj</string>
+    <string name="yes_button">Tak</string>
+    <string name="no_button">Nie</string>
+
+    <!-- Main Navigation -->
+    <string name="levels_tab_caption">Poziomy</string>
+    <string name="random_tab_caption">Losuj</string>
+    <string name="review_tab_caption">Powtórka</string>
+    <string name="verse_groups_tab_caption">Baza</string>
+    <string name="settings_tab_caption">Ustawienia</string>
+
+    <!-- GameLevelScreen (Levels List) -->
+    <string name="verses_title">Wersety - %1$s</string>
+    <string name="show_verses">Pokaż wersety</string>
+    <string name="show_verses_button_caption">Pokaż listę wersetów</string>
+    <string name="choose_next_verses">Wybierz kolejne wersety</string>
+    <string name="choose_next_verses_info">Użytkownik ma możliwość samemu wybierać kolejne grupy wersetów do nauki</string>
+    <string name="export_to_anki">Eksportuj CSV do AnkiDroid</string>
+    <string name="all_verses_learned_title">Gratulacje!</string>
+    <string name="no_more_verses_message">Nie ma więcej wersetów do nauki.</string>
+    <string name="all_verses_learned_message">Nauczyłeś się wszystkich wersetów!</string>
+    <string name="jump_to_current_section">Skocz do aktualnej sekcji</string>
+    <string name="draw_pictures">Wybierz obrazki</string>
+    <string name="draw_pictures_button_caption">Wybierz obrazki</string>
+    <string name="next_shield_in">Następna\ntarcza za:</string>
+    <string name="all_shields_full">Masz\nwszystkie\ntarcze!</string>
+    <string name="day_streak_toast">Aktualna\nseria dni</string>
+    <string name="day_streak_toast_keep">Zagraj\ndowolny\npoziom aby\npodtrzymać\nserię</string>
+    <string name="day_streak_toast_start">Zagraj\ndowolny\npoziom aby\nrozpocząć\nserię</string>
+    <string name="repeat_for_shields_hint">Zagraj Powtórkę, aby odzyskać tarcze!</string>
+    <string name="level_locked_need_previous">Aby zagrać ten poziom ukończ najpierw poprzedni poziom.</string>
+    <string name="level_locked_need_retention">Aby zagrać ten poziom zwiększ poziom utrwalenia wersetów w sercu.</string>
+    <string name="level_locked_need_both">Aby zagrać ten poziom ukończ poprzedni poziom oraz zwiększ poziom utrwalenia wersetów w sercu.</string>
+    <string name="repeat_verse_button_caption">Wymawiaj wersety</string>
+    <string name="best_time">Rekord: %1$s</string>
+    <string name="retention_button_caption">Utrwalenie wersetów w sercu: %1$d%%</string>
+    <string name="retention_heart_toast">Aby zwiększyć utrwalenie wersetów w sercu zagraj poziomy powyżej.</string>
+    <string name="retention_heart_toast_maxed">Niestety już dzisiaj nie możesz zwiększyć poziomu utrwalenia wersetów z sercu. Zagraj jutro.</string>
+    <string name="challenges_unlock_hint">Możesz w dowolnym momencie przejść poniższe wyzwania, aby odblokować kolejną sekcję</string>
+    <string name="section_unlocked_title">Gratulacje! 🎉</string>
+    <string name="section_unlocked_message">Ukończyłeś wyzwania i odblokowałeś sekcję %1$d! Możesz teraz poznawać kolejne wersety.</string>
+    <string name="section_unlocked_all_message">Nauczyłeś się wszystkich możliwych wersetów!</string>
+
+    <!-- RandomVerseScreen -->
+    <string name="random_screen_caption">Rozwiąż zagadki dla losowego cytatu</string>
+    <string name="difficulty_level">Poziom trudności</string>
+    <string name="difficulty_easy">Łatwy</string>
+    <string name="difficulty_normal">Normalny</string>
+    <string name="draw_another">Wylosuj inny</string>
+    <string name="start_countdown">Start (%1$d)</string>
+    <string name="random_verse">Losowy cytat</string>
+
+    <!-- ReviewVersesScreen -->
+    <string name="review_screen_caption">Powtórz wersety, które już znasz</string>
+    <string name="no_verses_to_review">Nie masz jeszcze żadnych ukończonych wersetów do powtórki.</string>
+    <string name="select_riddles_count">Wybierz liczbę zagadek:</string>
+    <string name="play_for_shields">Graj o tarczę:</string>
+    <string name="reward_for_playing">Nagroda za bezbłędną grę: +%1$d tarcze</string>
+    <string name="start_review">Rozpocznij powtórkę</string>
+
+    <!-- GameActivity & General Riddle Feedback -->
+    <string name="correct_answer">Dobrze!</string>
+    <string name="wrong_answer">Źle!</string>
+    <string name="success_message">Gratulacje! To jest poprawna odpowiedź.</string>
+    <string name="failure_message">Niestety, to nie jest poprawna odpowiedź. Spróbuj jeszcze raz.</string>
+    <string name="check_button">Sprawdź</string>
+    <string name="riddle_info">Informacja o zagadce</string>
+    <string name="all_riddles_completed_title">Gratulacje!</string>
+    <string name="all_riddles_completed_message">Ukończyłeś wszystkie zadania w tym poziomie!</string>
+    <string name="exit_confirmation_title">Wyjść?</string>
+    <string name="exit_confirmation_message">Twoje postępy w tym poziomie zostaną utracone. Czy na pewno chcesz wyjść?</string>
+    <string name="game_over">Nie możesz grać!</string>
+    <string name="cant_play_more">Niestety nie masz już żadnej tarczy, poczekaj aż tarcze się odnowią.</string>
+    <string name="game_over_for_shields">Koniec gry o tarcze!</string>
+    <string name="cant_play_more_for_shields">Niestety popełniłeś błąd, więc nie możesz już grać o tarcze.</string>
+    <string name="all_riddles_completed_for_shields_title">Zdobywasz tarczę!</string>
+    <string name="all_riddles_completed_for_shields_2_title">Zdobywasz 2 tarcze!</string>
+    <string name="all_riddles_completed_for_shields_message">Gratulacje, rozwiązałeś wszystkie zadania!</string>
+    <string name="speak_now">Mów teraz</string>
+    <string name="new_record_title">Nowy rekord! 🏆</string>
+    <string name="new_record_message">Ukończyłeś w czasie %1$s!</string>
+    <string name="new_streak_record_title">Nowa seria! 🏆</string>
+    <string name="new_streak_record_message">Ukończyłeś %1$d perfekcyjnych poziomów z rzędu!</string>
+    <string name="retention_gained_title">Utrwalenie wzrosło! ❤️</string>
+    <string name="retention_gained_message">Zdobyłeś +%1$d%% utrwalenia wersetów w sercu.</string>
+
+    <!-- Specific Riddle Types -->
+    <!-- Connect Pairs / Parts -->
+    <string name="connect_pairs_caption">Połącz sigla i wersety w pary</string>
+    <string name="connect_pairs_success_message">Połączyłeś wszystkie pary!</string>
+    <string name="connect_parts_caption">Połącz części wersetów w pary</string>
+    <string name="connect_parts_success_message">Połączyłeś wszystkie części!</string>
+    <string name="connect_success_time">Twój czas: %1$s</string>
+
+    <!-- Repeat Verse Riddle --> -->
+    <string name="repeat_verse_choose_hint">Wybierz obrazek, aby ćwiczyć werset</string>
+    <string name="repeat_verse_retention_growth">Wzrost utrwalenia w sercu:\n+%1$d%% za powyższy cytat,\n+%2$d%% za wszystkie cytaty w tej sekcji</string>
+    <string name="repeat_verse_accepted">Podobieństwo: %.1f%% ✓</string>
+    <string name="repeat_verse_too_low">Podobieństwo: %.1f%% — spróbuj ponownie</string>
+
+    <!-- Fill Sigla (Book, Chapter, Verse) Riddles -->
+    <string name="book_caption">Księga</string>
+    <string name="chapter_caption">Rozdział</string>
+    <string name="verse_caption">Werset</string>
+    <string name="fill_book_caption">Uzupełnij księgę</string>
+    <string name="fill_chapter_caption">Uzupełnij numer rozdziału</string>
+    <string name="fill_verse_caption">Uzupełnij numer wersetu</string>
+    <string name="fill_sigla_verse_range_hint">Jeśli odpowiedzią jest zakres wersów, wystarczy że wpiszesz numer jednego z nich</string>
+
+    <!-- Word Scramble Riddle -->
+    <string name="move_left_desc">Przesuń w lewo</string>
+    <string name="move_right_desc">Przesuń w prawo</string>
+    <string name="reset_button">Reset</string>
+
+    <!-- Fill Whole Sigla / Verse Riddles -->
+    <string name="fill_whole_sigla_caption">Uzupełnij księge, numer rozdziału i numer wersetu</string>
+    <string name="fill_whole_sigla_button_caption">Uzupełnij wszystkie sigla</string>
+    <string name="fill_whole_verse_caption">Uzupełnij cały werset</string>
+    <string name="fill_whole_verse_button_caption">Uzupełnij wszystkie wersety</string>
+    <string name="skip_possibility_info">Jeśli werset zawiera fragmenty zaznaczone na szaro, możesz je pominąć.</string>
+    <string name="similarity_score">Podobieństwo: %.1f%%</string>
+    <string name="required_similarity_info">(Wymagane podobieństwo: 90%)</string>
+
+    <!-- SettingsScreen -->
+    <string name="settings_title">Ustawienia i osiągnięcia</string>
+    <string name="settings_achievements_section">Osiągnięcia</string>
+    <string name="settings_best_connect_parts">Najlepszy czas — Połącz części</string>
+    <string name="settings_best_connect_pairs">Najlepszy czas — Połącz sigla</string>
+    <string name="settings_no_achievement">Brak rekordu</string>
+    <string name="settings_learned_verses">Znane wersety</string>
+    <string name="settings_repeated_verses">Powtórzone wersety</string>
+    <string name="settings_aloud_repeated_verses">Wymówione wersety</string>
+    <string name="settings_finished_levels">Ukończone poziomy</string>
+    <string name="settings_level_streak_current">Aktualna seria perfekcyjnych poziomów</string>
+    <string name="settings_level_streak_best">Najlepsza seria perfekcyjnych poziomów</string>
+    <string name="settings_day_streak_current">Aktualna seria dni</string>
+    <string name="settings_day_streak_best">Najlepsza seria dni</string>
+    <string name="settings_info_section">Informacje</string>
+    <string name="settings_info_github">Kod źródłowy aplikacji jest dostępny na GitHubie:</string>
+    <string name="settings_github_url">https://github.com/Ptimulka/SwordOfTheWordOfGod</string>
+    <string name="settings_reset_section">Reset</string>
+    <string name="settings_reset_progress">Zresetuj całą grę</string>
+    <string name="reset_progress_title">Zresetować całą grę?</string>
+    <string name="reset_progress_message">Stracisz wszystkie ukończone sekcje i poziomy. Usunięte zostaną wszystkie rekordy, serie, osiągnięcia, utrwalenie wersetów w sercu oraz Twoje narysowane i zaimportowane obrazki.</string>
+    <string name="reset_progress_confirm">Resetuj</string>
+    <string name="reset_progress_final_title">Na pewno?</string>
+    <string name="reset_progress_final_message">To ostatnie ostrzeżenie. Cały Twój postęp zostanie bezpowrotnie usunięty i nie da się go odzyskać.</string>
+    <string name="reset_progress_final_confirm">Usuń wszystko</string>
+    <string name="reset_progress_done">Postęp został zresetowany</string>
+    <string name="settings_notifications_section">Powiadomienia</string>
+    <string name="settings_daily_reminder">Codzienne przypomnienie</string>
+    <string name="settings_notification_time">Godzina powiadomienia</string>
+    <string name="notification_channel_name">Przypomnienia dzienne</string>
+    <string name="notification_title">Miecz Słowa Bożego</string>
+    <string name="notification_text">Czas na dzisiejszą porcję wersetów!</string>
+
+    <!-- VerseGroupsScreen (Search) -->
+    <string name="search_placeholder">Szukaj...</string>
+    <string name="search">Szukaj</string>
+    <string name="clear_search">Wyczyść wyszukiwanie</string>
+    <string name="verse_groups_sections_header">Domyślne wersety</string>
+    <string name="verse_groups_groups_header">Grupy wersetów do wybrania</string>
+
+    <!-- ChooseVerseGroupsScreen -->
+    <string name="choose_groups_title">Wybierz 2 grupy</string>
+    <string name="save_selection">Zapisz wybór</string>
+    <string name="repeat_level_name">Powtórka</string>
+
+    <!-- MnemonicPicturesActivity (Drawing Screen) -->
+    <string name="mnemonic_pictures_title">Obrazki - %1$s</string>
+    <string name="save_drawing">Zapisz</string>
+    <string name="undo">Cofnij</string>
+    <string name="redo">Ponów</string>
+    <string name="unsaved_changes_title">Niezapisane zmiany</string>
+    <string name="unsaved_changes_message">Masz niezapisane zmiany. Czy chcesz zapisać przed wyjściem?</string>
+    <string name="save_and_exit">Zapisz i wyjdź</string>
+    <string name="discard_and_exit">Odrzuć</string>
+    <string name="image_hint">Podpowiedź obrazkowa</string>
+    <string name="picture_none_caption">Brak</string>
+    <string name="picture_draw_caption">Narysuj</string>
+    <string name="picture_import_caption">Importuj</string>
+    <string name="picture_chosen_imported">Importowany</string>
+    <string name="picture_chosen_default">Domyślny</string>
+    <string name="picture_chosen_user">Twój</string>
+    <string name="image_import_save">Zapisz</string>
+    <string name="image_import_load_failed">Nie udało się wczytać obrazka. Spróbuj wybrać mniejszy plik.</string>
+    <string name="mnemonic_pictures_info">Obrazki są pomocne przy zapamiętywaniu sigli wersetów. Możesz zostać przy domyślnych obrazkach wygenerowanych przez sztuczną inteligencję, narysować swój prosty obrazek lub zupełnie zrezygnować z obrazka.</string>
+    <string name="download_all_images">Pobierz wybrane obrazki</string>
+    <string name="download_images_done">Zapisano %1$d obrazków do galerii</string>
+    <string name="download_images_none">Brak obrazków do pobrania</string>
+</resources>

@@ -1,0 +1,192 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="137.38dp"
+    android:height="145.04dp"
+    android:viewportWidth="137.38"
+    android:viewportHeight="145.04">
+  <!-- Scaled so the heart fills the whole viewport, keeping the retention fill level accurate -->
+  <group
+      android:pivotX="68.69"
+      android:pivotY="74.51"
+      android:scaleX="1.16"
+      android:scaleY="1.215"
+      android:translateY="-1.99">
+  <!-- Heart-shaped button base (dark drop shadow) -->
+  <path
+      android:pathData="M68.69,53C68.69,53 61.69,32 40.69,32C12.69,32 12.69,67 12.69,67C12.69,88 40.69,109 68.69,134.2C96.69,109 124.69,88 124.69,67C124.69,67 124.69,32 96.69,32C75.69,32 68.69,53 68.69,53Z"
+      android:fillColor="@color/game_button_yellow_dark"/>
+  <!-- Heart-shaped button top -->
+  <path
+      android:pathData="M68.69,39C68.69,39 61.69,18 40.69,18C12.69,18 12.69,53 12.69,53C12.69,74 40.69,95 68.69,120.2C96.69,95 124.69,74 124.69,53C124.69,53 124.69,18 96.69,18C75.69,18 68.69,39 68.69,39Z"
+      android:strokeWidth="6.365"
+      android:fillColor="@color/game_button_yellow_light"
+      android:strokeColor="@color/level_button_number"/>
+
+  <!-- Scrambled Greek-like + Hebrew-like glyphs, each scaled/rotated/offset -->
+  <!-- Greek-like: lambda -->
+  <group
+      android:pivotX="40" android:pivotY="51"
+      android:scaleX="0.78" android:scaleY="0.78"
+      android:rotation="-18"
+      android:translateX="-2" android:translateY="-5">
+    <path
+        android:pathData="M34,58 L41,45 L46,58 M41,45 L36,49"
+        android:strokeWidth="2.2"
+        android:strokeColor="@color/level_button_number"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+  </group>
+  <!-- Greek-like: omega -->
+  <group
+      android:pivotX="58" android:pivotY="51"
+      android:scaleX="0.78" android:scaleY="0.78"
+      android:rotation="12"
+      android:translateY="6">
+    <path
+        android:pathData="M51,56 C50,45 66,45 65,56 M47,56 L54,56 M62,56 L69,56"
+        android:strokeWidth="2.2"
+        android:strokeColor="@color/level_button_number"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+  </group>
+  <!-- Greek-like: alpha -->
+  <group
+      android:pivotX="84" android:pivotY="51"
+      android:scaleX="0.78" android:scaleY="0.78"
+      android:rotation="-10"
+      android:translateY="-6">
+    <path
+        android:pathData="M87,47 C80,44 77,56 84,56 C89,56 89,47 84,47 M86,55 L91,58"
+        android:strokeWidth="2.2"
+        android:strokeColor="@color/level_button_number"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+  </group>
+  <!-- Greek-like: pi -->
+  <group
+      android:pivotX="101" android:pivotY="52"
+      android:scaleX="0.72" android:scaleY="0.72"
+      android:rotation="20"
+      android:translateX="-3" android:translateY="4">
+    <path
+        android:pathData="M95,47 L107,47 M98,47 L98,57 M104,47 L104,57"
+        android:strokeWidth="2.2"
+        android:strokeColor="@color/level_button_number"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+  </group>
+
+  <!-- Hebrew-like: shin -->
+  <group
+      android:pivotX="40" android:pivotY="74"
+      android:scaleX="0.78" android:scaleY="0.78"
+      android:rotation="14"
+      android:translateY="5">
+    <path
+        android:pathData="M34,70 L36,79 M40,69 L40,79 M46,70 L44,79 M33,79 L47,79"
+        android:strokeWidth="2.2"
+        android:strokeColor="@color/level_button_number"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+  </group>
+  <!-- Hebrew-like: aleph -->
+  <group
+      android:pivotX="61" android:pivotY="75"
+      android:scaleX="0.78" android:scaleY="0.78"
+      android:rotation="-15"
+      android:translateY="-4">
+    <path
+        android:pathData="M55,70 L67,80 M63,69 L58,74 M64,76 L59,81"
+        android:strokeWidth="2.2"
+        android:strokeColor="@color/level_button_number"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+  </group>
+  <!-- Hebrew-like: lamed -->
+  <group
+      android:pivotX="79" android:pivotY="74"
+      android:scaleX="0.78" android:scaleY="0.78"
+      android:rotation="22"
+      android:translateY="6">
+    <path
+        android:pathData="M76,71 C78,67 82,67 81,72 L81,81"
+        android:strokeWidth="2.2"
+        android:strokeColor="@color/level_button_number"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+  </group>
+  <!-- Hebrew-like: bet -->
+  <group
+      android:pivotX="97" android:pivotY="73"
+      android:scaleX="0.72" android:scaleY="0.72"
+      android:rotation="-20"
+      android:translateY="-5">
+    <path
+        android:pathData="M94,69 L103,69 L103,78 L91,78"
+        android:strokeWidth="2.2"
+        android:strokeColor="@color/level_button_number"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+  </group>
+
+  <!-- Hebrew-like: mem (left lobe) -->
+  <group
+      android:pivotX="33" android:pivotY="34"
+      android:scaleX="0.7" android:scaleY="0.7"
+      android:rotation="-12">
+    <path
+        android:pathData="M28,38 L28,31 C29,29 37,29 38,33 L38,39 M30,38 L34,38"
+        android:strokeWidth="2.2"
+        android:strokeColor="@color/level_button_number"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+  </group>
+  <!-- Greek-like: phi (right lobe) -->
+  <group
+      android:pivotX="104" android:pivotY="35"
+      android:scaleX="0.68" android:scaleY="0.68"
+      android:rotation="15">
+    <path
+        android:pathData="M104,27 L104,42 M100,30 C97,34 100,39 104,39 C108,39 111,34 108,30 C106,28 102,28 100,30"
+        android:strokeWidth="2.2"
+        android:strokeColor="@color/level_button_number"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+  </group>
+  <!-- Greek-like: theta (center gap) -->
+  <group
+      android:pivotX="68" android:pivotY="44"
+      android:scaleX="0.6" android:scaleY="0.6"
+      android:rotation="-8">
+    <path
+        android:pathData="M68,40 C65,40 65,48 68,48 C72,48 72,40 68,40 M65,44 L72,44"
+        android:strokeWidth="2.2"
+        android:strokeColor="@color/level_button_number"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+  </group>
+  <!-- Greek-like: sigma (lower row, left) -->
+  <group
+      android:pivotX="53" android:pivotY="92"
+      android:scaleX="0.72" android:scaleY="0.72"
+      android:rotation="10">
+    <path
+        android:pathData="M58,89 L51,89 C47,89 47,95 51,95 C55,95 55,90 51,90"
+        android:strokeWidth="2.2"
+        android:strokeColor="@color/level_button_number"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+  </group>
+  <!-- Hebrew-like: tav (lower row, right) -->
+  <group
+      android:pivotX="82" android:pivotY="92"
+      android:scaleX="0.72" android:scaleY="0.72"
+      android:rotation="-16">
+    <path
+        android:pathData="M77,88 L87,88 M78,88 L78,96 M86,88 L86,94 C86,96 83,96 83,94"
+        android:strokeWidth="2.2"
+        android:strokeColor="@color/level_button_number"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+  </group>
+  </group>
+</vector>

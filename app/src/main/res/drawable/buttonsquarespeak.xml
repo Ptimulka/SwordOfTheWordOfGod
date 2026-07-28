@@ -1,0 +1,45 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="137.38dp"
+    android:height="145.04dp"
+    android:viewportWidth="137.38"
+    android:viewportHeight="145.04">
+  <path
+      android:pathData="M23.87,18.54L113.39,18.54A23.24,23.24 0,0 1,136.64 41.78L136.64,121.7A23.24,23.24 0,0 1,113.39 144.94L23.87,144.94A23.24,23.24 0,0 1,0.62 121.7L0.62,41.78A23.24,23.24 0,0 1,23.87 18.54z"
+      android:fillColor="@color/game_button_yellow_dark"/>
+  <path
+      android:pathData="M26.08,5.41L111.31,5.41A22.13,22.13 0,0 1,133.45 27.54L133.45,114.7A22.13,22.13 0,0 1,111.31 136.83L26.08,136.83A22.13,22.13 0,0 1,3.95 114.7L3.95,27.54A22.13,22.13 0,0 1,26.08 5.41z"
+      android:strokeWidth="6.74296"
+      android:fillColor="@color/game_button_yellow_light"
+      android:strokeColor="@color/level_button_number"/>
+  <!-- Person icon (left) -->
+  <group
+      android:translateX="16"
+      android:translateY="44"
+      android:scaleX="2.3"
+      android:scaleY="2.3">
+    <path
+        android:pathData="M12,12c2.21,0 4,-1.79 4,-4s-1.79,-4 -4,-4 -4,1.79 -4,4 1.79,4 4,4zM12,14c-2.67,0 -8,1.34 -8,4v2h16v-2c0,-2.66 -5.33,-4 -8,-4z"
+        android:fillColor="@color/level_button_number"/>
+  </group>
+  <!-- Sound wave small -->
+  <path
+      android:pathData="M66,62 A9,9 0 0 1 66,80"
+      android:strokeWidth="6"
+      android:fillColor="#00000000"
+      android:strokeColor="@color/level_button_number"
+      android:strokeLineCap="round"/>
+  <!-- Sound wave medium -->
+  <path
+      android:pathData="M78,55 A16,16 0 0 1 78,87"
+      android:strokeWidth="6"
+      android:fillColor="#00000000"
+      android:strokeColor="@color/level_button_number"
+      android:strokeLineCap="round"/>
+  <!-- Sound wave large -->
+  <path
+      android:pathData="M92,48 A23,23 0 0 1 92,94"
+      android:strokeWidth="6"
+      android:fillColor="#00000000"
+      android:strokeColor="@color/level_button_number"
+      android:strokeLineCap="round"/>
+</vector>

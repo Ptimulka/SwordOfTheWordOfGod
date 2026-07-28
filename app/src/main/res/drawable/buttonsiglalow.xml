@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="137.38dp"
+    android:height="145.04dp"
+    android:viewportWidth="137.38"
+    android:viewportHeight="145.04">
+  <path
+      android:pathData="M1.35,82.03a67.81,63.01 0,1 0,135.63 0a67.81,63.01 0,1 0,-135.63 0z"
+      android:fillColor="@color/game_button_grey_dark"/>
+  <path
+      android:pathData="M3.18,64.27a65.51,61.09 0,1 0,131.02 0a65.51,61.09 0,1 0,-131.02 0z"
+      android:strokeWidth="6.365"
+      android:fillColor="@color/game_button_grey_light"
+      android:strokeColor="@color/level_button_number_grey"/>
+  <path
+      android:pathData="M14.32,66.73l27.03,0l0,1.97l-27.03,0z"
+      android:strokeWidth="3.04"
+      android:fillColor="@color/level_button_number_grey"
+      android:strokeColor="@color/level_button_number_grey"/>
+  <path
+      android:pathData="M54.48,66.87l28.09,0l0,1.94l-28.09,0z"
+      android:strokeWidth="3.08"
+      android:fillColor="@color/level_button_number_grey"
+      android:strokeColor="@color/level_button_number_grey"/>
+  <path
+      android:pathData="M94.88,66.57l28.71,0l0,1.92l-28.71,0z"
+      android:strokeWidth="3.09"
+      android:fillColor="@color/level_button_number_grey"
+      android:strokeColor="@color/level_button_number_grey"/>
+</vector>

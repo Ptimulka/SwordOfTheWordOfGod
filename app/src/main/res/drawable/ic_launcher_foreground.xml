@@ -1,0 +1,38 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="137.38dp"
+    android:height="145.04dp"
+    android:viewportWidth="137.38"
+    android:viewportHeight="145.04">
+  <group
+      android:scaleX="0.55"
+      android:scaleY="0.55"
+      android:translateX="30"
+      android:translateY="31">
+    <path
+        android:pathData="m69.49,141.5c10.71,-0.57 -21.78,1.75 -17.48,-6.01l6.07,-0.12c6.81,0.41 14.28,-1.51 14.28,-18.95 0,-3.21 2.24,-5.81 5,-5.81h51.16c2.76,0 4.99,2.6 4.99,5.81v2.98c-0.02,16.04 -11.47,21.48 -21.61,21.69zM74.83,134.33 L110.66,134.74c8.27,-0.01 14.98,-5.7 14.98,-15.32v-1.93l-45.24,0.27c-0.25,6.82 -1.24,12.17 -5.57,16.57zM52.39,136.84c-0.12,-3.26 4.99,2.82 4.99,0.01v-2.12,5.8c-2.81,0.14 -5.11,-0.43 -4.99,-3.69zM10.77,44.93c-2.76,-0 -4.99,-2.6 -4.99,-5.81L5.77,28.39c-0,-11.77 8.2,-21.31 18.31,-21.31 10.12,0 14.61,9.54 14.61,21.31v15.49c-0,3.21 -2.24,1.04 -4.99,1.05zM12.58,28.39v9.68L32.41,38.07L32.41,28.39C32.6,19.87 29.07,14.56 24.08,14.46 18.54,14.36 12.85,18.55 12.58,28.39Z"
+        android:strokeWidth="5.72436"
+        android:fillColor="@color/level_button_number" />
+    <path
+        android:pathData="m90.87,13.17c9.91,0.05 18.16,11.19 18.16,22.72v76.29h6.81L115.84,35.89c0,-16.04 -11.18,-29.05 -24.97,-29.05L24.28,6.84c-6.66,0 -7.47,7.28 1.36,7.27 7.18,-0.19 6.97,1.15 6.97,14.03v85.22c0,16.04 11.18,27.99 24.97,27.99l53.48,-0.27 -0.2,-6.06L57.57,135.02c-8.28,0 -18.16,-12.04 -18.16,-21.66L39.41,28.14C38.71,14.05 36.03,15.98 35.03,12.88Z"
+        android:strokeWidth="5.72436"
+        android:fillColor="@color/level_button_number" />
+    <path
+        android:pathData="M73.35,23.19L73.35,98.06"
+        android:strokeWidth="9.66"
+        android:strokeColor="#c7c4b1"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M51.79,43.33L94.91,43.33"
+        android:strokeWidth="10.56"
+        android:strokeColor="@color/level_button_number"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M73.35,43.33m-10.78,0a10.4,10.78 90,1 1,21.56 0a10.4,10.78 90,1 1,-21.56 0"
+        android:strokeWidth="3.53"
+        android:strokeColor="@color/game_button_yellow_light"/>
+    <path
+        android:pathData="M70.58,43.01a2.52,2.71 90,1 0,5.42 0a2.52,2.71 90,1 0,-5.42 0z"
+        android:strokeWidth="0.13"
+        android:fillColor="@color/game_button_yellow_light"/>
+  </group>
+</vector>
