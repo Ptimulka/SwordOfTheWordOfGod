@@ -176,8 +176,12 @@ fun FillWholeVerseRiddleScreen(
                             fontSize = 12.sp,
                             color = Color.Gray
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        DiffView(diffs = diffs)
+                        // Below 50% the user likely doesn't know the verse — hide the word
+                        // comparison so it isn't used as a hint.
+                        if (similarityScore >= 50f) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            DiffView(diffs = diffs)
+                        }
                     }
                 }
             },
