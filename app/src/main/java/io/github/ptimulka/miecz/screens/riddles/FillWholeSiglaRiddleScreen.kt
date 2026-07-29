@@ -22,7 +22,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -224,6 +228,9 @@ private fun WholeSiglaInputArea(
     isVerseError: () -> Boolean,
 ) {
 
+    val chapterFocusRequester = remember { FocusRequester() }
+    val verseFocusRequester = remember { FocusRequester() }
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
         Text(
@@ -240,7 +247,9 @@ private fun WholeSiglaInputArea(
             SiglaPartTextField(
                 value = bookInput,
                 onValueChange = onBookInputChanged,
-                isError = isBookError()
+                isError = isBookError(),
+                imeAction = ImeAction.Next,
+                keyboardActions = KeyboardActions(onNext = { chapterFocusRequester.requestFocus() })
             )
             Text(",", style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.width(8.dp))
@@ -248,7 +257,10 @@ private fun WholeSiglaInputArea(
                 value = chapterInput,
                 onValueChange = onChapterInputChanged,
                 isError = isChapterError(),
-                keyboardType = KeyboardType.Number
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next,
+                keyboardActions = KeyboardActions(onNext = { verseFocusRequester.requestFocus() }),
+                focusRequester = chapterFocusRequester
             )
             Text(",", style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.width(8.dp))
@@ -256,7 +268,8 @@ private fun WholeSiglaInputArea(
                 value = verseInput,
                 onValueChange = onVerseInputChanged,
                 isError = isVerseError(),
-                keyboardType = KeyboardType.Number
+                keyboardType = KeyboardType.Number,
+                focusRequester = verseFocusRequester
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
@@ -286,7 +299,10 @@ private fun SiglaPartTextField(
     value: String,
     onValueChange: (String) -> Unit,
     isError: Boolean,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    imeAction: ImeAction = ImeAction.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    focusRequester: FocusRequester? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -300,9 +316,12 @@ private fun SiglaPartTextField(
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier.width(80.dp),
+        modifier = Modifier
+            .width(80.dp)
+            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier),
         singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
+        keyboardActions = keyboardActions,
         textStyle = MaterialTheme.typography.bodyMedium.copy(
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurface
