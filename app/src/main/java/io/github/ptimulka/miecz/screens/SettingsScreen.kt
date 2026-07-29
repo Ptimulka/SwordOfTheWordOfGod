@@ -4,7 +4,6 @@ import android.app.TimePickerDialog
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -41,8 +40,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -343,18 +346,52 @@ fun SettingsScreen(innerPadding: PaddingValues) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text(text = stringResource(R.string.settings_info_github), fontSize = 14.sp)
+            val linkColor = colorResource(R.color.game_button_yellow_dark)
+            val linkStyle = TextLinkStyles(
+                style = SpanStyle(color = linkColor, textDecoration = TextDecoration.Underline)
+            )
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            val uriHandler = LocalUriHandler.current
             val githubUrl = stringResource(R.string.settings_github_url)
+            val githubText = buildAnnotatedString {
+                append(stringResource(R.string.settings_info_github))
+                append(" ")
+                withLink(LinkAnnotation.Url(githubUrl, linkStyle)) {
+                    append(stringResource(R.string.settings_info_github_link))
+                }
+                append(".")
+            }
+            Text(text = githubText, fontSize = 14.sp)
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            val privacyUrl = stringResource(R.string.settings_privacy_policy_url)
+            val privacyText = buildAnnotatedString {
+                withLink(LinkAnnotation.Url(privacyUrl, linkStyle)) {
+                    append(stringResource(R.string.settings_privacy_policy))
+                }
+            }
+            Text(text = privacyText, fontSize = 14.sp)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
-                text = githubUrl,
-                fontSize = 14.sp,
-                color = colorResource(R.color.game_button_yellow_dark),
-                textDecoration = TextDecoration.Underline,
-                modifier = Modifier.clickable { uriHandler.openUri(githubUrl) }
+                text = stringResource(R.string.app_name),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = colorResource(R.color.game_button_yellow_dark)
+            )
+
+            val appVersion = remember {
+                try {
+                    context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: ""
+                } catch (_: Exception) {
+                    ""
+                }
+            }
+            Text(
+                text = stringResource(R.string.settings_version, appVersion),
+                fontSize = 13.sp,
+                color = Color.Gray
             )
 
             Spacer(modifier = Modifier.height(32.dp))
