@@ -1,7 +1,10 @@
 package io.github.ptimulka.miecz.screens.riddles
 
 import android.content.res.Configuration
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,10 +42,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,16 +51,16 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.ptimulka.miecz.R
+import io.github.ptimulka.miecz.components.game.RiddleHint
 import io.github.ptimulka.miecz.helpers.BookNameNormalizer
 import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
+import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
 
 @Composable
 fun FillWholeSiglaRiddleScreen(
@@ -305,13 +305,9 @@ private fun WholeSiglaInputArea(
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = stringResource(id = R.string.fill_sigla_verse_range_hint),
-            style = MaterialTheme.typography.bodySmall,
-            fontStyle = FontStyle.Italic,
-            color = Color.Gray,
-            textAlign = TextAlign.Center
-        )
+        RiddleHint(text = stringResource(id = R.string.fill_sigla_verse_range_hint))
+        Spacer(modifier = Modifier.height(4.dp))
+        RiddleHint(text = stringResource(id = R.string.no_diacritics_hint))
 
     }
 }

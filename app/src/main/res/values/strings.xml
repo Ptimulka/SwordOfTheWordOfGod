@@ -88,6 +88,7 @@
     <string name="new_streak_record_message">Ukończyłeś %1$d perfekcyjnych poziomów z rzędu!</string>
     <string name="retention_gained_title">Utrwalenie wzrosło! ❤️</string>
     <string name="retention_gained_message">Zdobyłeś +%1$d%% utrwalenia wersetów w sercu.</string>
+    <string name="no_diacritics_hint">Nie musisz używać dużych liter i polskich znaków diakrytycznych.</string>
 
     <!-- Specific Riddle Types -->
     <!-- Connect Pairs / Parts -->
@@ -110,7 +111,7 @@
     <string name="fill_book_caption">Uzupełnij księgę</string>
     <string name="fill_chapter_caption">Uzupełnij numer rozdziału</string>
     <string name="fill_verse_caption">Uzupełnij numer wersetu</string>
-    <string name="fill_sigla_verse_range_hint">Jeśli odpowiedzią jest zakres wersów, wystarczy że wpiszesz numer jednego z nich</string>
+    <string name="fill_sigla_verse_range_hint">Jeśli odpowiedzią jest zakres wersów, wystarczy że wpiszesz numer jednego z nich.</string>
 
     <!-- Word Scramble Riddle -->
     <string name="move_left_desc">Przesuń w lewo</string>
