@@ -22,23 +22,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -54,11 +46,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.ptimulka.miecz.R
+import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
+import io.github.ptimulka.miecz.components.game.RiddleResultDialog
+import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.data.WordItem
 import java.util.Collections
 import java.util.regex.Pattern
@@ -79,13 +75,7 @@ fun WordScrambleRiddleScreen(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    val context = LocalContext.current
-    val hintBitmap = remember(sectionId, verseIndex) {
-        if (assetName != null || (sectionId > 0 && verseIndex >= 0)) {
-            val repo = MnemonicPicturesRepository(context)
-            repo.loadActivePicture(sectionId, verseIndex, assetName)
-        } else null
-    }
+    val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
     var showHintDialog by remember { mutableStateOf(false) }
 
     val correctWords = remember(verseText, isEasy) { 
@@ -133,20 +123,11 @@ fun WordScrambleRiddleScreen(
     var selectedWordForReorder by rememberSaveable { mutableStateOf<WordItem?>(null) }
 
     if (showResultDialog) {
-        AlertDialog(
-            onDismissRequest = { 
-                showResultDialog = false 
+        RiddleResultDialog(
+            isCorrect = isAnswerCorrect,
+            onConfirm = {
+                showResultDialog = false
                 if (isAnswerCorrect) onSuccess()
-            },
-            title = { Text(if (isAnswerCorrect) stringResource(R.string.correct_answer) else stringResource(R.string.wrong_answer), color = if (isAnswerCorrect) colorResource(R.color.correct_answer_green) else Color.Red, fontWeight = FontWeight.Bold) },
-            text = { Text(if (isAnswerCorrect) stringResource(R.string.success_message) else stringResource(R.string.failure_message)) },
-            confirmButton = {
-                TextButton(onClick = { 
-                    showResultDialog = false
-                    if (isAnswerCorrect) onSuccess()
-                }) {
-                    Text(stringResource(R.string.ok_button))
-                }
             }
         )
     }
@@ -228,67 +209,52 @@ fun WordScrambleRiddleScreen(
 
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-        // Common Top Bar
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).align(Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "$book $chapter,$number",
-                style = MaterialTheme.typography.titleLarge.copy(fontSize = 24.sp, fontWeight = FontWeight.Bold),
-                color = colorResource(id = R.color.game_button_yellow_dark)
-            )
-            if (hintBitmap != null) {
-                Spacer(Modifier.width(4.dp))
-                IconButton(onClick = { showHintDialog = true }) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_hint),
-                        contentDescription = stringResource(R.string.image_hint),
-                        tint = colorResource(id = R.color.game_button_yellow_dark)
-                    )
+            // Common Top Bar
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).align(Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "$book $chapter,$number",
+                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 24.sp, fontWeight = FontWeight.Bold),
+                    color = colorResource(id = R.color.game_button_yellow_dark)
+                )
+                if (hintBitmap != null) {
+                    Spacer(Modifier.width(4.dp))
+                    IconButton(onClick = { showHintDialog = true }) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_hint),
+                            contentDescription = stringResource(R.string.image_hint),
+                            tint = colorResource(id = R.color.game_button_yellow_dark)
+                        )
+                    }
                 }
             }
-        }
 
-        if (isLandscape) {
-            Row(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 8.dp)) {
-                answerArea(Modifier.weight(1f).fillMaxHeight())
-                Spacer(Modifier.width(16.dp))
-                Column(Modifier.weight(1f).fillMaxHeight()) {
+            if (isLandscape) {
+                Row(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    answerArea(Modifier.weight(1f).fillMaxHeight())
+                    Spacer(Modifier.width(16.dp))
+                    Column(Modifier.weight(1f).fillMaxHeight()) {
+                        selectionArea(Modifier.weight(1f))
+                        Spacer(Modifier.height(16.dp))
+                        controls(Modifier.fillMaxWidth())
+                    }
+                }
+            } else {
+                Column(Modifier.fillMaxSize().padding(16.dp)) {
+                    answerArea(Modifier.weight(1f))
+                    Spacer(Modifier.height(16.dp))
                     selectionArea(Modifier.weight(1f))
                     Spacer(Modifier.height(16.dp))
                     controls(Modifier.fillMaxWidth())
                 }
             }
-        } else {
-            Column(Modifier.fillMaxSize().padding(16.dp)) {
-                answerArea(Modifier.weight(1f))
-                Spacer(Modifier.height(16.dp))
-                selectionArea(Modifier.weight(1f))
-                Spacer(Modifier.height(16.dp))
-                controls(Modifier.fillMaxWidth())
-            }
-        }
         } // end inner Column
 
         // Full-screen image hint overlay — tap anywhere to dismiss
         if (showHintDialog && hintBitmap != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.85f))
-                    .clickable { showHintDialog = false },
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    bitmap = hintBitmap.asImageBitmap(),
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .fillMaxWidth(0.9f)
-                        .fillMaxHeight(0.85f)
-                )
-            }
+            FullscreenImageOverlay(hintBitmap) { showHintDialog = false }
         }
     } // end outer Box
 }

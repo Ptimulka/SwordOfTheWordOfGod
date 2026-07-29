@@ -1,16 +1,64 @@
 package io.github.ptimulka.miecz.components.game
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import io.github.ptimulka.miecz.helpers.formatTime
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.window.DialogProperties
 import io.github.ptimulka.miecz.R
+
+/**
+ * Standard result dialog shared by all riddle screens.
+ *
+ * @param isCorrect whether the answer was correct (drives title text/color and body message).
+ * @param onConfirm invoked on the OK button and, when [dismissable], on outside/back dismissal.
+ * @param dismissable when false the dialog can only be closed via the OK button
+ *        (used where dismissing outside would skip follow-up logic).
+ * @param extraContent optional extra content rendered below the standard message,
+ *        inside a vertically scrollable column (e.g. a word-diff comparison).
+ */
+@Composable
+fun RiddleResultDialog(
+    isCorrect: Boolean,
+    onConfirm: () -> Unit,
+    dismissable: Boolean = true,
+    extraContent: (@Composable () -> Unit)? = null
+) {
+    AlertDialog(
+        onDismissRequest = { if (dismissable) onConfirm() },
+        properties = if (dismissable) DialogProperties()
+            else DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+        title = {
+            Text(
+                text = if (isCorrect) stringResource(R.string.correct_answer)
+                    else stringResource(R.string.wrong_answer),
+                color = if (isCorrect) colorResource(R.color.correct_answer_green) else Color.Red,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Text(
+                    if (isCorrect) stringResource(R.string.success_message)
+                    else stringResource(R.string.failure_message)
+                )
+                extraContent?.invoke()
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text(stringResource(R.string.ok_button)) }
+        }
+    )
+}
 
 @Composable
 fun GameExitDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
