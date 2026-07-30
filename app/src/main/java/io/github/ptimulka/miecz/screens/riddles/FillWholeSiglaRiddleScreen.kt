@@ -24,12 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,21 +37,23 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
+import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleHint
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
+import io.github.ptimulka.miecz.components.game.VerseDisplay
 import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.helpers.BookNameNormalizer
-import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
 
 @Composable
 fun FillWholeSiglaRiddleScreen(
@@ -164,7 +161,7 @@ fun FillWholeSiglaRiddleScreen(
                     { wrongInputs.contains(2) }
                 )
                 Spacer(Modifier.height(32.dp))
-                FillSiglaCheckButton(allFieldsFilled, onCheck)
+                RiddleCheckButton(allFieldsFilled, onCheck)
             }
         }
     } else {
@@ -193,25 +190,8 @@ fun FillWholeSiglaRiddleScreen(
                 { wrongInputs.contains(2) }
             )
             Spacer(Modifier.height(16.dp))
-            FillSiglaCheckButton(allFieldsFilled, onCheck)
+            RiddleCheckButton(allFieldsFilled, onCheck)
         }
-    }
-}
-
-@Composable
-private fun VerseDisplay(modifier: Modifier, verseText: String) {
-    val annotatedVerseText = remember(verseText) {
-        buildAnnotatedVerseText(verseText)
-    }
-    Box(
-        modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = annotatedVerseText,
-            style = MaterialTheme.typography.headlineSmall,
-            textAlign = TextAlign.Center
-        )
     }
 }
 
@@ -277,20 +257,6 @@ private fun WholeSiglaInputArea(
         Spacer(modifier = Modifier.height(4.dp))
         RiddleHint(text = stringResource(id = R.string.no_diacritics_hint))
 
-    }
-}
-
-@Composable
-private fun FillSiglaCheckButton(enabled: Boolean, onCheck: () -> Unit) {
-    Button(
-        onClick = onCheck,
-        enabled = enabled,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.game_button_yellow_dark))
-    ) {
-        Text(stringResource(id = R.string.check_button), fontSize = 18.sp, fontWeight = FontWeight.Bold)
     }
 }
 

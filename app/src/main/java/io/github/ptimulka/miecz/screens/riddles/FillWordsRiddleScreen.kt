@@ -25,8 +25,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -54,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
+import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleHint
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
@@ -237,8 +236,9 @@ fun FillWordsRiddleScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = {
+            RiddleCheckButton(
+                enabled = allFieldsFilled,
+                onCheck = {
                     wrongInputs.clear()
                     var allCorrect = true
                     var i = 0
@@ -253,15 +253,8 @@ fun FillWordsRiddleScreen(
                     }
                     isAnswerCorrect = allCorrect
                     showResultDialog = if(!isAnswerCorrect) { !onShieldLoss() } else true
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                enabled = allFieldsFilled,
-                colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.game_button_yellow_dark))
-            ) {
-                Text(stringResource(id = R.string.check_button), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
+                }
+            )
         } // end Column
 
         // Full-screen image hint overlay — tap anywhere to dismiss

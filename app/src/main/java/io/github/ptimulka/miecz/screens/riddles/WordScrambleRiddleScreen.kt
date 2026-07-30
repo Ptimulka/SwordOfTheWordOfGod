@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
+import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.data.WordItem
@@ -319,9 +320,7 @@ private fun Controls(modifier: Modifier, checkEnabled: Boolean, onReset: () -> U
         Button(onClick = onReset, modifier = Modifier.weight(1f).height(50.dp), colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.game_button_yellow_dark))) {
             Text(stringResource(id = R.string.reset_button), fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
-        Button(onClick = onCheck, modifier = Modifier.weight(1f).height(50.dp), enabled = checkEnabled, colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.game_button_yellow_dark))) {
-            Text(stringResource(id = R.string.check_button), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        }
+        RiddleCheckButton(checkEnabled, onCheck, Modifier.weight(1f).height(50.dp))
     }
 }
 

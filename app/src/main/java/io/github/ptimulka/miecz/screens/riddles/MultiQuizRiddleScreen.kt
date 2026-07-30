@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
+import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.helpers.BibleDataProvider
@@ -278,16 +279,13 @@ fun AnswerColumns(
 
 @Composable
 fun CheckButton(enabled: Boolean, onClick: () -> Unit, isLandscape: Boolean) {
-    Button(
-        onClick = onClick,
+    RiddleCheckButton(
+        enabled = enabled,
+        onCheck = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(if (isLandscape) 40.dp else 50.dp),
-        enabled = enabled,
-        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.game_button_yellow_dark))
-    ) {
-        Text(stringResource(id = R.string.check_button), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-    }
+            .height(if (isLandscape) 40.dp else 50.dp)
+    )
 }
 
 @Composable

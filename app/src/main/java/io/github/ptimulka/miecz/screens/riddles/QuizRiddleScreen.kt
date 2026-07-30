@@ -30,13 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
+import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.data.Verse
@@ -242,16 +242,13 @@ fun QuizAnswerArea(
         Spacer(modifier = Modifier.height(if (isLandscape) 16.dp else 32.dp))
 
         // Check Button
-        Button(
-            onClick = onCheckClick,
+        RiddleCheckButton(
+            enabled = selectedAnswer != null,
+            onCheck = onCheckClick,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(if (isLandscape) 40.dp else 50.dp),
-            enabled = selectedAnswer != null,
-            colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.game_button_yellow_dark))
-        ) {
-            Text(stringResource(id = R.string.check_button), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        }
+                .height(if (isLandscape) 40.dp else 50.dp)
+        )
     }
 }
 

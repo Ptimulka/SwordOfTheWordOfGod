@@ -1,10 +1,6 @@
 package io.github.ptimulka.miecz.screens.riddles
 
-import android.app.Activity
 import android.content.res.Configuration
-import android.speech.RecognizerIntent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,8 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,18 +40,19 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
+import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleHint
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.helpers.calculateWordSimilarity
 import io.github.ptimulka.miecz.helpers.createPolishSpeechIntent
 import io.github.ptimulka.miecz.helpers.normalizeVerseText
+import io.github.ptimulka.miecz.helpers.rememberSpeechLauncher
 
 // Data structures for the diffing algorithm
 private enum class DiffType { INSERT, DELETE, EQUAL }
@@ -87,15 +82,7 @@ fun FillWholeVerseRiddleScreen(
     val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
     var showHintDialog by remember { mutableStateOf(false) }
 
-    val speechLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val data = result.data
-            val results = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-            userInput = results?.get(0) ?: ""
-        }
-    }
+    val speechLauncher = rememberSpeechLauncher { recognized -> userInput = recognized }
 
     fun checkAnswer() {
         val userWords = normalizeVerseText(userInput).split(' ').filter { it.isNotEmpty() }
@@ -197,57 +184,37 @@ fun FillWholeVerseRiddleScreen(
                 }
             }
 
+            val extraPrompt = stringResource(R.string.speak_now)
             OutlinedTextField(
                 value = userInput,
                 onValueChange = { userInput = it },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(textFieldHeight),
-                label = { Text(stringResource(id = R.string.fill_whole_verse_caption)) }
+                label = { Text(stringResource(id = R.string.fill_whole_verse_caption)) },
+                trailingIcon = {
+                    IconButton(onClick = {
+                        speechLauncher.launch(createPolishSpeechIntent(prompt = extraPrompt))
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.microphone),
+                            contentDescription = stringResource(R.string.speak_now)
+                        )
+                    }
+                }
             )
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = stringResource(id = R.string.skip_possibility_info),
-                    modifier = Modifier
-                        .weight(0.9f),
-                    textAlign = TextAlign.Center,
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
+            RiddleHint(text = stringResource(id = R.string.skip_possibility_info))
 
-                val extraPrompt = stringResource(R.string.speak_now)
-                IconButton(onClick = {
-                    speechLauncher.launch(createPolishSpeechIntent(prompt = extraPrompt))
-                }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.microphone),
-                        contentDescription = stringResource(R.string.speak_now)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             RiddleHint(text = stringResource(id = R.string.no_diacritics_hint))
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = ::checkAnswer,
-                enabled = userInput.isNotBlank(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.game_button_yellow_dark))
-            ) {
-                Text(
-                    stringResource(id = R.string.check_button),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            RiddleCheckButton(enabled = userInput.isNotBlank(), onCheck = ::checkAnswer)
         } // end Column
 
         // Full-screen image hint overlay — tap anywhere to dismiss
