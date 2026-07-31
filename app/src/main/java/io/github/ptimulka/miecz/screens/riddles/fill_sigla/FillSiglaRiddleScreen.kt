@@ -1,7 +1,8 @@
-package io.github.ptimulka.miecz.screens.riddles
+package io.github.ptimulka.miecz.screens.riddles.fill_sigla
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,11 +32,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.components.game.RiddleCheckButton
@@ -42,13 +49,7 @@ import io.github.ptimulka.miecz.components.game.RiddleHint
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.VerseDisplay
 import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
-import io.github.ptimulka.miecz.helpers.BookNameNormalizer
-
-enum class FillSiglaType {
-    BOOK,
-    CHAPTER,
-    VERSE
-}
+import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
 
 @Composable
 fun FillSiglaRiddleScreen(
@@ -63,100 +64,155 @@ fun FillSiglaRiddleScreen(
     onSuccess: () -> Unit,
     onShieldLoss: () -> Boolean
 ) {
-    var userInput by rememberSaveable { mutableStateOf("") }
-    var showResultDialog by rememberSaveable { mutableStateOf(false) }
-    var isAnswerCorrect by rememberSaveable { mutableStateOf(false) }
-    var showImagePreview by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val hasHint = remember(sectionId, verseIndex, assetName) {
+        MnemonicPicturesRepository(context).loadActivePicture(sectionId, verseIndex, assetName) != null
+    }
 
+    val vm: FillSiglaViewModel = viewModel(
+        key = "FillSiglaVM_${book}_${chapter}_${number}_${fillType}",
+        factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return FillSiglaViewModel(
+                    FillSiglaArgs(
+                        book = book,
+                        chapter = chapter,
+                        number = number,
+                        fillType = fillType,
+                        hasHint = hasHint
+                    )
+                ) as T
+            }
+        }
+    )
+
+    val state by vm.state.collectAsStateWithLifecycle()
     val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
+    var showResultDialog by rememberSaveable { mutableStateOf(false) }
 
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    LaunchedEffect(vm.effects) {
+        vm.effects.collect { effect ->
+            when (effect) {
+                FillSiglaEffect.Success -> onSuccess()
+            }
+        }
+    }
 
-    val onCheck = {
-        val correct = when (fillType) {
-            FillSiglaType.BOOK -> BookNameNormalizer.getCanonicalSigla(userInput) == book
-            FillSiglaType.CHAPTER -> userInput == chapter.toString()
-            FillSiglaType.VERSE -> {
-                if (number.contains("-")) {
-                    val parts = number.split("-").mapNotNull { it.toIntOrNull() }
-                    if (parts.size == 2) {
-                        val userNum = userInput.toIntOrNull()
-                        userNum != null && userNum >= parts[0] && userNum <= parts[1]
-                    } else {
-                        userInput == number
-                    }
+    val phase = state.phase
+    LaunchedEffect(phase) {
+        when (phase) {
+            is FillSiglaUiState.Phase.Result -> {
+                showResultDialog = if (!phase.correct) {
+                    !onShieldLoss()
                 } else {
-                    userInput == number
+                    true
                 }
             }
-        }
-        isAnswerCorrect = correct
-        if (isAnswerCorrect && hintBitmap != null) {
-            showImagePreview = true
-        } else {
-            showResultDialog = if (!isAnswerCorrect) { !onShieldLoss() } else true
-        }
-    }
-
-    if (showImagePreview && hintBitmap != null) {
-        FullscreenImageOverlay(hintBitmap) { showImagePreview = false; showResultDialog = true }
-        return
-    }
-
-    if (showResultDialog) {
-        RiddleResultDialog(
-            isCorrect = isAnswerCorrect,
-            onConfirm = {
+            FillSiglaUiState.Phase.Answering -> {
                 showResultDialog = false
-                if (isAnswerCorrect) onSuccess()
             }
-        )
+            else -> {}
+        }
     }
 
-    val scrollState = rememberScrollState()
+    Box(Modifier.fillMaxSize()) {
+        val configuration = LocalConfiguration.current
+        val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    if (isLandscape) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(16.dp)
-                .padding(
-                    WindowInsets.ime.only(WindowInsetsSides.Bottom).asPaddingValues()
-                ),
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            VerseDisplay(Modifier.weight(2f), verseText)
-            Spacer(Modifier.width(16.dp))
-            Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                SiglaInputArea(fillType, userInput, { userInput = it }, book, chapter, number)
-                Spacer(Modifier.height(32.dp))
-                RiddleCheckButton(userInput.isNotBlank(), onCheck)
-            }
+        if (isLandscape) {
+            LandscapeFillSiglaLayout(
+                verseText = verseText,
+                fillType = fillType,
+                book = book,
+                chapter = chapter,
+                number = number,
+                state = state,
+                onEvent = vm::onEvent
+            )
+        } else {
+            PortraitFillSiglaLayout(
+                verseText = verseText,
+                fillType = fillType,
+                book = book,
+                chapter = chapter,
+                number = number,
+                state = state,
+                onEvent = vm::onEvent
+            )
         }
-    } else {
+
+        if (phase is FillSiglaUiState.Phase.ShowingImageReward && hintBitmap != null) {
+            FullscreenImageOverlay(hintBitmap) { vm.onEvent(FillSiglaEvent.DismissImage) }
+        } else if (showResultDialog && phase is FillSiglaUiState.Phase.Result) {
+            RiddleResultDialog(
+                isCorrect = phase.correct,
+                onConfirm = { vm.onEvent(FillSiglaEvent.DismissResult) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun PortraitFillSiglaLayout(
+    verseText: String,
+    fillType: FillSiglaType,
+    book: String,
+    chapter: Int,
+    number: String,
+    state: FillSiglaUiState,
+    onEvent: (FillSiglaEvent) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+            .padding(
+                WindowInsets.ime.only(WindowInsetsSides.Bottom).asPaddingValues()
+            ),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
+    ) {
+        VerseDisplay(Modifier, verseText)
+        Spacer(Modifier.height(16.dp))
+        SiglaInputArea(fillType, state.userInput, { onEvent(FillSiglaEvent.UpdateInput(it)) }, book, chapter, number)
+        Spacer(Modifier.height(16.dp))
+        RiddleCheckButton(state.userInput.isNotBlank(), { onEvent(FillSiglaEvent.Check) })
+    }
+}
+
+@Composable
+private fun LandscapeFillSiglaLayout(
+    verseText: String,
+    fillType: FillSiglaType,
+    book: String,
+    chapter: Int,
+    number: String,
+    state: FillSiglaUiState,
+    onEvent: (FillSiglaEvent) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+            .padding(
+                WindowInsets.ime.only(WindowInsetsSides.Bottom).asPaddingValues()
+            ),
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        VerseDisplay(Modifier.weight(2f), verseText)
+        Spacer(Modifier.width(16.dp))
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(16.dp)
-                .padding(
-                    WindowInsets.ime.only(WindowInsetsSides.Bottom).asPaddingValues()
-                ),
+            modifier = Modifier.weight(1f),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            VerseDisplay(Modifier, verseText)
-            Spacer(Modifier.height(16.dp))
-            SiglaInputArea(fillType, userInput, { userInput = it }, book, chapter, number)
-            Spacer(Modifier.height(16.dp))
-            RiddleCheckButton(userInput.isNotBlank(), onCheck)
+            SiglaInputArea(fillType, state.userInput, { onEvent(FillSiglaEvent.UpdateInput(it)) }, book, chapter, number)
+            Spacer(Modifier.height(32.dp))
+            RiddleCheckButton(state.userInput.isNotBlank(), { onEvent(FillSiglaEvent.Check) })
         }
     }
 }
