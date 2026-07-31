@@ -88,6 +88,7 @@
     <string name="new_streak_record_message">Ukończyłeś %1$d perfekcyjnych poziomów z rzędu!</string>
     <string name="retention_gained_title">Utrwalenie wzrosło! ❤️</string>
     <string name="retention_gained_message">Zdobyłeś +%1$d%% utrwalenia wersetów w sercu.</string>
+    <string name="no_diacritics_hint">Nie musisz używać dużych liter i polskich znaków diakrytycznych.</string>
 
     <!-- Specific Riddle Types -->
     <!-- Connect Pairs / Parts -->
@@ -110,7 +111,7 @@
     <string name="fill_book_caption">Uzupełnij księgę</string>
     <string name="fill_chapter_caption">Uzupełnij numer rozdziału</string>
     <string name="fill_verse_caption">Uzupełnij numer wersetu</string>
-    <string name="fill_sigla_verse_range_hint">Jeśli odpowiedzią jest zakres wersów, wystarczy że wpiszesz numer jednego z nich</string>
+    <string name="fill_sigla_verse_range_hint">Jeśli odpowiedzią jest zakres wersów, wystarczy że wpiszesz numer jednego z nich.</string>
 
     <!-- Word Scramble Riddle -->
     <string name="move_left_desc">Przesuń w lewo</string>
@@ -141,8 +142,12 @@
     <string name="settings_day_streak_current">Aktualna seria dni</string>
     <string name="settings_day_streak_best">Najlepsza seria dni</string>
     <string name="settings_info_section">Informacje</string>
-    <string name="settings_info_github">Kod źródłowy aplikacji jest dostępny na GitHubie:</string>
+    <string name="settings_info_github">Kod źródłowy aplikacji jest dostępny na</string>
+    <string name="settings_info_github_link">GitHubie</string>
     <string name="settings_github_url">https://github.com/Ptimulka/SwordOfTheWordOfGod</string>
+    <string name="settings_version">Wersja: %1$s</string>
+    <string name="settings_privacy_policy">Polityka prywatności</string>
+    <string name="settings_privacy_policy_url">https://ptimulka.github.io/SwordOfTheWordOfGod/privacy</string>
     <string name="settings_reset_section">Reset</string>
     <string name="settings_reset_progress">Zresetuj całą grę</string>
     <string name="reset_progress_title">Zresetować całą grę?</string>

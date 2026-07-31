@@ -22,14 +22,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -38,29 +35,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.github.ptimulka.miecz.R
+import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
+import io.github.ptimulka.miecz.components.game.RiddleCheckButton
+import io.github.ptimulka.miecz.components.game.RiddleHint
+import io.github.ptimulka.miecz.components.game.RiddleResultDialog
+import io.github.ptimulka.miecz.components.game.VerseDisplay
+import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.helpers.BookNameNormalizer
-import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
 
 @Composable
 fun FillWholeSiglaRiddleScreen(
@@ -82,12 +75,7 @@ fun FillWholeSiglaRiddleScreen(
     var isAnswerCorrect by rememberSaveable { mutableStateOf(false) }
     var showImagePreview by remember { mutableStateOf(false) }
 
-    val context = LocalContext.current
-    val hintBitmap = remember(sectionId, verseIndex) {
-        if (assetName != null || (sectionId > 0 && verseIndex >= 0))
-            MnemonicPicturesRepository(context).loadActivePicture(sectionId, verseIndex, assetName)
-        else null
-    }
+    val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
     val wrongInputs = rememberSaveable { mutableStateListOf<Int>() }
 
     val allFieldsFilled by remember {
@@ -126,48 +114,16 @@ fun FillWholeSiglaRiddleScreen(
     }
 
     if (showImagePreview && hintBitmap != null) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.85f))
-                .clickable { showImagePreview = false; showResultDialog = true },
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                bitmap = hintBitmap.asImageBitmap(),
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxWidth(0.9f).fillMaxHeight(0.85f)
-            )
-        }
+        FullscreenImageOverlay(hintBitmap) { showImagePreview = false; showResultDialog = true }
         return
     }
 
     if (showResultDialog) {
-        AlertDialog(
-            onDismissRequest = { 
-                showResultDialog = false 
+        RiddleResultDialog(
+            isCorrect = isAnswerCorrect,
+            onConfirm = {
+                showResultDialog = false
                 if (isAnswerCorrect) onSuccess()
-            },
-            title = {
-                Text(
-                    if (isAnswerCorrect) stringResource(R.string.correct_answer) else stringResource(R.string.wrong_answer),
-                    color = if (isAnswerCorrect) colorResource(R.color.correct_answer_green) else Color.Red,
-                    fontWeight = FontWeight.Bold
-                )
-            },
-            text = {
-                Text(
-                    if (isAnswerCorrect) stringResource(R.string.success_message) else stringResource(R.string.failure_message)
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { 
-                    showResultDialog = false
-                    if (isAnswerCorrect) onSuccess()
-                }) {
-                    Text(stringResource(R.string.ok_button))
-                }
             }
         )
     }
@@ -205,7 +161,7 @@ fun FillWholeSiglaRiddleScreen(
                     { wrongInputs.contains(2) }
                 )
                 Spacer(Modifier.height(32.dp))
-                FillSiglaCheckButton(allFieldsFilled, onCheck)
+                RiddleCheckButton(allFieldsFilled, onCheck)
             }
         }
     } else {
@@ -234,25 +190,8 @@ fun FillWholeSiglaRiddleScreen(
                 { wrongInputs.contains(2) }
             )
             Spacer(Modifier.height(16.dp))
-            FillSiglaCheckButton(allFieldsFilled, onCheck)
+            RiddleCheckButton(allFieldsFilled, onCheck)
         }
-    }
-}
-
-@Composable
-private fun VerseDisplay(modifier: Modifier, verseText: String) {
-    val annotatedVerseText = remember(verseText) {
-        buildAnnotatedVerseText(verseText)
-    }
-    Box(
-        modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = annotatedVerseText,
-            style = MaterialTheme.typography.headlineSmall,
-            textAlign = TextAlign.Center
-        )
     }
 }
 
@@ -268,6 +207,9 @@ private fun WholeSiglaInputArea(
     isChapterError: () -> Boolean,
     isVerseError: () -> Boolean,
 ) {
+
+    val chapterFocusRequester = remember { FocusRequester() }
+    val verseFocusRequester = remember { FocusRequester() }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
@@ -285,7 +227,9 @@ private fun WholeSiglaInputArea(
             SiglaPartTextField(
                 value = bookInput,
                 onValueChange = onBookInputChanged,
-                isError = isBookError()
+                isError = isBookError(),
+                imeAction = ImeAction.Next,
+                keyboardActions = KeyboardActions(onNext = { chapterFocusRequester.requestFocus() })
             )
             Text(",", style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.width(8.dp))
@@ -293,7 +237,10 @@ private fun WholeSiglaInputArea(
                 value = chapterInput,
                 onValueChange = onChapterInputChanged,
                 isError = isChapterError(),
-                keyboardType = KeyboardType.Number
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next,
+                keyboardActions = KeyboardActions(onNext = { verseFocusRequester.requestFocus() }),
+                focusRequester = chapterFocusRequester
             )
             Text(",", style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.width(8.dp))
@@ -301,32 +248,15 @@ private fun WholeSiglaInputArea(
                 value = verseInput,
                 onValueChange = onVerseInputChanged,
                 isError = isVerseError(),
-                keyboardType = KeyboardType.Number
+                keyboardType = KeyboardType.Number,
+                focusRequester = verseFocusRequester
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = stringResource(id = R.string.fill_sigla_verse_range_hint),
-            style = MaterialTheme.typography.bodySmall,
-            fontStyle = FontStyle.Italic,
-            color = Color.Gray,
-            textAlign = TextAlign.Center
-        )
+        RiddleHint(text = stringResource(id = R.string.fill_sigla_verse_range_hint))
+        Spacer(modifier = Modifier.height(4.dp))
+        RiddleHint(text = stringResource(id = R.string.no_diacritics_hint))
 
-    }
-}
-
-@Composable
-private fun FillSiglaCheckButton(enabled: Boolean, onCheck: () -> Unit) {
-    Button(
-        onClick = onCheck,
-        enabled = enabled,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = colorResource(id = R.color.game_button_yellow_dark))
-    ) {
-        Text(stringResource(id = R.string.check_button), fontSize = 18.sp, fontWeight = FontWeight.Bold)
     }
 }
 
@@ -335,7 +265,10 @@ private fun SiglaPartTextField(
     value: String,
     onValueChange: (String) -> Unit,
     isError: Boolean,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    imeAction: ImeAction = ImeAction.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    focusRequester: FocusRequester? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -349,9 +282,12 @@ private fun SiglaPartTextField(
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier.width(80.dp),
+        modifier = Modifier
+            .width(80.dp)
+            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier),
         singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
+        keyboardActions = keyboardActions,
         textStyle = MaterialTheme.typography.bodyMedium.copy(
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurface

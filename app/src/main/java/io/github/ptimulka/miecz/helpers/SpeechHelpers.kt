@@ -1,7 +1,32 @@
 package io.github.ptimulka.miecz.helpers
 
+import android.app.Activity
 import android.content.Intent
 import android.speech.RecognizerIntent
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.Composable
+
+/**
+ * Remembers an activity-result launcher for the system speech-recognition dialog. On a successful
+ * result the top recognition candidate (or an empty string) is delivered to [onResult]. Launch it
+ * with an intent from [createPolishSpeechIntent].
+ */
+@Composable
+fun rememberSpeechLauncher(
+    onResult: (String) -> Unit
+): ManagedActivityResultLauncher<Intent, ActivityResult> =
+    rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val recognized = result.data
+                ?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+                ?.firstOrNull()
+                .orEmpty()
+            onResult(recognized)
+        }
+    }
 
 /**
  * Builds the Polish speech-recognition intent shared by the riddle screens.

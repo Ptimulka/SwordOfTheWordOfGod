@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -211,7 +212,7 @@ fun RepeatVerseRiddleScreen(
     }
 
     val isSectionFinished = remember { progressRepository.areSpecialChallengesFinished(sectionId) }
-    val retentionCaption: @Composable () -> Unit = {
+    val retentionCaption: @Composable (Modifier) -> Unit = { captionModifier ->
         if (selectedVerse != null && !isSectionFinished) {
             Text(
                 text = stringResource(
@@ -220,19 +221,20 @@ fun RepeatVerseRiddleScreen(
                     sectionRetentionToday
                 ),
                 fontSize = 12.sp,
+                lineHeight = 13.sp,
                 color = colorResource(R.color.game_button_yellow_dark),
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = captionModifier
             )
         }
     }
 
-    val gallery: @Composable (Modifier) -> Unit = { galleryModifier ->
+    val gallery: @Composable (Modifier, Arrangement.Vertical) -> Unit = { galleryModifier, vArrangement ->
         LazyVerticalGrid(
             columns = GridCells.Fixed(5),
             modifier = galleryModifier,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = vArrangement
         ) {
             itemsIndexed(sectionVerses) { index, verse ->
                 val bitmap = remember(sectionId, index, assetNames) {
@@ -286,7 +288,10 @@ fun RepeatVerseRiddleScreen(
                 .fillMaxSize()
                 .padding(12.dp)
         ) {
-            gallery(Modifier.fillMaxHeight().weight(1f))
+            gallery(
+                Modifier.fillMaxHeight().weight(1f),
+                Arrangement.spacedBy(6.dp, Alignment.CenterVertically)
+            )
             Spacer(modifier = Modifier.width(12.dp))
             Column(
                 modifier = Modifier
@@ -325,7 +330,16 @@ fun RepeatVerseRiddleScreen(
                         modifier = Modifier.fillMaxWidth().height(20.dp)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    micButton()
+                    // Landscape: mic and retention caption grouped together (centered), so the mic
+                    // isn't stuck next to the images and sits right beside the caption.
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)
+                    ) {
+                        micButton()
+                        retentionCaption(Modifier.widthIn(max = 200.dp))
+                    }
                 } else {
                     Box(
                         modifier = Modifier.fillMaxWidth().weight(1f),
@@ -339,8 +353,6 @@ fun RepeatVerseRiddleScreen(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                retentionCaption()
             }
         }
     } else {
@@ -350,7 +362,10 @@ fun RepeatVerseRiddleScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            gallery(Modifier.fillMaxWidth().weight(1f))
+            gallery(
+                Modifier.fillMaxWidth().weight(1f),
+                Arrangement.spacedBy(6.dp)
+            )
             Spacer(modifier = Modifier.height(12.dp))
             if (selectedVerse != null) {
                 Text(
@@ -398,7 +413,7 @@ fun RepeatVerseRiddleScreen(
                 }
             }
             Spacer(modifier = Modifier.height(12.dp))
-            retentionCaption()
+            retentionCaption(Modifier.fillMaxWidth())
         }
     }
 

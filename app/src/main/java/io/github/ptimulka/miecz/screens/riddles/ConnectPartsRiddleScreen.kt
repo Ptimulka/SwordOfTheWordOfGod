@@ -5,16 +5,13 @@ import android.graphics.Bitmap
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,20 +33,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.ptimulka.miecz.R
+import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
+import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
 import kotlinx.coroutines.delay
 
 data class PartConnectItem(val id: Int, val part1: String, val part2: String)
@@ -211,152 +207,139 @@ fun ConnectPartsRiddleScreen(
         }
     }
 
-    if (previewBitmap != null) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.85f))
-                .clickable {
-                    val id = pendingRemoveId
-                    remainingParts1 = remainingParts1.filter { it.id != id }
-                    remainingParts2 = remainingParts2.filter { it.id != id }
-                    pendingRemoveId = null
-                    selectedPart1 = null
-                    selectedPart2 = null
-                    previewBitmap = null
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                bitmap = previewBitmap!!.asImageBitmap(),
-                contentDescription = null,
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxWidth(0.9f).fillMaxHeight(0.85f)
-            )
+    previewBitmap?.let { preview ->
+        FullscreenImageOverlay(preview) {
+            val id = pendingRemoveId
+            remainingParts1 = remainingParts1.filter { it.id != id }
+            remainingParts2 = remainingParts2.filter { it.id != id }
+            pendingRemoveId = null
+            selectedPart1 = null
+            selectedPart2 = null
+            previewBitmap = null
         }
         return
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = stringResource(id = R.string.connect_parts_caption),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth().weight(1f),
-            horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                remainingParts1.take(3).forEach { part1Item ->
-                    val isSelected = selectedPart1 == part1Item
-                    val isWrong = wrongPair?.first == part1Item
-                    val isMatched = justMatchedId == part1Item.id
+            Text(
+                text = stringResource(id = R.string.connect_parts_caption),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
 
-                    Button(
-                        onClick = {
-                            if (!isLocked) {
-                            if (selectedPart1 == part1Item) {
-                                selectedPart1 = null
-                                wrongPair = null
-                            } else {
-                                selectedPart1 = part1Item
-                                wrongPair = null
-                                if (selectedPart2 != null) {
-                                    if (part1Item.id == selectedPart2!!.id) {
-                                        justMatchedId = part1Item.id
-                                    } else {
-                                        wrongPair = Pair(part1Item, selectedPart2)
+            Row(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    remainingParts1.take(3).forEach { part1Item ->
+                        val isSelected = selectedPart1 == part1Item
+                        val isWrong = wrongPair?.first == part1Item
+                        val isMatched = justMatchedId == part1Item.id
+
+                        Button(
+                            onClick = {
+                                if (!isLocked) {
+                                if (selectedPart1 == part1Item) {
+                                    selectedPart1 = null
+                                    wrongPair = null
+                                } else {
+                                    selectedPart1 = part1Item
+                                    wrongPair = null
+                                    if (selectedPart2 != null) {
+                                        if (part1Item.id == selectedPart2!!.id) {
+                                            justMatchedId = part1Item.id
+                                        } else {
+                                            wrongPair = Pair(part1Item, selectedPart2)
+                                        }
                                     }
                                 }
-                            }
-                            }
-                        },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = when {
-                                isWrong -> colorResource(R.color.wrong_answer_highlight)
-                                isSelected -> colorResource(id = R.color.game_button_yellow_dark)
-                                else -> MaterialTheme.colorScheme.secondaryContainer
+                                }
                             },
-                            contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSecondaryContainer
-                        ),
-                        contentPadding = buttonPadding,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(buttonHeight)
-                            .graphicsLayer(scaleX = if (isMatched) scale else 1f, scaleY = if (isMatched) scale else 1f)
-                    ) {
-                        val annotatedString = buildAnnotatedVerseText(part1Item.part1)
-                        Text(annotatedString, textAlign = TextAlign.Center)
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = when {
+                                    isWrong -> colorResource(R.color.wrong_answer_highlight)
+                                    isSelected -> colorResource(id = R.color.game_button_yellow_dark)
+                                    else -> MaterialTheme.colorScheme.secondaryContainer
+                                },
+                                contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSecondaryContainer
+                            ),
+                            contentPadding = buttonPadding,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(buttonHeight)
+                                .graphicsLayer(scaleX = if (isMatched) scale else 1f, scaleY = if (isMatched) scale else 1f)
+                        ) {
+                            val annotatedString = buildAnnotatedVerseText(part1Item.part1)
+                            Text(annotatedString, textAlign = TextAlign.Center)
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(16.dp))
 
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                remainingParts2.take(3).forEach { part2Item ->
-                    val isSelected = selectedPart2 == part2Item
-                    val isWrong = wrongPair?.second == part2Item
-                    val isMatched = justMatchedId == part2Item.id
+                Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    remainingParts2.take(3).forEach { part2Item ->
+                        val isSelected = selectedPart2 == part2Item
+                        val isWrong = wrongPair?.second == part2Item
+                        val isMatched = justMatchedId == part2Item.id
 
-                    Button(
-                        onClick = {
-                            if (!isLocked) {
-                            if (selectedPart2 == part2Item) {
-                                selectedPart2 = null
-                                wrongPair = null
-                            } else {
-                                selectedPart2 = part2Item
-                                wrongPair = null
-                                if (selectedPart1 != null) {
-                                    if (selectedPart1!!.id == part2Item.id) {
-                                        justMatchedId = part2Item.id
-                                    } else {
-                                        wrongPair = Pair(selectedPart1, part2Item)
+                        Button(
+                            onClick = {
+                                if (!isLocked) {
+                                if (selectedPart2 == part2Item) {
+                                    selectedPart2 = null
+                                    wrongPair = null
+                                } else {
+                                    selectedPart2 = part2Item
+                                    wrongPair = null
+                                    if (selectedPart1 != null) {
+                                        if (selectedPart1!!.id == part2Item.id) {
+                                            justMatchedId = part2Item.id
+                                        } else {
+                                            wrongPair = Pair(selectedPart1, part2Item)
+                                        }
                                     }
                                 }
-                            }
-                            }
-                        },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = when {
-                                isWrong -> colorResource(R.color.wrong_answer_highlight)
-                                isSelected -> colorResource(id = R.color.game_button_yellow_dark)
-                                else -> MaterialTheme.colorScheme.secondaryContainer
+                                }
                             },
-                            contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSecondaryContainer
-                        ),
-                        contentPadding = buttonPadding,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(buttonHeight)
-                            .graphicsLayer(scaleX = if (isMatched) scale else 1f, scaleY = if (isMatched) scale else 1f)
-                    ) {
-                        val annotatedString = buildAnnotatedVerseText(part2Item.part2)
-                        Text(annotatedString, textAlign = TextAlign.Center)
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = when {
+                                    isWrong -> colorResource(R.color.wrong_answer_highlight)
+                                    isSelected -> colorResource(id = R.color.game_button_yellow_dark)
+                                    else -> MaterialTheme.colorScheme.secondaryContainer
+                                },
+                                contentColor = if (isSelected) Color.White else MaterialTheme.colorScheme.onSecondaryContainer
+                            ),
+                            contentPadding = buttonPadding,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(buttonHeight)
+                                .graphicsLayer(scaleX = if (isMatched) scale else 1f, scaleY = if (isMatched) scale else 1f)
+                        ) {
+                            val annotatedString = buildAnnotatedVerseText(part2Item.part2)
+                            Text(annotatedString, textAlign = TextAlign.Center)
+                        }
                     }
                 }
             }
         }
-    }
-    if (redOverlayAlpha.value > 0f) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Red.copy(alpha = redOverlayAlpha.value))
-        )
-    }
+        if (redOverlayAlpha.value > 0f) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Red.copy(alpha = redOverlayAlpha.value))
+            )
+        }
     } // end Box
 }
 

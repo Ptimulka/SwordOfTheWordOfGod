@@ -333,7 +333,9 @@ fun GameLevelScreen(contentPadding: PaddingValues = PaddingValues()) {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Repeat hint toast — topmost, full width
-                if (showRepeatHint) {
+                // Only hint to play a repeat when Review is actually available (section 3+);
+                // otherwise the no-shields dialog already explains the situation.
+                if (showRepeatHint && currentSectionId >= 3) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
                         color = colorResource(R.color.toast_text),
