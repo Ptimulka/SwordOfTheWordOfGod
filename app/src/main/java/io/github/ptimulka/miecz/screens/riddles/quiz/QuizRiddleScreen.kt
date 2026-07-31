@@ -1,4 +1,4 @@
-package io.github.ptimulka.miecz.screens.riddles
+package io.github.ptimulka.miecz.screens.riddles.quiz
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
@@ -19,29 +19,34 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.data.Verse
-import io.github.ptimulka.miecz.helpers.BibleDataProvider
 import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
+import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
 
 @Composable
 fun QuizRiddleScreen(
@@ -57,83 +62,97 @@ fun QuizRiddleScreen(
     onSuccess: () -> Unit,
     onShieldLoss: () -> Boolean
 ) {
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val context = LocalContext.current
+    val hasHint = remember(sectionId, verseIndex, assetName) {
+        MnemonicPicturesRepository(context).loadActivePicture(sectionId, verseIndex, assetName) != null
+    }
 
+    val vm: QuizViewModel = viewModel(
+        key = "QuizVM_${book}_${chapter}_${number}_${isEasy}",
+        factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return QuizViewModel(
+                    QuizArgs(
+                        verseText = verseText,
+                        book = book,
+                        chapter = chapter,
+                        number = number,
+                        isEasy = isEasy,
+                        sectionVerses = sectionVerses,
+                        sectionId = sectionId,
+                        verseIndex = verseIndex,
+                        hasHint = hasHint
+                    )
+                ) as T
+            }
+        }
+    )
+
+    val state by vm.state.collectAsStateWithLifecycle()
     val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
 
-    val correctAnswer = remember(book, chapter, number) { "$book $chapter,$number" }
-
-    val answers = rememberSaveable(
-        saver = listSaver(
-            save = { stateList -> stateList.toList() },
-            restore = { it.toMutableList() }
-        )
-    ) {
-        val wrongAnswers = mutableListOf<String>()
-        val totalAnswers = if (isEasy) 4 else 6
-        val wrongAnswersNeeded = totalAnswers - 1
-
-        if (!isEasy) {
-            val otherVerses = sectionVerses
-                .filter { ref -> "${ref.book} ${ref.chapter},${ref.number}" != correctAnswer }
-                .shuffled()
-            otherVerses.take(3).forEach { wrongAnswers.add("${it.book} ${it.chapter},${it.number}") }
-        }
-
-        while (wrongAnswers.size < wrongAnswersNeeded) {
-            val randomRef = BibleDataProvider.getRandomReference()
-            val randomRefString = randomRef.toString()
-            if (randomRefString != correctAnswer && !wrongAnswers.contains(randomRefString)) {
-                wrongAnswers.add(randomRefString)
-            }
-        }
-        (wrongAnswers + correctAnswer).shuffled().toMutableList()
-    }
-    
-    var selectedAnswer by rememberSaveable { mutableStateOf<String?>(null) }
     var showResultDialog by rememberSaveable { mutableStateOf(false) }
-    var isAnswerCorrect by rememberSaveable { mutableStateOf(false) }
-    var showImagePreview by remember { mutableStateOf(false) }
 
-    if (showImagePreview && hintBitmap != null) {
-        FullscreenImageOverlay(hintBitmap) { showImagePreview = false; showResultDialog = true }
-        return
-    }
-
-    if (showResultDialog) {
-        RiddleResultDialog(
-            isCorrect = isAnswerCorrect,
-            onConfirm = {
-                showResultDialog = false
-                if (isAnswerCorrect) onSuccess()
+    LaunchedEffect(vm.effects) {
+        vm.effects.collect { effect ->
+            when (effect) {
+                QuizEffect.Success -> onSuccess()
             }
-        )
-    }
-
-    val onCheckClick = {
-        isAnswerCorrect = (selectedAnswer == correctAnswer)
-        if (isAnswerCorrect && hintBitmap != null) {
-            showImagePreview = true
-        } else {
-            showResultDialog = if (!isAnswerCorrect) { !onShieldLoss() } else true
         }
     }
 
-    if (isLandscape) {
-        LandscapeQuizLayout(verseText, answers, selectedAnswer, { selectedAnswer = it }, onCheckClick)
-    } else {
-        PortraitQuizLayout(verseText, answers, selectedAnswer, { selectedAnswer = it }, onCheckClick)
+    val phase = state.phase
+    LaunchedEffect(phase) {
+        when (phase) {
+            is QuizUiState.Phase.Result -> {
+                showResultDialog = if (!phase.correct) {
+                    !onShieldLoss()
+                } else {
+                    true
+                }
+            }
+            QuizUiState.Phase.Answering -> {
+                showResultDialog = false
+            }
+            else -> {}
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        val configuration = LocalConfiguration.current
+        val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+        if (isLandscape) {
+            LandscapeQuizLayout(
+                verseText = verseText,
+                state = state,
+                onEvent = vm::onEvent
+            )
+        } else {
+            PortraitQuizLayout(
+                verseText = verseText,
+                state = state,
+                onEvent = vm::onEvent
+            )
+        }
+
+        if (phase is QuizUiState.Phase.ShowingImageReward && hintBitmap != null) {
+            FullscreenImageOverlay(hintBitmap) { vm.onEvent(QuizEvent.DismissImage) }
+        } else if (showResultDialog && phase is QuizUiState.Phase.Result) {
+            RiddleResultDialog(
+                isCorrect = phase.correct,
+                onConfirm = { vm.onEvent(QuizEvent.DismissResult) }
+            )
+        }
     }
 }
 
 @Composable
 fun PortraitQuizLayout(
     verseText: String,
-    answers: List<String>,
-    selectedAnswer: String?,
-    onAnswerSelected: (String) -> Unit,
-    onCheckClick: () -> Unit
+    state: QuizUiState,
+    onEvent: (QuizEvent) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -158,17 +177,20 @@ fun PortraitQuizLayout(
             )
         }
 
-        QuizAnswerArea(answers, selectedAnswer, onAnswerSelected, onCheckClick, Modifier.fillMaxWidth(), isLandscape = false)
+        QuizAnswerArea(
+            state = state,
+            onEvent = onEvent,
+            modifier = Modifier.fillMaxWidth(),
+            isLandscape = false
+        )
     }
 }
 
 @Composable
 fun LandscapeQuizLayout(
     verseText: String,
-    answers: List<String>,
-    selectedAnswer: String?,
-    onAnswerSelected: (String) -> Unit,
-    onCheckClick: () -> Unit
+    state: QuizUiState,
+    onEvent: (QuizEvent) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -185,7 +207,7 @@ fun LandscapeQuizLayout(
         ) {
             Text(
                 text = buildAnnotatedVerseText(verseText),
-                style = MaterialTheme.typography.titleLarge, // Slightly smaller for landscape
+                style = MaterialTheme.typography.titleLarge,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.verticalScroll(rememberScrollState())
             )
@@ -194,16 +216,19 @@ fun LandscapeQuizLayout(
         Spacer(modifier = Modifier.width(16.dp))
 
         // Right side: Answers and Button
-        QuizAnswerArea(answers, selectedAnswer, onAnswerSelected, onCheckClick, Modifier.weight(1f), isLandscape = true)
+        QuizAnswerArea(
+            state = state,
+            onEvent = onEvent,
+            modifier = Modifier.weight(1f),
+            isLandscape = true
+        )
     }
 }
 
 @Composable
 fun QuizAnswerArea(
-    answers: List<String>,
-    selectedAnswer: String?,
-    onAnswerSelected: (String) -> Unit,
-    onCheckClick: () -> Unit,
+    state: QuizUiState,
+    onEvent: (QuizEvent) -> Unit,
     modifier: Modifier = Modifier,
     isLandscape: Boolean
 ) {
@@ -213,28 +238,46 @@ fun QuizAnswerArea(
             modifier = Modifier
                 .weight(1f, fill = false)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(if (isLandscape) 8.dp else 16.dp) // Less space in landscape
+            verticalArrangement = Arrangement.spacedBy(if (isLandscape) 8.dp else 16.dp)
         ) {
             val answerButtonModifier = Modifier.height(if (isLandscape) 48.dp else 60.dp)
-            val isEasy = answers.size <= 4
-            val useTwoColumns = isLandscape || !isEasy
+            val useTwoColumns = isLandscape || state.answers.size > 4
 
             if (useTwoColumns) {
-                for (i in answers.indices step 2) {
+                for (i in state.answers.indices step 2) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        val answer1 = answers[i]
-                        Box(Modifier.weight(1f)) { AnswerButton(answer1, selectedAnswer == answer1, { onAnswerSelected(answer1) }, answerButtonModifier) }
-                        if (i + 1 < answers.size) {
-                            val answer2 = answers[i + 1]
-                            Box(Modifier.weight(1f)) { AnswerButton(answer2, selectedAnswer == answer2, { onAnswerSelected(answer2) }, answerButtonModifier) }
+                        val answer1 = state.answers[i]
+                        Box(Modifier.weight(1f)) {
+                            AnswerButton(
+                                answer = answer1,
+                                isSelected = state.selectedAnswer == answer1,
+                                onClick = { onEvent(QuizEvent.Select(answer1)) },
+                                modifier = answerButtonModifier
+                            )
+                        }
+                        if (i + 1 < state.answers.size) {
+                            val answer2 = state.answers[i + 1]
+                            Box(Modifier.weight(1f)) {
+                                AnswerButton(
+                                    answer = answer2,
+                                    isSelected = state.selectedAnswer == answer2,
+                                    onClick = { onEvent(QuizEvent.Select(answer2)) },
+                                    modifier = answerButtonModifier
+                                )
+                            }
                         } else {
                             Spacer(Modifier.weight(1f))
                         }
                     }
                 }
             } else {
-                answers.forEach { answer ->
-                    AnswerButton(answer, selectedAnswer == answer, { onAnswerSelected(answer) }, answerButtonModifier)
+                state.answers.forEach { answer ->
+                    AnswerButton(
+                        answer = answer,
+                        isSelected = state.selectedAnswer == answer,
+                        onClick = { onEvent(QuizEvent.Select(answer)) },
+                        modifier = answerButtonModifier
+                    )
                 }
             }
         }
@@ -243,8 +286,8 @@ fun QuizAnswerArea(
 
         // Check Button
         RiddleCheckButton(
-            enabled = selectedAnswer != null,
-            onCheck = onCheckClick,
+            enabled = state.checkEnabled,
+            onCheck = { onEvent(QuizEvent.Check) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(if (isLandscape) 40.dp else 50.dp)
@@ -270,4 +313,3 @@ fun AnswerButton(
         Text(answer, fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
     }
 }
-

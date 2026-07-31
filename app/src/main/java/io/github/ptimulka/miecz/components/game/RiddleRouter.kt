@@ -6,6 +6,7 @@ import io.github.ptimulka.miecz.data.Riddle
 import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.screens.riddles.*
+import io.github.ptimulka.miecz.screens.riddles.quiz.QuizRiddleScreen
 
 @Composable
 fun RiddleRouter(
