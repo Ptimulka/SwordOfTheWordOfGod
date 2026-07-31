@@ -10,6 +10,7 @@ import io.github.ptimulka.miecz.screens.riddles.quiz.QuizRiddleScreen
 import io.github.ptimulka.miecz.screens.riddles.fill_words.FillWordsRiddleScreen
 import io.github.ptimulka.miecz.screens.riddles.fill_sigla.FillSiglaRiddleScreen
 import io.github.ptimulka.miecz.screens.riddles.fill_sigla.FillSiglaType
+import io.github.ptimulka.miecz.screens.riddles.multi_quiz.MultiQuizRiddleScreen
 
 @Composable
 fun RiddleRouter(
