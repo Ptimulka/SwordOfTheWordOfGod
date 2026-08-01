@@ -58,7 +58,6 @@ import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleHint
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
 
 @Composable
 fun FillWordsRiddleScreen(
@@ -74,11 +73,6 @@ fun FillWordsRiddleScreen(
     onSuccess: () -> Unit,
     onShieldLoss: () -> Boolean
 ) {
-    val context = LocalContext.current
-    val hasHint = remember(sectionId, verseIndex, assetName) {
-        MnemonicPicturesRepository(context).loadActivePicture(sectionId, verseIndex, assetName) != null
-    }
-
     val vm: FillWordsViewModel = viewModel(
         key = "FillWordsVM_${book}_${chapter}_${number}_${isEasy}_${moreWords}",
         factory = object : ViewModelProvider.Factory {
@@ -91,8 +85,7 @@ fun FillWordsRiddleScreen(
                         chapter = chapter,
                         number = number,
                         isEasy = isEasy,
-                        moreWords = moreWords,
-                        hasHint = hasHint
+                        moreWords = moreWords
                     )
                 ) as T
             }

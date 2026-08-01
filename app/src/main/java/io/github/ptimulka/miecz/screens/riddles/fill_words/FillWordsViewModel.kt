@@ -17,8 +17,7 @@ data class FillWordsArgs(
     val chapter: Int,
     val number: String,
     val isEasy: Boolean,
-    val moreWords: Boolean,
-    val hasHint: Boolean
+    val moreWords: Boolean
 )
 
 class FillWordsViewModel(

@@ -14,8 +14,7 @@ class FillWordsViewModelTest {
         chapter = 1,
         number = "1",
         isEasy = true,
-        moreWords = false,
-        hasHint = false
+        moreWords = false
     )
 
     @Test
