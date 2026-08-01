@@ -16,6 +16,7 @@ import io.github.ptimulka.miecz.screens.riddles.fill_whole_verse.FillWholeVerseR
 import io.github.ptimulka.miecz.screens.riddles.fill_whole_sigla.FillWholeSiglaRiddleScreen
 import io.github.ptimulka.miecz.screens.riddles.connect.ConnectPairsRiddleScreen
 import io.github.ptimulka.miecz.screens.riddles.connect.ConnectPartsRiddleScreen
+import io.github.ptimulka.miecz.screens.riddles.repeat_verse.RepeatVerseRiddleScreen
 
 @Composable
 fun RiddleRouter(
