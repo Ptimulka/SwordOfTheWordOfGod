@@ -98,13 +98,24 @@ class GameLevelViewModel(
                 sectionStates = sectionStates,
                 allVerseGroups = allGroups,
                 usedGroupIds = usedGroupIds,
-                progress = ProgressSummary(
+                progress = it.progress.copy(
                     currentSectionId = progressRepo.getCurrentSection(),
                     shieldsCount = progressRepo.getShieldsCount(),
                     dayStreak = progressRepo.getCurrentDayStreak(),
                     playedToday = progressRepo.hasPlayedToday(),
                     timeToNextShieldMs = progressRepo.getTimeToNextShield(),
                     availableGroupsCount = allGroups.count { g -> !usedGroupIds.contains(g.id) }
+                )
+            )
+        }
+    }
+
+    private fun refreshShieldsStatus() {
+        _state.update { 
+            it.copy(
+                progress = it.progress.copy(
+                    shieldsCount = progressRepo.getShieldsCount(),
+                    timeToNextShieldMs = progressRepo.getTimeToNextShield()
                 )
             )
         }
@@ -161,9 +172,9 @@ class GameLevelViewModel(
         shieldRefreshJob?.cancel()
         shieldRefreshJob = viewModelScope.launch {
             while (isActive) {
-                progressRepo.refreshShields()
-                refreshProgress()
                 delay(60000)
+                progressRepo.refreshShields()
+                refreshShieldsStatus()
             }
         }
     }
@@ -175,7 +186,14 @@ class GameLevelViewModel(
         shieldAutoHideJob?.cancel()
         if (nextVisible) {
             shieldAutoHideJob = viewModelScope.launch {
-                delay(7000)
+                // High-frequency refresh loop while the toast is visible
+                var iterations = 0
+                while (iterations < 7) {
+                    progressRepo.refreshShields()
+                    refreshShieldsStatus()
+                    delay(1000)
+                    iterations++
+                }
                 _state.update { it.copy(isShieldInfoVisible = false) }
             }
         }

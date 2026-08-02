@@ -33,7 +33,7 @@ import io.github.ptimulka.miecz.helpers.formatTime
 import io.github.ptimulka.miecz.helpers.launchGame
 import io.github.ptimulka.miecz.screens.main.SectionState
 
-const val SPECIAL_CHALLENGE_RIDDLES_COUNT = 2
+const val SPECIAL_CHALLENGE_RIDDLES_COUNT = 10
 
 // Retention rays fan out from the heart, reaching one more level per +8% (from 4% → level 1).
 private const val SECTION_LEVEL_COUNT = 12

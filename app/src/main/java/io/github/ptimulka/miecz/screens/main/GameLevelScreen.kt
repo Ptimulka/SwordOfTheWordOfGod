@@ -86,8 +86,13 @@ fun GameLevelScreen(contentPadding: PaddingValues = PaddingValues()) {
     )
 
     val state by vm.state.collectAsStateWithLifecycle()
+
+    // Trigger a data refresh whenever this screen enters the composition (e.g. switching tabs)
+    LaunchedEffect(Unit) {
+        vm.onEvent(GameLevelEvent.OnResume)
+    }
     
-    // Lifecycle handling
+    // Lifecycle handling for app-level resume
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->

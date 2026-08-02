@@ -1,6 +1,5 @@
-package io.github.ptimulka.miecz.screens
+package io.github.ptimulka.miecz.screens.review
 
-import android.content.Intent
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
@@ -8,13 +7,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,88 +19,70 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.ptimulka.miecz.GameActivity
-import io.github.ptimulka.miecz.GameActivity.Companion.SECTION_ID_REPEAT_FOR_SHIELDS
-import io.github.ptimulka.miecz.GameActivity.Companion.SECTION_ID_REPEAT_NORMAL
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
-import io.github.ptimulka.miecz.data.RiddleType
-import io.github.ptimulka.miecz.data.Verse
+import io.github.ptimulka.miecz.helpers.launchGame
 import io.github.ptimulka.miecz.repositories.SectionRepository
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
 import io.github.ptimulka.miecz.repositories.VersesGroupsRepository
-import kotlinx.coroutines.delay
 
 @Composable
 fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
     val context = LocalContext.current
-    val userProgressRepository = remember { UserProgressRepository(context) }
-    val sectionRepository = remember { SectionRepository(context) }
-    val versesGroupsRepository = remember { VersesGroupsRepository(context) }
-
-    val currentSectionId = userProgressRepository.getCurrentSection()
-
-    var refreshTrigger by remember { mutableIntStateOf(0) }
-    val shieldsCount = remember(refreshTrigger) { userProgressRepository.getShieldsCount() }
-
-    val options = listOf(5, 8, 10)
-    var selectedCount by rememberSaveable { mutableIntStateOf(10) }
-    var playForShields by rememberSaveable { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            userProgressRepository.refreshShields()
-            refreshTrigger++
-            if (userProgressRepository.getShieldsCount() >= UserProgressRepository.MAX_SHIELDS) {
-                playForShields = false
+    
+    val reviewName = stringResource(R.string.repeat_level_name)
+    val vm: ReviewViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return ReviewViewModel(
+                    UserProgressRepository(context),
+                    SectionRepository(context),
+                    VersesGroupsRepository(context),
+                    reviewName
+                ) as T
             }
-            delay(10000) // Refresh each 10 seconds
         }
+    )
+
+    val state by vm.state.collectAsStateWithLifecycle()
+
+    // Trigger a data refresh whenever this screen enters the composition (e.g. switching tabs)
+    LaunchedEffect(Unit) {
+        vm.onEvent(ReviewEvent.OnResume)
+    }
+    
+    // Lifecycle handling
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                vm.onEvent(ReviewEvent.OnResume)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    val knownVersesSections = remember(currentSectionId) {
-        val sectionsList = mutableListOf<Pair<List<Verse>, List<String>>>()
-
-        val baseSections = listOf(
-            R.raw.section01, R.raw.section02, R.raw.section03, R.raw.section04
-        )
-        baseSections.forEachIndexed { index, resId ->
-            val sectionId = index + 1
-            if (sectionId < currentSectionId) {
-                sectionRepository.loadSection(resId)?.let {
-                    if (it.verses.isNotEmpty()) sectionsList.add(it.verses to it.assetNames)
+    LaunchedEffect(vm.effects) {
+        vm.effects.collect { effect ->
+            when (effect) {
+                is ReviewEffect.LaunchReview -> {
+                    val sectionWithName = effect.section.copy(
+                        name = context.getString(R.string.repeat_level_name)
+                    )
+                    launchGame(context, sectionWithName, effect.riddleTypes, 0)
                 }
             }
         }
-
-        val customCount = userProgressRepository.getCustomSectionsCount()
-        val allGroups = versesGroupsRepository.loadVerseGroups()
-        for (i in 1..customCount) {
-            val sectionId = 5 + i - 1
-            if (sectionId < currentSectionId) {
-                userProgressRepository.getCustomSectionGroups(sectionId)?.let { (id1, id2) ->
-                    val g1 = allGroups.find { it.id == id1 }
-                    val g2 = allGroups.find { it.id == id2 }
-                    val g1Verses = g1?.verses ?: emptyList()
-                    val g2Verses = g2?.verses ?: emptyList()
-                    val allVerses = g1Verses + g2Verses
-                    val allNames = g1Verses.mapIndexed { j, v ->
-                        "group%03d_%d_%s%d-%s.webp".format(id1, j + 1, v.book, v.chapter, v.number.replace(".", "-"))
-                    } + g2Verses.mapIndexed { j, v ->
-                        "group%03d_%d_%s%d-%s.webp".format(id2, j + 1, v.book, v.chapter, v.number.replace(".", "-"))
-                    }
-                    val nameMap = allVerses.zip(allNames).toMap()
-                    val sectionVerses = allVerses.distinct()
-                    val sectionAssetNames = sectionVerses.map { nameMap[it] ?: "" }
-                    if (sectionVerses.isNotEmpty()) {
-                        sectionsList.add(sectionVerses to sectionAssetNames)
-                    }
-                }
-            }
-        }
-        sectionsList
     }
 
     Column(
@@ -138,7 +115,7 @@ fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            if (knownVersesSections.isEmpty()) {
+            if (!state.isReviewAvailable) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
                         text = stringResource(R.string.no_verses_to_review),
@@ -147,96 +124,46 @@ fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
                     )
                 }
             } else {
-
                 val configuration = LocalConfiguration.current
                 val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-                if(isLandscape) {
+                if (isLandscape) {
                     Row {
                         ChooseRiddlesCount(
-                            options = options,
-                            selectedCount = selectedCount,
-                            onOptionSelected = { count -> selectedCount = count }
+                            selectedCount = state.selectedCount,
+                            onOptionSelected = { vm.onEvent(ReviewEvent.SetCount(it)) }
                         )
 
-                        if(shieldsCount < UserProgressRepository.MAX_SHIELDS) {
+                        if (state.shieldsCount < UserProgressRepository.MAX_SHIELDS) {
                             Spacer(modifier = Modifier.width(32.dp))
                             PlayForShieldsSection(
-                                playForShields = playForShields,
-                                selectedCount = selectedCount,
-                                shieldsCount = shieldsCount,
-                                onPlayForShieldsChange = { playForShields = it }
+                                playForShields = state.playForShields,
+                                maxPossibleReward = state.maxPossibleReward,
+                                onPlayForShieldsChange = { vm.onEvent(ReviewEvent.SetPlayForShields(it)) }
                             )
                         }
                     }
                 } else {
                     ChooseRiddlesCount(
-                        options = options,
-                        selectedCount = selectedCount,
-                        onOptionSelected = { count -> selectedCount = count }
+                        selectedCount = state.selectedCount,
+                        onOptionSelected = { vm.onEvent(ReviewEvent.SetCount(it)) }
                     )
 
-                    if(shieldsCount < UserProgressRepository.MAX_SHIELDS) {
+                    if (state.shieldsCount < UserProgressRepository.MAX_SHIELDS) {
                         Spacer(modifier = Modifier.height(16.dp))
                         PlayForShieldsSection(
-                            playForShields = playForShields,
-                            selectedCount = selectedCount,
-                            shieldsCount = shieldsCount,
-                            onPlayForShieldsChange = { playForShields = it }
+                            playForShields = state.playForShields,
+                            maxPossibleReward = state.maxPossibleReward,
+                            onPlayForShieldsChange = { vm.onEvent(ReviewEvent.SetPlayForShields(it)) }
                         )
                     }
                 }
-
-
-
             }
         }
 
-        if (knownVersesSections.isNotEmpty()) {
+        if (state.isReviewAvailable) {
             Button(
-                onClick = {
-                    val availableRiddleTypes = listOf(
-                        RiddleType.QUIZ_NORMAL.name,
-                        RiddleType.MULTI_QUIZ.name,
-                        RiddleType.WORD_SCRAMBLE_EASY.name,
-                        RiddleType.WORD_SCRAMBLE_NORMAL.name,
-                        RiddleType.FILL_SIGLA_BOOK.name,
-                        RiddleType.FILL_SIGLA_CHAPTER.name,
-                        RiddleType.FILL_SIGLA_VERSE.name,
-                        RiddleType.FILL_WORDS_EASY.name,
-                        RiddleType.FILL_WORDS_NORMAL.name,
-                        RiddleType.FILL_MORE_WORDS_EASY.name,
-                        RiddleType.FILL_MORE_WORDS_NORMAL.name
-                    )
-
-                    val riddleTypes = ArrayList(availableRiddleTypes.shuffled().take(selectedCount))
-                    val startSectionIdx = userProgressRepository.getRepeatSectionIndex()
-                    val startVerseIdx = userProgressRepository.getRepeatVerseIndex()
-                    val numSections = knownVersesSections.size
-
-                    val reviewVerses = mutableListOf<Verse>()
-                    val reviewAssetNames = mutableListOf<String>()
-
-                    (0 until selectedCount).forEach { i ->
-                        val currentSectionIdx = (startSectionIdx + i) % numSections
-                        val currentVerseIdx = (startVerseIdx + (startSectionIdx + i) / numSections) % 10
-
-                        val (sectionVerses, sectionAssetNames) = knownVersesSections[currentSectionIdx]
-                        reviewVerses.add(sectionVerses[currentVerseIdx])
-                        reviewAssetNames.add(sectionAssetNames.getOrElse(currentVerseIdx) { "" })
-                    }
-
-                    val sectionId = if(playForShields) SECTION_ID_REPEAT_FOR_SHIELDS else SECTION_ID_REPEAT_NORMAL
-                    val intent = Intent(context, GameActivity::class.java).apply {
-                        putStringArrayListExtra(GameActivity.ARG_LEVEL_RIDDLE_TYPES, riddleTypes)
-                        putExtra(GameActivity.ARG_SECTION_ID, sectionId)
-                        putExtra(GameActivity.ARG_SECTION_NAME, context.getString(R.string.repeat_level_name))
-                        putExtra(GameActivity.ARG_LEVEL_NUMBER, 0)
-                        putParcelableArrayListExtra(GameActivity.ARG_SECTION_VERSES, ArrayList(reviewVerses))
-                        putStringArrayListExtra(GameActivity.ARG_ASSET_NAMES, ArrayList(reviewAssetNames))
-                    }
-                    context.startActivity(intent)
-                },
+                onClick = { vm.onEvent(ReviewEvent.StartReview) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
@@ -254,7 +181,8 @@ fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
 }
 
 @Composable
-private fun ChooseRiddlesCount(options: List<Int>, selectedCount: Int, onOptionSelected: (Int) -> Unit) {
+private fun ChooseRiddlesCount(selectedCount: Int, onOptionSelected: (Int) -> Unit) {
+    val options = listOf(5, 8, 10)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = stringResource(R.string.select_riddles_count),
@@ -291,7 +219,11 @@ private fun ChooseRiddlesCount(options: List<Int>, selectedCount: Int, onOptionS
 }
 
 @Composable
-fun PlayForShieldsSection(playForShields: Boolean, selectedCount: Int, shieldsCount: Int, onPlayForShieldsChange: (Boolean) -> Unit) {
+fun PlayForShieldsSection(
+    playForShields: Boolean, 
+    maxPossibleReward: Int, 
+    onPlayForShieldsChange: (Boolean) -> Unit
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = stringResource(R.string.play_for_shields),
@@ -301,8 +233,7 @@ fun PlayForShieldsSection(playForShields: Boolean, selectedCount: Int, shieldsCo
         Spacer(modifier = Modifier.height(8.dp))
         PlayForShieldsSwitch(playForShields = playForShields, onPlayForShieldsChange = onPlayForShieldsChange)
         Spacer(modifier = Modifier.height(8.dp))
-        val rewardCount = if (selectedCount == 10) 2 else 1
-        val maxPossibleReward = (UserProgressRepository.MAX_SHIELDS - shieldsCount).coerceAtMost(rewardCount)
+        
         val textColor = if(playForShields) colorResource(id = R.color.game_button_yellow_dark) else Color.Gray
         Text(
             text = stringResource(R.string.reward_for_playing, maxPossibleReward),
@@ -311,7 +242,6 @@ fun PlayForShieldsSection(playForShields: Boolean, selectedCount: Int, shieldsCo
             modifier = Modifier.padding(top = 4.dp),
             fontWeight = FontWeight.Bold
         )
-
     }
 }
 
