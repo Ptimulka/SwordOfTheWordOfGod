@@ -41,7 +41,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import io.github.ptimulka.miecz.helpers.NotificationHelper
 import io.github.ptimulka.miecz.repositories.SettingsRepository
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
-import io.github.ptimulka.miecz.screens.GameLevelScreen
+import io.github.ptimulka.miecz.screens.main.GameLevelScreen
 import io.github.ptimulka.miecz.screens.RandomVerseScreen
 import io.github.ptimulka.miecz.screens.ReviewVersesScreen
 import io.github.ptimulka.miecz.screens.SettingsScreen

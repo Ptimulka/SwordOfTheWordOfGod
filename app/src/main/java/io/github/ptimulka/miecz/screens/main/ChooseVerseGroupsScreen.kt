@@ -1,4 +1,4 @@
-package io.github.ptimulka.miecz.screens
+package io.github.ptimulka.miecz.screens.main
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -24,13 +24,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -38,21 +34,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.ptimulka.miecz.R
-import io.github.ptimulka.miecz.repositories.UserProgressRepository
-import io.github.ptimulka.miecz.repositories.VersesGroupsRepository
 
 @Composable
 fun ChooseVerseGroupsScreen(
-    onGroupsSelected: (Int, Int) -> Unit,
-    onBack: () -> Unit,
+    state: GameLevelUiState,
+    onEvent: (GameLevelEvent) -> Unit,
     contentPadding: PaddingValues = PaddingValues()
 ) {
-    val context = LocalContext.current
-    val userProgressRepository = remember { UserProgressRepository(context) }
-    val allVerseGroups = remember { VersesGroupsRepository(context).loadVerseGroups() }
-    val usedGroupIds = remember { userProgressRepository.getAllUsedGroupIds() }
-    val selectedGroupIds = rememberSaveable { mutableStateListOf<Int>() }
-
     Scaffold(
         topBar = {
             Surface(
@@ -66,7 +54,7 @@ fun ChooseVerseGroupsScreen(
                         .padding(horizontal = 4.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { onEvent(GameLevelEvent.CancelChooseGroups) }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = null, tint = Color.White)
                     }
                     Text(
@@ -93,9 +81,9 @@ fun ChooseVerseGroupsScreen(
                     .fillMaxWidth()
                     .padding(start = 8.dp, end = 8.dp, top = 8.dp)
             ) {
-                items(allVerseGroups) { group ->
-                    val isSelected = selectedGroupIds.contains(group.id)
-                    val isUsed = usedGroupIds.contains(group.id)
+                items(state.allVerseGroups) { group ->
+                    val isSelected = state.selectedGroupIds.contains(group.id)
+                    val isUsed = state.usedGroupIds.contains(group.id)
                     val isClickable = !isUsed
 
                     Card(
@@ -104,13 +92,7 @@ fun ChooseVerseGroupsScreen(
                             .padding(vertical = 4.dp)
                             .then(
                                 if (isClickable) {
-                                    Modifier.clickable {
-                                        if (isSelected) {
-                                            selectedGroupIds.remove(group.id)
-                                        } else if (selectedGroupIds.size < 2) {
-                                            selectedGroupIds.add(group.id)
-                                        }
-                                    }
+                                    Modifier.clickable { onEvent(GameLevelEvent.ToggleGroupSelection(group.id)) }
                                 } else Modifier
                             ),
                         colors = CardDefaults.cardColors(
@@ -149,12 +131,8 @@ fun ChooseVerseGroupsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Button(
-                    onClick = {
-                        if (selectedGroupIds.size == 2) {
-                            onGroupsSelected(selectedGroupIds[0], selectedGroupIds[1])
-                        }
-                    },
-                    enabled = selectedGroupIds.size == 2,
+                    onClick = { onEvent(GameLevelEvent.ConfirmGroupSelection) },
+                    enabled = state.selectedGroupIds.size == 2,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -170,7 +148,6 @@ fun ChooseVerseGroupsScreen(
                     )
                 }
             }
-
         }
     }
 }
