@@ -42,7 +42,7 @@ import io.github.ptimulka.miecz.helpers.NotificationHelper
 import io.github.ptimulka.miecz.repositories.SettingsRepository
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
 import io.github.ptimulka.miecz.screens.main.GameLevelScreen
-import io.github.ptimulka.miecz.screens.RandomVerseScreen
+import io.github.ptimulka.miecz.screens.random.RandomVerseScreen
 import io.github.ptimulka.miecz.screens.review.ReviewVersesScreen
 import io.github.ptimulka.miecz.screens.SettingsScreen
 import io.github.ptimulka.miecz.screens.VerseGroupsScreen

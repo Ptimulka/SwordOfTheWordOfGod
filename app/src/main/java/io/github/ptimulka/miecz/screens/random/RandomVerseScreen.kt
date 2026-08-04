@@ -1,6 +1,5 @@
-package io.github.ptimulka.miecz.screens
+package io.github.ptimulka.miecz.screens.random
 
-import android.content.Intent
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,9 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -46,85 +43,73 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import io.github.ptimulka.miecz.GameActivity
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
+import io.github.ptimulka.miecz.helpers.launchGame
 import io.github.ptimulka.miecz.repositories.VersesGroupsRepository
-import kotlinx.coroutines.delay
-
-private const val INITIAL_COUNTDOWN = 10
 
 @Composable
 fun RandomVerseScreen(contentPadding: PaddingValues = PaddingValues()) {
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    val repository = remember { VersesGroupsRepository(context) }
-    val allVerses = remember { repository.loadVerseGroups().flatMap { it.verses } }
+    val vm: RandomVerseViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return RandomVerseViewModel(
+                    VersesGroupsRepository(context), 
+                    context.getString(R.string.random_verse)
+                ) as T
+            }
+        }
+    )
 
-    var randomVerse by rememberSaveable { mutableStateOf(allVerses.random()) }
-    var isEasy by rememberSaveable { mutableStateOf(false) }
-    var countdown by rememberSaveable { mutableIntStateOf(INITIAL_COUNTDOWN) }
-    var isCountingDown by rememberSaveable { mutableStateOf(true) }
+    val state by vm.state.collectAsStateWithLifecycle()
 
-    val onDrawAnother = {
-        randomVerse = allVerses.random()
-        countdown = INITIAL_COUNTDOWN
-        isCountingDown = true
+    // Detect if this is a fresh tab entry or a rotation
+    var isNewTabEntry by rememberSaveable { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        vm.onEvent(RandomVerseEvent.EnterScreen(isNewTabEntry))
+        isNewTabEntry = false
     }
 
-    val onStartNow = {
-        countdown = 0
+    // Stop timer when leaving tab
+    DisposableEffect(Unit) {
+        onDispose {
+            vm.onEvent(RandomVerseEvent.LeaveScreen)
+        }
     }
 
+    // Lifecycle handling for app-level pause/resume
+    val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME && !isCountingDown) {
-                onDrawAnother()
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> vm.onEvent(RandomVerseEvent.EnterScreen(isNewTabEntry = true))
+                Lifecycle.Event.ON_PAUSE -> vm.onEvent(RandomVerseEvent.LeaveScreen)
+                else -> {}
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    LaunchedEffect(isCountingDown, randomVerse) {
-        if (isCountingDown) {
-            while (countdown > 0) {
-                delay(1000)
-                countdown -= 1
+    LaunchedEffect(vm.effects) {
+        vm.effects.collect { effect ->
+            when (effect) {
+                is RandomVerseEffect.LaunchGame -> {
+                    launchGame(context, effect.section, effect.riddleTypes, 0)
+                }
             }
-            isCountingDown = false
-            val riddleTypes = if (isEasy) {
-                arrayListOf(
-                    "QUIZ_EASY",
-                    "FILL_WORDS_EASY",
-                    "FILL_SIGLA_BOOK",
-                    "FILL_MORE_WORDS_EASY",
-                    "FILL_SIGLA_CHAPTER"
-                )
-            } else {
-                arrayListOf(
-                    "QUIZ_NORMAL",
-                    "FILL_WORDS_NORMAL",
-                    "MULTI_QUIZ",
-                    "FILL_MORE_WORDS_NORMAL",
-                    "FILL_SIGLA_VERSE"
-                )
-            }
-            val intent = Intent(context, GameActivity::class.java).apply {
-                putStringArrayListExtra(GameActivity.ARG_LEVEL_RIDDLE_TYPES, riddleTypes)
-                putExtra(GameActivity.ARG_SECTION_ID, 0)
-                putExtra(GameActivity.ARG_SECTION_NAME, context.getString(R.string.random_verse))
-                putExtra(GameActivity.ARG_LEVEL_NUMBER, 0)
-                putParcelableArrayListExtra(GameActivity.ARG_SECTION_VERSES, arrayListOf(randomVerse))
-            }
-            context.startActivity(intent)
         }
     }
 
@@ -150,18 +135,18 @@ fun RandomVerseScreen(contentPadding: PaddingValues = PaddingValues()) {
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Box(modifier = Modifier.weight(1f).align(Alignment.CenterVertically)) {
-                    VerseCard(randomVerse = randomVerse)
+                    state.randomVerse?.let { VerseCard(it) }
                 }
                 Column(
                     modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    DifficultySection(isEasy = isEasy, onEasyChange = { isEasy = it })
+                    DifficultySection(isEasy = state.isEasy, onEasyChange = { vm.onEvent(RandomVerseEvent.SetEasy(it)) })
                     Spacer(modifier = Modifier.height(24.dp))
-                    DrawAnotherButton(onClick = onDrawAnother, modifier = Modifier.fillMaxWidth().height(50.dp))
+                    DrawAnotherButton(onClick = { vm.onEvent(RandomVerseEvent.DrawAnother) }, modifier = Modifier.fillMaxWidth().height(50.dp))
                     Spacer(modifier = Modifier.height(12.dp))
-                    StartButton(countdown = countdown, onClick = onStartNow, modifier = Modifier.fillMaxWidth().height(50.dp))
+                    StartButton(countdown = state.countdown, onClick = { vm.onEvent(RandomVerseEvent.StartNow) }, modifier = Modifier.fillMaxWidth().height(50.dp))
                 }
             }
         } else {
@@ -170,16 +155,16 @@ fun RandomVerseScreen(contentPadding: PaddingValues = PaddingValues()) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
-                DifficultySection(isEasy = isEasy, onEasyChange = { isEasy = it })
+                DifficultySection(isEasy = state.isEasy, onEasyChange = { vm.onEvent(RandomVerseEvent.SetEasy(it)) })
                 Spacer(modifier = Modifier.height(24.dp))
-                VerseCard(randomVerse = randomVerse)
+                state.randomVerse?.let { VerseCard(it) }
                 Spacer(modifier = Modifier.weight(1f))
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    DrawAnotherButton(onClick = onDrawAnother, modifier = Modifier.weight(1f).height(50.dp))
-                    StartButton(countdown = countdown, onClick = onStartNow, modifier = Modifier.weight(1f).height(50.dp))
+                    DrawAnotherButton(onClick = { vm.onEvent(RandomVerseEvent.DrawAnother) }, modifier = Modifier.weight(1f).height(50.dp))
+                    StartButton(countdown = state.countdown, onClick = { vm.onEvent(RandomVerseEvent.StartNow) }, modifier = Modifier.weight(1f).height(50.dp))
                 }
             }
         }
@@ -187,7 +172,7 @@ fun RandomVerseScreen(contentPadding: PaddingValues = PaddingValues()) {
 }
 
 @Composable
-fun DrawAnotherButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun DrawAnotherButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Button(
         onClick = onClick,
         modifier = modifier,
@@ -203,7 +188,7 @@ fun DrawAnotherButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun StartButton(countdown: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun StartButton(countdown: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Button(
         onClick = onClick,
         modifier = modifier,
@@ -219,7 +204,7 @@ fun StartButton(countdown: Int, onClick: () -> Unit, modifier: Modifier = Modifi
 }
 
 @Composable
-fun DifficultySection(isEasy: Boolean, onEasyChange: (Boolean) -> Unit) {
+private fun DifficultySection(isEasy: Boolean, onEasyChange: (Boolean) -> Unit) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     if (isLandscape) {
@@ -246,7 +231,7 @@ fun DifficultySection(isEasy: Boolean, onEasyChange: (Boolean) -> Unit) {
 }
 
 @Composable
-fun DifficultySwitch(isEasy: Boolean, onEasyChange: (Boolean) -> Unit) {
+private fun DifficultySwitch(isEasy: Boolean, onEasyChange: (Boolean) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = stringResource(R.string.difficulty_normal),
@@ -276,7 +261,7 @@ fun DifficultySwitch(isEasy: Boolean, onEasyChange: (Boolean) -> Unit) {
 }
 
 @Composable
-fun VerseCard(randomVerse: Verse) {
+private fun VerseCard(randomVerse: Verse) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
