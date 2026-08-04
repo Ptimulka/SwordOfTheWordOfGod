@@ -1,4 +1,4 @@
-package io.github.ptimulka.miecz.screens
+package io.github.ptimulka.miecz.screens.groups
 
 import android.graphics.Bitmap
 import androidx.compose.animation.animateContentSize
@@ -34,10 +34,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -55,6 +52,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
@@ -66,180 +67,156 @@ import java.util.regex.Pattern
 @Composable
 fun VerseGroupsScreen(contentPadding: PaddingValues = PaddingValues()) {
     val context = LocalContext.current
-    val allVerseGroups = remember { VersesGroupsRepository(context).loadVerseGroups() }
-    val allSections = remember { SectionRepository(context).loadInitialSections() }
-
-    val userProgressRepository = remember { UserProgressRepository(context) }
-
-    val groupToSectionMap = remember(userProgressRepository.getCustomSectionsCount()) {
-        val count = userProgressRepository.getCustomSectionsCount()
-        (1..count).flatMap { index ->
-            val sectionId = 5 + index - 1
-            userProgressRepository.getCustomSectionGroups(sectionId)?.let { (groupId1, groupId2) ->
-                listOf(groupId1 to sectionId, groupId2 to sectionId)
-            } ?: emptyList()
-        }.toMap()
-    }
-
-    // Single AssetManager.list() call — O(1) existence checks everywhere, no bitmap I/O during scroll
-    val existingAssets = remember {
-        context.assets.list("default_mnemonics")?.toHashSet() ?: hashSetOf()
-    }
-    val repository = remember { MnemonicPicturesRepository(context) }
-
-    var searchQuery by rememberSaveable { mutableStateOf("") }
-    var previewedImage by remember { mutableStateOf<Bitmap?>(null) }
-    var expandedGroupId by rememberSaveable { mutableStateOf<Int?>(null) }
-
-    val filteredVerseGroups = remember(searchQuery, allVerseGroups) {
-        if (searchQuery.isBlank()) {
-            allVerseGroups
-        } else {
-            allVerseGroups.filter { group ->
-                val query = searchQuery.trim()
-                group.name.contains(query, ignoreCase = true) ||
-                        group.verses.any { verse ->
-                            val sigla = "${verse.book} ${verse.chapter},${verse.number}"
-                            val cleanText = verse.text.replace('_', ' ').replace("*", "")
-                            sigla.contains(query, ignoreCase = true) ||
-                                    cleanText.contains(query, ignoreCase = true)
-                        }
+    
+    val vm: VerseGroupsViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                val assetList = context.assets.list("default_mnemonics")?.toSet() ?: emptySet()
+                return VerseGroupsViewModel(
+                    SectionRepository(context),
+                    VersesGroupsRepository(context),
+                    UserProgressRepository(context),
+                    MnemonicPicturesRepository(context),
+                    assetList
+                ) as T
             }
         }
-    }
+    )
 
-    val filteredSections = remember(searchQuery, allSections) {
-        if (searchQuery.isBlank()) {
-            allSections
-        } else {
-            allSections.filter { section ->
-                val query = searchQuery.trim()
-                section.name.contains(query, ignoreCase = true) ||
-                        section.verses.any { verse ->
-                            val sigla = "${verse.book} ${verse.chapter},${verse.number}"
-                            val cleanText = verse.text.replace('_', ' ').replace("*", "")
-                            sigla.contains(query, ignoreCase = true) ||
-                                    cleanText.contains(query, ignoreCase = true)
-                        }
-            }
-        }
-    }
+    val state by vm.state.collectAsStateWithLifecycle()
 
     Box(modifier = Modifier.fillMaxSize()) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .imePadding()
-    ) {
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shadowElevation = 4.dp
-        ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                label = { Text(stringResource(id = R.string.search_placeholder)) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = stringResource(R.string.search)
-                    )
-                },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { searchQuery = "" }) {
-                            Icon(
-                                imageVector = Icons.Default.Clear,
-                                contentDescription = stringResource(R.string.clear_search)
-                            )
-                        }
-                    }
-                },
-                singleLine = true
-            )
-        }
-
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 8.dp),
-            contentPadding = contentPadding
+                .imePadding()
         ) {
-            item {
-                Text(
-                    text = stringResource(R.string.verse_groups_sections_header),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
-                )
-            }
-            items(filteredSections) { section ->
-                VerseItem(
-                    id = section.id,
-                    name = section.name,
-                    verses = section.verses,
-                    assetNames = section.assetNames,
-                    searchQuery = searchQuery,
-                    sectionId = null,
-                    isExpanded = expandedGroupId == -section.id,
-                    onToggle = {
-                        expandedGroupId = if (expandedGroupId == -section.id) null else -section.id
-                    },
-                    existingAssets = existingAssets,
-                    repository = repository,
-                    onPreviewImage = { previewedImage = it }
-                )
-            }
-            item {
-                Text(
-                    text = stringResource(R.string.verse_groups_groups_header),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
-                )
-            }
-            items(filteredVerseGroups) { group ->
-                val groupAssetNames = remember(group.id) {
-                    group.verses.mapIndexed { index, verse ->
-                        "group%03d_%d_%s%d-%s.webp".format(
-                            group.id, index + 1, verse.book, verse.chapter,
-                            verse.number.replace(".", "-")
+            SearchBar(
+                query = state.searchQuery,
+                onQueryChange = { vm.onEvent(VerseGroupsEvent.UpdateSearch(it)) },
+                onClear = { vm.onEvent(VerseGroupsEvent.ClearSearch) }
+            )
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp),
+                contentPadding = contentPadding
+            ) {
+                if (state.filteredSections.isNotEmpty()) {
+                    item {
+                        SectionHeader(stringResource(R.string.verse_groups_sections_header))
+                    }
+                    items(state.filteredSections) { section ->
+                        VerseItem(
+                            id = section.id,
+                            name = section.name,
+                            verses = section.verses,
+                            assetNames = section.assetNames,
+                            searchQuery = state.searchQuery,
+                            sectionId = null,
+                            isExpanded = state.expandedId == -section.id,
+                            onToggle = { vm.onEvent(VerseGroupsEvent.ToggleExpand(-section.id)) },
+                            existingAssets = state.existingAssets,
+                            onPreviewImage = { vm.onEvent(VerseGroupsEvent.ShowPreview(it)) }
                         )
                     }
                 }
-                VerseItem(
-                    id = group.id,
-                    name = group.name,
-                    verses = group.verses,
-                    assetNames = groupAssetNames,
-                    searchQuery = searchQuery,
-                    sectionId = groupToSectionMap[group.id],
-                    isExpanded = expandedGroupId == group.id,
-                    onToggle = {
-                        expandedGroupId = if (expandedGroupId == group.id) null else group.id
-                    },
-                    existingAssets = existingAssets,
-                    repository = repository,
-                    onPreviewImage = { previewedImage = it }
-                )
+
+                if (state.filteredGroups.isNotEmpty()) {
+                    item {
+                        SectionHeader(stringResource(R.string.verse_groups_groups_header))
+                    }
+                    items(state.filteredGroups) { group ->
+                        val groupAssetNames = state.groupAssetNames[group.id] ?: emptyList()
+                        VerseItem(
+                            id = group.id,
+                            name = group.name,
+                            verses = group.verses,
+                            assetNames = groupAssetNames,
+                            searchQuery = state.searchQuery,
+                            sectionId = state.groupToSectionMap[group.id],
+                            isExpanded = state.expandedId == group.id,
+                            onToggle = { vm.onEvent(VerseGroupsEvent.ToggleExpand(group.id)) },
+                            existingAssets = state.existingAssets,
+                            onPreviewImage = { vm.onEvent(VerseGroupsEvent.ShowPreview(it)) }
+                        )
+                    }
+                }
             }
         }
-    }
 
-    // Fullscreen image preview overlay — covers entire screen
-    previewedImage?.let { bitmap ->
+        PreviewOverlay(
+            bitmap = state.previewImage,
+            onDismiss = { vm.onEvent(VerseGroupsEvent.DismissPreview) }
+        )
+    }
+}
+
+@Composable
+private fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onClear: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shadowElevation = 4.dp
+    ) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            label = { Text(stringResource(id = R.string.search_placeholder)) },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = stringResource(R.string.search)
+                )
+            },
+            trailingIcon = {
+                if (query.isNotEmpty()) {
+                    IconButton(onClick = onClear) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = stringResource(R.string.clear_search)
+                        )
+                    }
+                }
+            },
+            singleLine = true
+        )
+    }
+}
+
+@Composable
+private fun SectionHeader(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
+    )
+}
+
+@Composable
+private fun PreviewOverlay(
+    bitmap: Bitmap?,
+    onDismiss: () -> Unit
+) {
+    bitmap?.let { b ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.85f))
-                .clickable { previewedImage = null },
+                .clickable { onDismiss() },
             contentAlignment = Alignment.Center
         ) {
             Image(
-                bitmap = bitmap.asImageBitmap(),
+                bitmap = b.asImageBitmap(),
                 contentDescription = null,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
@@ -248,7 +225,6 @@ fun VerseGroupsScreen(contentPadding: PaddingValues = PaddingValues()) {
             )
         }
     }
-    } // end outer Box
 }
 
 @Composable
@@ -261,9 +237,8 @@ private fun VerseItem(
     sectionId: Int?,
     isExpanded: Boolean,
     onToggle: () -> Unit,
-    existingAssets: HashSet<String>,
-    repository: MnemonicPicturesRepository,
-    onPreviewImage: (Bitmap) -> Unit
+    existingAssets: Set<String>,
+    onPreviewImage: (String) -> Unit
 ) {
     val headerText = remember(id, searchQuery) {
         buildAnnotatedString {
@@ -364,9 +339,7 @@ private fun VerseItem(
                             )
                             if (hasImage) {
                                 IconButton(
-                                    onClick = {
-                                        repository.loadDefaultPicture(assetName!!)?.let { onPreviewImage(it) }
-                                    },
+                                    onClick = { onPreviewImage(assetName!!) },
                                     modifier = Modifier.size(24.dp)
                                 ) {
                                     Icon(
