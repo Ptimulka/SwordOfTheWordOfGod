@@ -44,7 +44,7 @@ import io.github.ptimulka.miecz.repositories.UserProgressRepository
 import io.github.ptimulka.miecz.screens.main.GameLevelScreen
 import io.github.ptimulka.miecz.screens.random.RandomVerseScreen
 import io.github.ptimulka.miecz.screens.review.ReviewVersesScreen
-import io.github.ptimulka.miecz.screens.SettingsScreen
+import io.github.ptimulka.miecz.screens.settings.SettingsScreen
 import io.github.ptimulka.miecz.screens.groups.VerseGroupsScreen
 import io.github.ptimulka.miecz.ui.theme.SwordOfTheWordOfGodTheme
 import kotlinx.parcelize.Parcelize
