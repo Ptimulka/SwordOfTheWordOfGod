@@ -3,7 +3,6 @@ package io.github.ptimulka.miecz
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
-import android.os.Parcelable
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -21,10 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.Modifier
@@ -38,25 +33,22 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.helpers.NotificationHelper
 import io.github.ptimulka.miecz.repositories.SettingsRepository
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
 import io.github.ptimulka.miecz.screens.main.GameLevelScreen
+import io.github.ptimulka.miecz.screens.main.MainEvent
+import io.github.ptimulka.miecz.screens.main.MainViewModel
+import io.github.ptimulka.miecz.screens.main.Screen
 import io.github.ptimulka.miecz.screens.random.RandomVerseScreen
 import io.github.ptimulka.miecz.screens.review.ReviewVersesScreen
 import io.github.ptimulka.miecz.screens.settings.SettingsScreen
 import io.github.ptimulka.miecz.screens.groups.VerseGroupsScreen
 import io.github.ptimulka.miecz.ui.theme.SwordOfTheWordOfGodTheme
-import kotlinx.parcelize.Parcelize
-
-@Parcelize
-sealed class Screen(val route: String, val resourceId: Int) : Parcelable {
-    object Levels : Screen("levels", R.string.levels_tab_caption)
-    object Random : Screen("random", R.string.random_tab_caption)
-    object Review : Screen("review", R.string.review_tab_caption)
-    object VerseGroups : Screen("verse_groups", R.string.verse_groups_tab_caption)
-    object Settings : Screen("settings", R.string.settings_tab_caption)
-}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,7 +56,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        windowInsetsController.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
 
         NotificationHelper.createNotificationChannel(this)
@@ -87,19 +80,29 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
     val context = LocalContext.current
-    val userProgressRepository = remember { UserProgressRepository(context) }
-    val currentSection = userProgressRepository.getCurrentSection()
+    
+    val vm: MainViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return MainViewModel(UserProgressRepository(context)) as T
+            }
+        }
+    )
+
+    val state by vm.state.collectAsStateWithLifecycle()
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {}
+    
     LaunchedEffect(Unit) {
+        vm.onEvent(MainEvent.RefreshTabVisibility)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
-    var selectedScreen by rememberSaveable { mutableStateOf<Screen>(Screen.Levels) }
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     Scaffold(
         bottomBar = {
@@ -107,7 +110,7 @@ fun MainScreen() {
                 modifier = if (isLandscape) Modifier.height(64.dp) else Modifier
             ) {
                 val items = mutableListOf(Screen.Levels, Screen.Random)
-                if (currentSection >= 3) {
+                if (state.isReviewTabVisible) {
                     items.add(Screen.Review)
                 }
                 items.add(Screen.VerseGroups)
@@ -125,8 +128,8 @@ fun MainScreen() {
                             }
                         },
                         label = { Text(stringResource(screen.resourceId), fontSize = 9.sp) },
-                        selected = selectedScreen == screen,
-                        onClick = { selectedScreen = screen },
+                        selected = state.selectedScreen == screen,
+                        onClick = { vm.onEvent(MainEvent.SelectScreen(screen)) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = colorResource(id = R.color.game_button_yellow_dark),
                             selectedTextColor = colorResource(id = R.color.game_button_yellow_dark),
@@ -137,7 +140,7 @@ fun MainScreen() {
             }
         }
     ) { innerPadding ->
-        when (selectedScreen) {
+        when (state.selectedScreen) {
             Screen.Levels -> GameLevelScreen(innerPadding)
             Screen.Random -> RandomVerseScreen(innerPadding)
             Screen.Review -> ReviewVersesScreen(innerPadding)
