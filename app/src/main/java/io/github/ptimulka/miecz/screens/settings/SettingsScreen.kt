@@ -37,10 +37,10 @@ import io.github.ptimulka.miecz.components.settings.ResetFinalConfirmDialog
 import io.github.ptimulka.miecz.components.settings.ResetSection
 import io.github.ptimulka.miecz.helpers.AndroidNotificationScheduler
 import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
-import io.github.ptimulka.miecz.repositories.SectionRepository
+import io.github.ptimulka.miecz.repositories.UserSectionRepository
 import io.github.ptimulka.miecz.repositories.SettingsRepository
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
-import io.github.ptimulka.miecz.repositories.VersesGroupsRepository
+import io.github.ptimulka.miecz.repositories.UserVersesGroupsRepository
 
 @Composable
 fun SettingsScreen(innerPadding: PaddingValues) {
@@ -63,8 +63,8 @@ fun SettingsScreen(innerPadding: PaddingValues) {
                     SettingsRepository(context),
                     UserProgressRepository(context),
                     MnemonicPicturesRepository(context),
-                    SectionRepository(context),
-                    VersesGroupsRepository(context),
+                    UserSectionRepository(context),
+                    UserVersesGroupsRepository(context),
                     AndroidNotificationScheduler(context),
                     appVersion
                 ) as T

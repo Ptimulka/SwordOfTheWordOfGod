@@ -80,4 +80,36 @@ class GameViewModelTest {
         // In this case for Connect it finishes or shows retention
         // Let's assume no retention gained
     }
+
+    @Test
+    fun `complex game session sequence with mistake and records`() = runTest {
+        val mixedRiddles = listOf(RiddleType.QUIZ_NORMAL.name, RiddleType.QUIZ_EASY.name, RiddleType.FILL_SIGLA_BOOK.name)
+        whenever(progressRepo.getShieldsCount()).thenReturn(5)
+        whenever(progressRepo.updateBestLevelStreak(any())).thenReturn(true)
+        
+        val viewModel = GameViewModel(1, "Section", 1, listOf(verse, verse, verse), emptyList(), mixedRiddles, progressRepo, false)
+        
+        // 1. Success 
+        viewModel.onEvent(GameEvent.OnRiddleSuccess())
+        assertEquals(1, viewModel.state.value.currentIndex)
+        
+        // 2. Mistake
+        whenever(progressRepo.getShieldsCount()).thenReturn(4)
+        viewModel.onEvent(GameEvent.OnShieldLoss)
+        assertEquals(4, viewModel.state.value.shieldsCount)
+        
+        // 3. Success
+        viewModel.onEvent(GameEvent.OnRiddleSuccess())
+        assertEquals(2, viewModel.state.value.currentIndex)
+        
+        // 4. Final Success -> Trigger Waterfall
+        // No streak because mistake was made
+        viewModel.onEvent(GameEvent.OnRiddleSuccess())
+        
+        // Generic success dialog since it was many riddles
+        assertEquals(GameDialogState.GenericSuccess, viewModel.state.value.dialogState)
+        
+        viewModel.onEvent(GameEvent.ConfirmDialog)
+        // Verify finish effect or next dialog
+    }
 }

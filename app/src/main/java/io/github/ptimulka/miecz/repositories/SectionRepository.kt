@@ -7,9 +7,15 @@ import io.github.ptimulka.miecz.helpers.parseVerse
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-class SectionRepository(private val context: Context) {
+interface SectionRepository {
+    fun loadSection(resourceId: Int): Section?
+    fun loadInitialSections(): List<Section>
+    fun loadSectionName(sectionId: Int): String?
+}
 
-    fun loadSection(resourceId: Int): Section? {
+class UserSectionRepository(private val context: Context) : SectionRepository {
+
+    override fun loadSection(resourceId: Int): Section? {
         val inputStream = context.resources.openRawResource(resourceId)
         val reader = BufferedReader(InputStreamReader(inputStream))
         
@@ -17,13 +23,8 @@ class SectionRepository(private val context: Context) {
             val lines = reader.readLines()
             if (lines.size < 2) return null
 
-            // First line: Section ID
             val id = lines[0].trim().toIntOrNull() ?: return null
-            
-            // Second line: Section Name
             val name = lines[1].trim()
-
-            // Remaining lines: Verses
             val verses = lines.drop(2).mapNotNull { parseVerse(it) }
             
             val assetNames = verses.mapIndexed { index, verse ->
@@ -42,7 +43,7 @@ class SectionRepository(private val context: Context) {
         }
     }
 
-    fun loadInitialSections(): List<Section> {
+    override fun loadInitialSections(): List<Section> {
         return listOfNotNull(
             loadSection(R.raw.section01),
             loadSection(R.raw.section02),
@@ -51,7 +52,7 @@ class SectionRepository(private val context: Context) {
         )
     }
 
-    fun loadSectionName(sectionId: Int): String? {
+    override fun loadSectionName(sectionId: Int): String? {
         val rawId = when (sectionId) {
             1 -> R.raw.section01
             2 -> R.raw.section02

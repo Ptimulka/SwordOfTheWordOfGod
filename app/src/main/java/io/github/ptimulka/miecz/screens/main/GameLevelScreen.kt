@@ -60,9 +60,9 @@ import io.github.ptimulka.miecz.components.main.renderAllVersesLearnedSection
 import io.github.ptimulka.miecz.components.main.renderChooseNextSection
 import io.github.ptimulka.miecz.components.main.renderSection
 import io.github.ptimulka.miecz.repositories.RiddlesOrderRepository
-import io.github.ptimulka.miecz.repositories.SectionRepository
+import io.github.ptimulka.miecz.repositories.UserSectionRepository
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
-import io.github.ptimulka.miecz.repositories.VersesGroupsRepository
+import io.github.ptimulka.miecz.repositories.UserVersesGroupsRepository
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -77,8 +77,8 @@ fun GameLevelScreen(contentPadding: PaddingValues = PaddingValues()) {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return GameLevelViewModel(
                     UserProgressRepository(context),
-                    SectionRepository(context),
-                    VersesGroupsRepository(context),
+                    UserSectionRepository(context),
+                    UserVersesGroupsRepository(context),
                     RiddlesOrderRepository(context)
                 ) as T
             }

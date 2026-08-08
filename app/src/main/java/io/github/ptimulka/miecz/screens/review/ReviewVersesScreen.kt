@@ -30,9 +30,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.helpers.launchGame
-import io.github.ptimulka.miecz.repositories.SectionRepository
+import io.github.ptimulka.miecz.repositories.UserSectionRepository
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
-import io.github.ptimulka.miecz.repositories.VersesGroupsRepository
+import io.github.ptimulka.miecz.repositories.UserVersesGroupsRepository
 
 @Composable
 fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
@@ -45,8 +45,8 @@ fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return ReviewViewModel(
                     UserProgressRepository(context),
-                    SectionRepository(context),
-                    VersesGroupsRepository(context),
+                    UserSectionRepository(context),
+                    UserVersesGroupsRepository(context),
                     reviewName
                 ) as T
             }

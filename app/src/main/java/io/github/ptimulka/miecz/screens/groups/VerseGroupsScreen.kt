@@ -59,9 +59,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
-import io.github.ptimulka.miecz.repositories.SectionRepository
+import io.github.ptimulka.miecz.repositories.UserSectionRepository
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
-import io.github.ptimulka.miecz.repositories.VersesGroupsRepository
+import io.github.ptimulka.miecz.repositories.UserVersesGroupsRepository
 import java.util.regex.Pattern
 
 @Composable
@@ -74,8 +74,8 @@ fun VerseGroupsScreen(contentPadding: PaddingValues = PaddingValues()) {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val assetList = context.assets.list("default_mnemonics")?.toSet() ?: emptySet()
                 return VerseGroupsViewModel(
-                    SectionRepository(context),
-                    VersesGroupsRepository(context),
+                    UserSectionRepository(context),
+                    UserVersesGroupsRepository(context),
                     UserProgressRepository(context),
                     MnemonicPicturesRepository(context),
                     assetList

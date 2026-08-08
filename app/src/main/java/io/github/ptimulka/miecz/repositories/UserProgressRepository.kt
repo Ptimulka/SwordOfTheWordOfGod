@@ -5,8 +5,11 @@ import android.content.SharedPreferences
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-class UserProgressRepository(context: Context) : ProgressRepository {
-    private val prefs: SharedPreferences = context.getSharedPreferences("user_progress", Context.MODE_PRIVATE)
+class UserProgressRepository(
+    context: Context,
+    private val prefs: SharedPreferences = context.getSharedPreferences("user_progress", Context.MODE_PRIVATE),
+    private val currentTimeProvider: () -> Long = { System.currentTimeMillis() }
+) : ProgressRepository {
 
     companion object {
         private const val KEY_CURRENT_SECTION = "current_section"
@@ -257,7 +260,7 @@ class UserProgressRepository(context: Context) : ProgressRepository {
     override fun decreaseShields(): Int {
         val current = getShieldsCount()
         if(current == MAX_SHIELDS) {
-            saveShieldUpdateTime(System.currentTimeMillis())
+            saveShieldUpdateTime(currentTimeProvider())
         }
         val next = (current - 1).coerceAtLeast(MIN_SHIELDS)
         setShieldsCount(next)
@@ -286,7 +289,7 @@ class UserProgressRepository(context: Context) : ProgressRepository {
         }
 
         val lastUpdate = getLastShieldUpdateTime()
-        val currentTime = System.currentTimeMillis()
+        val currentTime = currentTimeProvider()
 
         if (lastUpdate == 0L) {
             saveShieldUpdateTime(currentTime)
@@ -342,7 +345,7 @@ class UserProgressRepository(context: Context) : ProgressRepository {
         val lastUpdate = getLastShieldUpdateTime()
         if (lastUpdate == 0L) return 0L
 
-        val currentTime = System.currentTimeMillis()
+        val currentTime = currentTimeProvider()
         val elapsed = currentTime - lastUpdate
 
         if (elapsed >= SHIELD_REGEN_TIME_MS) return 0L
@@ -386,7 +389,7 @@ class UserProgressRepository(context: Context) : ProgressRepository {
 
     private fun todayString(): String {
         val sdf = SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-        return sdf.format(java.util.Date())
+        return sdf.format(java.util.Date(currentTimeProvider()))
     }
 
     override fun hasPlayedToday(): Boolean = prefs.getString(KEY_LAST_PLAYED_DATE, "") == todayString()
@@ -430,8 +433,8 @@ class UserProgressRepository(context: Context) : ProgressRepository {
     override fun getBestTimeOverall(riddleType: String, context: android.content.Context): BestTimeEntry? {
         val prefix = KEY_BEST_TIME_PREFIX
         val suffix = "_$riddleType"
-        val sectionRepo = SectionRepository(context)
-        val verseGroups by lazy { VersesGroupsRepository(context).loadVerseGroups().associateBy { it.id } }
+        val sectionRepo = UserSectionRepository(context)
+        val verseGroups by lazy { UserVersesGroupsRepository(context).loadVerseGroups().associateBy { it.id } }
         return prefs.all
             .filter { (key, _) -> key.startsWith(prefix) && key.endsWith(suffix) }
             .mapNotNull { (key, value) ->

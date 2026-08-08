@@ -52,7 +52,7 @@ import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
 import io.github.ptimulka.miecz.helpers.launchGame
-import io.github.ptimulka.miecz.repositories.VersesGroupsRepository
+import io.github.ptimulka.miecz.repositories.UserVersesGroupsRepository
 
 @Composable
 fun RandomVerseScreen(contentPadding: PaddingValues = PaddingValues()) {
@@ -65,7 +65,7 @@ fun RandomVerseScreen(contentPadding: PaddingValues = PaddingValues()) {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return RandomVerseViewModel(
-                    VersesGroupsRepository(context), 
+                    UserVersesGroupsRepository(context), 
                     context.getString(R.string.random_verse)
                 ) as T
             }
