@@ -1,5 +1,6 @@
 package io.github.ptimulka.miecz.screens.main
 
+import io.github.ptimulka.miecz.components.main.LevelButtonState
 import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.data.Section
 
@@ -14,8 +15,18 @@ data class ProgressSummary(
     val availableGroupsCount: Int = 0
 )
 
+data class LevelUiState(
+    val levelNumber: Int,
+    val isFinished: Boolean,
+    val state: LevelButtonState,
+    val lockMessageRes: Int? = null,
+    val riddles: List<RiddleType>
+)
+
 data class SectionState(
     val finishedLevels: Set<Int> = emptySet(),
+    val levels: List<LevelUiState> = emptyList(),
+    val raysReach: Int = 0,
     val retention: Int = 0,
     val isSiglaFinished: Boolean = false,
     val isVerseFinished: Boolean = false,

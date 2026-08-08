@@ -2,6 +2,8 @@ package io.github.ptimulka.miecz.screens.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.ptimulka.miecz.R
+import io.github.ptimulka.miecz.components.main.LevelButtonState
 import io.github.ptimulka.miecz.data.Section
 import io.github.ptimulka.miecz.repositories.ProgressRepository
 import io.github.ptimulka.miecz.repositories.RiddlesOrderRepository
@@ -65,6 +67,7 @@ class GameLevelViewModel(
         val allGroups = groupsRepo.loadVerseGroups()
         val baseSections = sectionRepo.loadInitialSections()
         val fullSections = buildFullSectionList(baseSections)
+        val riddlesOrder = riddlesOrderRepo.getRiddlesOrder()
 
         val sectionStates = fullSections.associate { section ->
             val finishedLevels = (1..12).filter { progressRepo.isLevelFinished(section.id, it) }.toSet()
@@ -81,8 +84,47 @@ class GameLevelViewModel(
                 ) >= 3
             }
 
+            val areChallengesFinished = isSiglaFinished && isVerseFinished
+            val effectiveRetention = if (areChallengesFinished) 100 else retention
+            val raysReach = (if (effectiveRetention >= 4) ((effectiveRetention - 4) / 8) + 1 else 0)
+                .coerceAtMost(12) // SECTION_LEVEL_COUNT
+
+            val levels = riddlesOrder.mapIndexed { index, riddleList ->
+                val levelNumber = index + 1
+                val isFinished = finishedLevels.contains(levelNumber)
+                val isPreviousFinished = if (levelNumber > 1) finishedLevels.contains(levelNumber - 1) else true
+                
+                val progressionUnlocked = isFinished || isPreviousFinished || areChallengesFinished
+                val raysUnlocked = levelNumber <= raysReach
+                
+                val levelState = when {
+                    section.id > progressRepo.getCurrentSection() -> LevelButtonState.LOCKED
+                    isFinished -> LevelButtonState.FULL
+                    progressionUnlocked && raysUnlocked -> LevelButtonState.FULL
+                    progressionUnlocked != raysUnlocked -> LevelButtonState.HALF
+                    else -> LevelButtonState.LOCKED
+                }
+
+                val lockMessageRes = when {
+                    section.id > progressRepo.getCurrentSection() || levelState == LevelButtonState.FULL -> null
+                    !progressionUnlocked && !raysUnlocked -> R.string.level_locked_need_both
+                    !progressionUnlocked -> R.string.level_locked_need_previous
+                    else -> R.string.level_locked_need_retention
+                }
+
+                LevelUiState(
+                    levelNumber = levelNumber,
+                    isFinished = isFinished,
+                    state = levelState,
+                    lockMessageRes = lockMessageRes,
+                    riddles = riddleList
+                )
+            }
+
             section.id to SectionState(
                 finishedLevels = finishedLevels,
+                levels = levels,
+                raysReach = raysReach,
                 retention = retention,
                 isSiglaFinished = isSiglaFinished,
                 isVerseFinished = isVerseFinished,

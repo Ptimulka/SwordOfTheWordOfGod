@@ -35,15 +35,11 @@ import io.github.ptimulka.miecz.screens.main.SectionState
 
 const val SPECIAL_CHALLENGE_RIDDLES_COUNT = 10
 
-// Retention rays fan out from the heart, reaching one more level per +8% (from 4% → level 1).
-private const val SECTION_LEVEL_COUNT = 12
-
 @OptIn(ExperimentalFoundationApi::class)
 fun LazyListScope.renderSection(
     section: Section,
     sectionState: SectionState,
     isLocked: Boolean,
-    riddlesOrder: List<List<RiddleType>>,
     isShieldsEmpty: Boolean,
     onShowVerses: (Section) -> Unit,
     onDrawPictures: (Section) -> Unit,
@@ -63,46 +59,21 @@ fun LazyListScope.renderSection(
         )
     }
 
-    itemsIndexed(riddlesOrder) { index, riddleListForLevel ->
-        val levelNumber = index + 1
-        val isFinished = sectionState.finishedLevels.contains(levelNumber)
-        val isPreviousFinished = if (levelNumber > 1) sectionState.finishedLevels.contains(levelNumber - 1) else true
-
-        // Retention rays from the heart reach one more level per +8% (from 4% → level 1).
-        val effectiveRetention = if (sectionState.areSpecialChallengesFinished) 100 else sectionState.retention
-        val raysReach = (if (effectiveRetention >= 4) ((effectiveRetention - 4) / 8) + 1 else 0)
-            .coerceAtMost(SECTION_LEVEL_COUNT)
-
-        // Two conditions to play a level: previous level finished AND retention rays reach it.
-        val progressionUnlocked = isFinished || isPreviousFinished || sectionState.areSpecialChallengesFinished
-        val raysUnlocked = levelNumber <= raysReach
-        val state = when {
-            isLocked -> LevelButtonState.LOCKED
-            isFinished -> LevelButtonState.FULL          // already-finished levels stay playable
-            progressionUnlocked && raysUnlocked -> LevelButtonState.FULL
-            progressionUnlocked != raysUnlocked -> LevelButtonState.HALF
-            else -> LevelButtonState.LOCKED
-        }
-        val lockMessage = when {
-            isLocked || state == LevelButtonState.FULL -> null
-            !progressionUnlocked && !raysUnlocked -> stringResource(R.string.level_locked_need_both)
-            !progressionUnlocked -> stringResource(R.string.level_locked_need_previous)
-            else -> stringResource(R.string.level_locked_need_retention)
-        }
-
+    itemsIndexed(sectionState.levels) { index, levelState ->
+        val lockMessage = levelState.lockMessageRes?.let { stringResource(it) }
         val context = LocalContext.current
         LevelItem(
-            levelIndex = levelNumber,
+            levelIndex = levelState.levelNumber,
             index = index,
-            isFinished = isFinished,
-            state = state,
-            raysReach = raysReach,
+            isFinished = levelState.isFinished,
+            state = levelState.state,
+            raysReach = sectionState.raysReach,
             lockMessage = lockMessage,
             onLevelClick = {
                 if (isShieldsEmpty) {
                     onNoShieldsClick()
                 } else {
-                    launchGame(context, section, riddleListForLevel, levelNumber)
+                    launchGame(context, section, levelState.riddles, levelState.levelNumber)
                 }
             }
         )
@@ -113,7 +84,7 @@ fun LazyListScope.renderSection(
             section = section,
             sectionState = sectionState,
             isLocked = isLocked,
-            lastLevelNumber = riddlesOrder.size,
+            lastLevelNumber = sectionState.levels.size,
             isShieldsEmpty = isShieldsEmpty,
             onNoShieldsClick = onNoShieldsClick
         )

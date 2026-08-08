@@ -1,5 +1,6 @@
 package io.github.ptimulka.miecz.screens.main
 
+import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.helpers.MainDispatcherRule
 import io.github.ptimulka.miecz.repositories.ProgressRepository
 import io.github.ptimulka.miecz.repositories.RiddlesOrderRepository
@@ -89,5 +90,28 @@ class GameLevelViewModelTest {
         verify(progressRepo).saveCustomSection(org.mockito.kotlin.any(), org.mockito.kotlin.eq(10), org.mockito.kotlin.eq(20))
         assertFalse(viewModel.state.value.showChooseVerseGroups)
         assertTrue(viewModel.state.value.selectedGroupIds.isEmpty())
+    }
+
+    @Test
+    fun `refreshProgress calculates level states correctly`() {
+        val section = io.github.ptimulka.miecz.data.Section(1, "Test", emptyList())
+        whenever(sectionRepo.loadInitialSections()).thenReturn(listOf(section))
+        whenever(progressRepo.getCurrentSection()).thenReturn(1)
+        
+        // Mock riddles order: 1 level with 1 riddle
+        whenever(riddlesOrderRepo.getRiddlesOrder()).thenReturn(listOf(listOf(io.github.ptimulka.miecz.data.RiddleType.QUIZ_NORMAL)))
+        
+        // Initial state: Level 1 not finished, 0% retention
+        whenever(progressRepo.isLevelFinished(1, 1)).thenReturn(false)
+        whenever(progressRepo.getRetention(1)).thenReturn(0)
+        
+        val viewModel = GameLevelViewModel(progressRepo, sectionRepo, groupsRepo, riddlesOrderRepo)
+        
+        val sectionState = viewModel.state.value.sectionStates[1]!!
+        val level1 = sectionState.levels[0]
+        
+        // Previous levels (none) finished, but 0% retention -> HALF unlocked (progression yes, rays no)
+        assertEquals(io.github.ptimulka.miecz.components.main.LevelButtonState.HALF, level1.state)
+        assertEquals(R.string.level_locked_need_retention, level1.lockMessageRes)
     }
 }

@@ -186,7 +186,6 @@ private fun GameLevelMainContent(
                     section = section,
                     sectionState = sectionState,
                     isLocked = section.id > state.progress.currentSectionId,
-                    riddlesOrder = state.riddlesOrder,
                     isShieldsEmpty = state.isShieldsEmpty,
                     onShowVerses = { onEvent(GameLevelEvent.ShowSectionVerses(it)) },
                     onDrawPictures = { s ->
