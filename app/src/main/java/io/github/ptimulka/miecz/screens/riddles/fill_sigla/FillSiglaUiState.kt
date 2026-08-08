@@ -1,18 +1,9 @@
 package io.github.ptimulka.miecz.screens.riddles.fill_sigla
 
-enum class FillSiglaType {
-    BOOK,
-    CHAPTER,
-    VERSE
-}
+import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleUiState
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
 data class FillSiglaUiState(
     val userInput: String = "",
-    val phase: Phase = Phase.Answering
-) {
-    sealed interface Phase {
-        data object Answering : Phase
-        data object ShowingImageReward : Phase
-        data class Result(val correct: Boolean) : Phase
-    }
-}
+    override val phase: RiddlePhase = RiddlePhase.Answering
+) : BaseRiddleUiState

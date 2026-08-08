@@ -5,7 +5,6 @@ import androidx.compose.runtime.key
 import io.github.ptimulka.miecz.data.Riddle
 import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.data.Verse
-import io.github.ptimulka.miecz.screens.riddles.*
 import io.github.ptimulka.miecz.screens.riddles.quiz.QuizRiddleScreen
 import io.github.ptimulka.miecz.screens.riddles.fill_words.FillWordsRiddleScreen
 import io.github.ptimulka.miecz.screens.riddles.fill_sigla.FillSiglaRiddleScreen

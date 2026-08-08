@@ -4,5 +4,5 @@ sealed interface FillSiglaEvent {
     data class UpdateInput(val value: String) : FillSiglaEvent
     data object Check : FillSiglaEvent
     data object DismissResult : FillSiglaEvent
-    data object DismissImage : FillSiglaEvent
+    data object DismissHint : FillSiglaEvent
 }

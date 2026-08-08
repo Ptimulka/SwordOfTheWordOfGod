@@ -40,7 +40,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -83,7 +82,7 @@ fun RepeatVerseRiddleScreen(
     sectionVerses: List<Verse>,
     sectionId: Int,
     assetNames: List<String>,
-    onSuccess: () -> Unit // Note: Signature kept for consistency
+    onSuccess: () -> Unit
 ) {
     val context = LocalContext.current
     val progressRepository = remember { UserProgressRepository(context) }

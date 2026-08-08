@@ -6,5 +6,5 @@ sealed interface FillWholeSiglaEvent {
     data class UpdateVerse(val value: String) : FillWholeSiglaEvent
     data object Check : FillWholeSiglaEvent
     data object DismissResult : FillWholeSiglaEvent
-    data object DismissImage : FillWholeSiglaEvent
+    data object DismissHint : FillWholeSiglaEvent
 }

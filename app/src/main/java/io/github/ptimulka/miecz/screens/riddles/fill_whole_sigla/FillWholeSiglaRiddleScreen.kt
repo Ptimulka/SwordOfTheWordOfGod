@@ -58,6 +58,8 @@ import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.VerseDisplay
 import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
 @Composable
 fun FillWholeSiglaRiddleScreen(
@@ -100,7 +102,7 @@ fun FillWholeSiglaRiddleScreen(
     LaunchedEffect(vm.effects) {
         vm.effects.collect { effect ->
             when (effect) {
-                FillWholeSiglaEffect.Success -> onSuccess()
+                is RiddleEffect.Success -> onSuccess()
             }
         }
     }
@@ -108,14 +110,14 @@ fun FillWholeSiglaRiddleScreen(
     val phase = state.phase
     LaunchedEffect(phase) {
         when (phase) {
-            is FillWholeSiglaUiState.Phase.Result -> {
+            is RiddlePhase.Result -> {
                 showResultDialog = if (!phase.correct) {
                     !onShieldLoss()
                 } else {
                     true
                 }
             }
-            FillWholeSiglaUiState.Phase.Answering -> {
+            RiddlePhase.Answering -> {
                 showResultDialog = false
             }
             else -> {}
@@ -140,16 +142,15 @@ fun FillWholeSiglaRiddleScreen(
             )
         }
 
-        if (phase is FillWholeSiglaUiState.Phase.ShowingImageReward && hintBitmap != null) {
-            FullscreenImageOverlay(hintBitmap) { vm.onEvent(FillWholeSiglaEvent.DismissImage) }
-        } else if (showResultDialog && phase is FillWholeSiglaUiState.Phase.Result) {
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hintBitmap != null) {
+            FullscreenImageOverlay(hintBitmap) { vm.onEvent(FillWholeSiglaEvent.DismissHint) }
+        } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,
                 onConfirm = { vm.onEvent(FillWholeSiglaEvent.DismissResult) }
             )
         }
-    }
-}
+    }}
 
 @Composable
 private fun PortraitFillWholeSiglaLayout(

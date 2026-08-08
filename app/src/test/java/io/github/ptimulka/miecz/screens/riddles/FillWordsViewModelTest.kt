@@ -1,5 +1,6 @@
 package io.github.ptimulka.miecz.screens.riddles
 
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import io.github.ptimulka.miecz.screens.riddles.fill_words.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -49,8 +50,8 @@ class FillWordsViewModelTest {
         viewModel.onEvent(FillWordsEvent.Check)
         
         val phase = viewModel.state.value.phase
-        assertTrue(phase is FillWordsUiState.Phase.Result)
-        assertTrue((phase as FillWordsUiState.Phase.Result).correct)
+        assertTrue(phase is RiddlePhase.Result)
+        assertTrue((phase as RiddlePhase.Result).correct)
     }
 
     @Test
@@ -60,8 +61,8 @@ class FillWordsViewModelTest {
         viewModel.onEvent(FillWordsEvent.Check)
         
         val phase = viewModel.state.value.phase
-        assertTrue(phase is FillWordsUiState.Phase.Result)
-        assertFalse((phase as FillWordsUiState.Phase.Result).correct)
+        assertTrue(phase is RiddlePhase.Result)
+        assertFalse((phase as RiddlePhase.Result).correct)
         assertTrue(viewModel.state.value.wrongInputIndices.contains(0))
     }
 }

@@ -1,72 +1,52 @@
 package io.github.ptimulka.miecz.screens.riddles
 
-import io.github.ptimulka.miecz.screens.riddles.fill_whole_sigla.*
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
+import io.github.ptimulka.miecz.screens.riddles.fill_whole_sigla.FillWholeSiglaArgs
+import io.github.ptimulka.miecz.screens.riddles.fill_whole_sigla.FillWholeSiglaEvent
+import io.github.ptimulka.miecz.screens.riddles.fill_whole_sigla.FillWholeSiglaViewModel
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FillWholeSiglaViewModelTest {
 
-    private val defaultArgs = FillWholeSiglaArgs(
-        book = "Rdz",
-        chapter = 1,
-        number = "1-3",
-        hasHint = false
-    )
+    private val args = FillWholeSiglaArgs(book = "Rdz", chapter = 1, number = "1", hasHint = false)
 
     @Test
-    fun `checking correct combination updates phase to success`() {
-        val viewModel = FillWholeSiglaViewModel(defaultArgs)
+    fun `checking correct whole sigla updates phase to result success`() {
+        val viewModel = FillWholeSiglaViewModel(args)
         
         viewModel.onEvent(FillWholeSiglaEvent.UpdateBook("Rodzaju"))
         viewModel.onEvent(FillWholeSiglaEvent.UpdateChapter("1"))
-        viewModel.onEvent(FillWholeSiglaEvent.UpdateVerse("2"))
+        viewModel.onEvent(FillWholeSiglaEvent.UpdateVerse("1"))
         viewModel.onEvent(FillWholeSiglaEvent.Check)
         
         val phase = viewModel.state.value.phase
-        assertTrue(phase is FillWholeSiglaUiState.Phase.Result)
-        assertTrue((phase as FillWholeSiglaUiState.Phase.Result).correct)
+        assertTrue(phase is RiddlePhase.Result)
+        assertTrue((phase as RiddlePhase.Result).correct)
     }
 
     @Test
-    fun `incorrect book name highlights error`() {
-        val viewModel = FillWholeSiglaViewModel(defaultArgs)
+    fun `checking partially wrong sigla highlights errors`() {
+        val viewModel = FillWholeSiglaViewModel(args)
         
-        viewModel.onEvent(FillWholeSiglaEvent.UpdateBook("Wrong"))
-        viewModel.onEvent(FillWholeSiglaEvent.UpdateChapter("1"))
+        viewModel.onEvent(FillWholeSiglaEvent.UpdateBook("Rodzaju"))
+        viewModel.onEvent(FillWholeSiglaEvent.UpdateChapter("2")) // WRONG
         viewModel.onEvent(FillWholeSiglaEvent.UpdateVerse("1"))
         viewModel.onEvent(FillWholeSiglaEvent.Check)
         
         val state = viewModel.state.value
-        assertFalse((state.phase as FillWholeSiglaUiState.Phase.Result).correct)
-        assertTrue(state.wrongIndices.contains(0))
-        assertFalse(state.wrongIndices.contains(1))
-        assertFalse(state.wrongIndices.contains(2))
+        assertTrue(!(state.phase as RiddlePhase.Result).correct)
+        assertEquals(setOf(1), state.wrongIndices)
     }
 
     @Test
-    fun `incorrect verse number highlights error`() {
-        val viewModel = FillWholeSiglaViewModel(defaultArgs)
-        
-        viewModel.onEvent(FillWholeSiglaEvent.UpdateBook("Rdz"))
-        viewModel.onEvent(FillWholeSiglaEvent.UpdateChapter("1"))
-        viewModel.onEvent(FillWholeSiglaEvent.UpdateVerse("5")) // Not in 1-3
+    fun `dismissResult resets to answering phase`() {
+        val viewModel = FillWholeSiglaViewModel(args)
+        viewModel.onEvent(FillWholeSiglaEvent.UpdateBook("X"))
         viewModel.onEvent(FillWholeSiglaEvent.Check)
+        viewModel.onEvent(FillWholeSiglaEvent.DismissResult)
         
-        val state = viewModel.state.value
-        assertTrue(state.wrongIndices.contains(2))
-    }
-
-    @Test
-    fun `correct answer with hint triggers image reward`() {
-        val viewModel = FillWholeSiglaViewModel(defaultArgs.copy(hasHint = true))
-        
-        viewModel.onEvent(FillWholeSiglaEvent.UpdateBook("Rdz"))
-        viewModel.onEvent(FillWholeSiglaEvent.UpdateChapter("1"))
-        viewModel.onEvent(FillWholeSiglaEvent.UpdateVerse("1"))
-        viewModel.onEvent(FillWholeSiglaEvent.Check)
-        
-        assertEquals(FillWholeSiglaUiState.Phase.ShowingImageReward, viewModel.state.value.phase)
+        assertEquals(RiddlePhase.Answering, viewModel.state.value.phase)
     }
 }

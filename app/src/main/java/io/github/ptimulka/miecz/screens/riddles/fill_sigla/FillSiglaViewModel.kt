@@ -1,14 +1,10 @@
 package io.github.ptimulka.miecz.screens.riddles.fill_sigla
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import io.github.ptimulka.miecz.helpers.BookNameNormalizer
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
+import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
+import io.github.ptimulka.miecz.screens.riddles.base.RiddleEvent
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 data class FillSiglaArgs(
     val book: String,
@@ -20,33 +16,18 @@ data class FillSiglaArgs(
 
 class FillSiglaViewModel(
     private val args: FillSiglaArgs
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(FillSiglaUiState())
-    val state = _state.asStateFlow()
-
-    private val _effects = Channel<FillSiglaEffect>()
-    val effects = _effects.receiveAsFlow()
+) : BaseRiddleViewModel<FillSiglaUiState>(FillSiglaUiState()) {
 
     fun onEvent(event: FillSiglaEvent) {
         when (event) {
             is FillSiglaEvent.UpdateInput -> _state.update { it.copy(userInput = event.value) }
-            FillSiglaEvent.Check -> checkAnswer()
-            FillSiglaEvent.DismissResult -> {
-                val s = _state.value
-                val phase = s.phase
-                if (phase is FillSiglaUiState.Phase.Result && phase.correct) {
-                    viewModelScope.launch { _effects.send(FillSiglaEffect.Success) }
-                }
-                _state.update { it.copy(phase = FillSiglaUiState.Phase.Answering) }
-            }
-            FillSiglaEvent.DismissImage -> {
-                _state.update { it.copy(phase = FillSiglaUiState.Phase.Result(correct = true)) }
-            }
+            FillSiglaEvent.Check -> onBaseEvent(RiddleEvent.Check)
+            FillSiglaEvent.DismissResult -> onBaseEvent(RiddleEvent.DismissResult)
+            FillSiglaEvent.DismissHint -> onBaseEvent(RiddleEvent.DismissHint)
         }
     }
 
-    private fun checkAnswer() {
+    override fun checkAnswer() {
         val userInput = _state.value.userInput
         val isCorrect = when (args.fillType) {
             FillSiglaType.BOOK -> BookNameNormalizer.getCanonicalSigla(userInput) == args.book
@@ -54,11 +35,7 @@ class FillSiglaViewModel(
             FillSiglaType.VERSE -> checkVerseNumber(userInput, args.number)
         }
 
-        if (isCorrect && args.hasHint) {
-            _state.update { it.copy(phase = FillSiglaUiState.Phase.ShowingImageReward) }
-        } else {
-            _state.update { it.copy(phase = FillSiglaUiState.Phase.Result(correct = isCorrect)) }
-        }
+        setResult(isCorrect, args.hasHint)
     }
 
     private fun checkVerseNumber(userInput: String, correctNumber: String): Boolean {
@@ -73,5 +50,9 @@ class FillSiglaViewModel(
         } else {
             userInput == correctNumber
         }
+    }
+
+    override fun updatePhase(state: FillSiglaUiState, newPhase: RiddlePhase): FillSiglaUiState {
+        return state.copy(phase = newPhase)
     }
 }

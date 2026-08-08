@@ -47,6 +47,8 @@ import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
 import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
 @Composable
 fun QuizRiddleScreen(
@@ -97,7 +99,7 @@ fun QuizRiddleScreen(
     LaunchedEffect(vm.effects) {
         vm.effects.collect { effect ->
             when (effect) {
-                QuizEffect.Success -> onSuccess()
+                is RiddleEffect.Success -> onSuccess()
             }
         }
     }
@@ -105,14 +107,14 @@ fun QuizRiddleScreen(
     val phase = state.phase
     LaunchedEffect(phase) {
         when (phase) {
-            is QuizUiState.Phase.Result -> {
+            is RiddlePhase.Result -> {
                 showResultDialog = if (!phase.correct) {
                     !onShieldLoss()
                 } else {
                     true
                 }
             }
-            QuizUiState.Phase.Answering -> {
+            RiddlePhase.Answering -> {
                 showResultDialog = false
             }
             else -> {}
@@ -137,16 +139,15 @@ fun QuizRiddleScreen(
             )
         }
 
-        if (phase is QuizUiState.Phase.ShowingImageReward && hintBitmap != null) {
-            FullscreenImageOverlay(hintBitmap) { vm.onEvent(QuizEvent.DismissImage) }
-        } else if (showResultDialog && phase is QuizUiState.Phase.Result) {
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hintBitmap != null) {
+            FullscreenImageOverlay(hintBitmap) { vm.onEvent(QuizEvent.DismissHint) }
+        } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,
                 onConfirm = { vm.onEvent(QuizEvent.DismissResult) }
             )
         }
-    }
-}
+    }}
 
 @Composable
 fun PortraitQuizLayout(

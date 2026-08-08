@@ -8,7 +8,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,8 +22,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -34,10 +33,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,6 +59,8 @@ import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.data.WordItem
+import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
 @Composable
 fun WordScrambleRiddleScreen(
@@ -74,6 +75,9 @@ fun WordScrambleRiddleScreen(
     onSuccess: () -> Unit,
     onShieldLoss: () -> Boolean
 ) {
+    val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
+    val hasHint = hintBitmap != null
+
     val vm: WordScrambleViewModel = viewModel(
         key = "WordScrambleVM_${book}_${chapter}_${number}_${isEasy}",
         factory = object : ViewModelProvider.Factory {
@@ -85,7 +89,8 @@ fun WordScrambleRiddleScreen(
                         book = book,
                         chapter = chapter,
                         number = number,
-                        isEasy = isEasy
+                        isEasy = isEasy,
+                        hasHint = hasHint
                     )
                 ) as T
             }
@@ -93,13 +98,12 @@ fun WordScrambleRiddleScreen(
     )
 
     val state by vm.state.collectAsStateWithLifecycle()
-    val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
     var showResultDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(vm.effects) {
         vm.effects.collect { effect ->
             when (effect) {
-                WordScrambleEffect.Success -> onSuccess()
+                is RiddleEffect.Success -> onSuccess()
             }
         }
     }
@@ -107,14 +111,14 @@ fun WordScrambleRiddleScreen(
     val phase = state.phase
     LaunchedEffect(phase) {
         when (phase) {
-            is WordScrambleUiState.Phase.Result -> {
+            is RiddlePhase.Result -> {
                 showResultDialog = if (!phase.correct) {
                     !onShieldLoss()
                 } else {
                     true
                 }
             }
-            WordScrambleUiState.Phase.Answering -> {
+            RiddlePhase.Answering -> {
                 showResultDialog = false
             }
             else -> {}
@@ -139,9 +143,9 @@ fun WordScrambleRiddleScreen(
             )
         }
 
-        if (phase is WordScrambleUiState.Phase.ShowingHintImage && hintBitmap != null) {
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hintBitmap != null) {
             FullscreenImageOverlay(hintBitmap) { vm.onEvent(WordScrambleEvent.DismissHint) }
-        } else if (showResultDialog && phase is WordScrambleUiState.Phase.Result) {
+        } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,
                 onConfirm = { vm.onEvent(WordScrambleEvent.DismissResult) }
@@ -156,8 +160,6 @@ private fun PortraitWordScrambleLayout(
     hintBitmap: android.graphics.Bitmap?,
     onEvent: (WordScrambleEvent) -> Unit
 ) {
-    var showHintDialog by remember { mutableStateOf(false) }
-
     Column(Modifier.fillMaxSize()) {
         ScrambleTopBar(state.book, state.chapter, state.number, hintBitmap) { onEvent(WordScrambleEvent.ShowHint) }
 
@@ -172,10 +174,6 @@ private fun PortraitWordScrambleLayout(
             )
         }
     }
-
-    if (showHintDialog && hintBitmap != null) {
-        FullscreenImageOverlay(hintBitmap) { showHintDialog = false }
-    }
 }
 
 @Composable
@@ -184,8 +182,6 @@ private fun LandscapeWordScrambleLayout(
     hintBitmap: android.graphics.Bitmap?,
     onEvent: (WordScrambleEvent) -> Unit
 ) {
-    var showHintDialog by remember { mutableStateOf(false) }
-
     Column(Modifier.fillMaxSize()) {
         ScrambleTopBar(state.book, state.chapter, state.number, hintBitmap) { onEvent(WordScrambleEvent.ShowHint) }
 
@@ -201,10 +197,6 @@ private fun LandscapeWordScrambleLayout(
                 )
             }
         }
-    }
-
-    if (showHintDialog && hintBitmap != null) {
-        FullscreenImageOverlay(hintBitmap) { showHintDialog = false }
     }
 }
 
@@ -239,7 +231,6 @@ private fun ScrambleTopBar(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun AnswerArea(
     modifier: Modifier,
@@ -285,7 +276,6 @@ private fun AnswerArea(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun SelectionArea(modifier: Modifier, availableWords: List<WordItem>, onWordClick: (WordItem) -> Unit) {
     Box(modifier) {
@@ -357,7 +347,7 @@ fun WordChip(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    Icons.Default.ArrowBack,
+                    Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = stringResource(id = R.string.move_left_desc),
                     tint = contentColor,
                     modifier = Modifier.size(20.dp)
@@ -376,7 +366,7 @@ fun WordChip(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    Icons.Default.ArrowForward,
+                    Icons.AutoMirrored.Filled.ArrowForward,
                     contentDescription = stringResource(id = R.string.move_right_desc),
                     tint = contentColor,
                     modifier = Modifier.size(20.dp)

@@ -1,8 +1,8 @@
 package io.github.ptimulka.miecz.screens.riddles
 
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import io.github.ptimulka.miecz.screens.riddles.quiz.QuizArgs
 import io.github.ptimulka.miecz.screens.riddles.quiz.QuizEvent
-import io.github.ptimulka.miecz.screens.riddles.quiz.QuizUiState
 import io.github.ptimulka.miecz.screens.riddles.quiz.QuizViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -29,7 +29,7 @@ class QuizViewModelTest {
         
         assertEquals("Na początku...", state.verseText)
         assertEquals(4, state.answers.size)
-        assertEquals(QuizUiState.Phase.Answering, state.phase)
+        assertEquals(RiddlePhase.Answering, state.phase)
     }
 
     @Test
@@ -48,17 +48,17 @@ class QuizViewModelTest {
         viewModel.onEvent(QuizEvent.Check)
         
         val phase = viewModel.state.value.phase
-        assertTrue(phase is QuizUiState.Phase.Result)
-        assertTrue((phase as QuizUiState.Phase.Result).correct)
+        assertTrue(phase is RiddlePhase.Result)
+        assertTrue((phase as RiddlePhase.Result).correct)
     }
 
     @Test
-    fun `checking correct answer with hint updates phase to showing image`() {
+    fun `checking correct answer with hint updates phase to showing reward`() {
         val viewModel = QuizViewModel(defaultArgs.copy(hasHint = true))
         viewModel.onEvent(QuizEvent.Select("Rdz 1,1"))
         viewModel.onEvent(QuizEvent.Check)
         
-        assertEquals(QuizUiState.Phase.ShowingImageReward, viewModel.state.value.phase)
+        assertEquals(RiddlePhase.ShowingReward, viewModel.state.value.phase)
     }
 
     @Test
@@ -66,11 +66,11 @@ class QuizViewModelTest {
         val viewModel = QuizViewModel(defaultArgs.copy(hasHint = true))
         viewModel.onEvent(QuizEvent.Select("Rdz 1,1"))
         viewModel.onEvent(QuizEvent.Check)
-        viewModel.onEvent(QuizEvent.DismissImage)
+        viewModel.onEvent(QuizEvent.DismissHint)
         
         val phase = viewModel.state.value.phase
-        assertTrue(phase is QuizUiState.Phase.Result)
-        assertTrue((phase as QuizUiState.Phase.Result).correct)
+        assertTrue(phase is RiddlePhase.Result)
+        assertTrue((phase as RiddlePhase.Result).correct)
     }
 
     @Test
@@ -83,8 +83,8 @@ class QuizViewModelTest {
         viewModel.onEvent(QuizEvent.Check)
         
         val phase = viewModel.state.value.phase
-        assertTrue(phase is QuizUiState.Phase.Result)
-        assertTrue(!(phase as QuizUiState.Phase.Result).correct)
+        assertTrue(phase is RiddlePhase.Result)
+        assertTrue(!(phase as RiddlePhase.Result).correct)
     }
 
     @Test
@@ -96,7 +96,7 @@ class QuizViewModelTest {
         viewModel.onEvent(QuizEvent.Check)
         viewModel.onEvent(QuizEvent.DismissResult)
         
-        assertEquals(QuizUiState.Phase.Answering, viewModel.state.value.phase)
+        assertEquals(RiddlePhase.Answering, viewModel.state.value.phase)
         assertEquals(wrongAnswer, viewModel.state.value.selectedAnswer) // Selection should persist
     }
 }

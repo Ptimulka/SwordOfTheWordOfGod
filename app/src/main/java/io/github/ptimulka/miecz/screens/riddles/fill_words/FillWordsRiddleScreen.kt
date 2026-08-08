@@ -58,6 +58,8 @@ import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleHint
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
+import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
 @Composable
 fun FillWordsRiddleScreen(
@@ -73,6 +75,9 @@ fun FillWordsRiddleScreen(
     onSuccess: () -> Unit,
     onShieldLoss: () -> Boolean
 ) {
+    val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
+    val hasHint = hintBitmap != null
+    
     val vm: FillWordsViewModel = viewModel(
         key = "FillWordsVM_${book}_${chapter}_${number}_${isEasy}_${moreWords}",
         factory = object : ViewModelProvider.Factory {
@@ -85,7 +90,8 @@ fun FillWordsRiddleScreen(
                         chapter = chapter,
                         number = number,
                         isEasy = isEasy,
-                        moreWords = moreWords
+                        moreWords = moreWords,
+                        hasHint = hasHint
                     )
                 ) as T
             }
@@ -93,13 +99,12 @@ fun FillWordsRiddleScreen(
     )
 
     val state by vm.state.collectAsStateWithLifecycle()
-    val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
     var showResultDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(vm.effects) {
         vm.effects.collect { effect ->
             when (effect) {
-                FillWordsEffect.Success -> onSuccess()
+                is RiddleEffect.Success -> onSuccess()
             }
         }
     }
@@ -107,14 +112,14 @@ fun FillWordsRiddleScreen(
     val phase = state.phase
     LaunchedEffect(phase) {
         when (phase) {
-            is FillWordsUiState.Phase.Result -> {
+            is RiddlePhase.Result -> {
                 showResultDialog = if (!phase.correct) {
                     !onShieldLoss()
                 } else {
                     true
                 }
             }
-            FillWordsUiState.Phase.Answering -> {
+            RiddlePhase.Answering -> {
                 showResultDialog = false
             }
             else -> {}
@@ -129,9 +134,9 @@ fun FillWordsRiddleScreen(
             onEvent = vm::onEvent
         )
 
-        if (phase is FillWordsUiState.Phase.ShowingHintImage && hintBitmap != null) {
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hintBitmap != null) {
             FullscreenImageOverlay(hintBitmap) { vm.onEvent(FillWordsEvent.DismissHint) }
-        } else if (showResultDialog && phase is FillWordsUiState.Phase.Result) {
+        } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,
                 onConfirm = { vm.onEvent(FillWordsEvent.DismissResult) }

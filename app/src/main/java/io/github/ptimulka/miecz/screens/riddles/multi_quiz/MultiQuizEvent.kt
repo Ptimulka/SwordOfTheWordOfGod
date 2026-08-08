@@ -6,5 +6,5 @@ sealed interface MultiQuizEvent {
     data class SelectVerse(val verse: String) : MultiQuizEvent
     data object Check : MultiQuizEvent
     data object DismissResult : MultiQuizEvent
-    data object DismissImage : MultiQuizEvent
+    data object DismissHint : MultiQuizEvent
 }

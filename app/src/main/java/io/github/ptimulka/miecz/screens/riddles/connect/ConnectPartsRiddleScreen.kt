@@ -17,6 +17,7 @@ import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 
 @Composable
 fun ConnectPartsRiddleScreen(
@@ -49,7 +50,7 @@ fun ConnectPartsRiddleScreen(
     LaunchedEffect(vm.effects) {
         vm.effects.collect { effect ->
             when (effect) {
-                is ConnectEffect.Success -> onSuccess(effect.elapsedMs)
+                is RiddleEffect.Success -> onSuccess(effect.elapsedMs ?: 0L)
             }
         }
     }
@@ -66,7 +67,7 @@ fun ConnectPartsRiddleScreen(
 
         state.previewBitmap?.let { preview ->
             FullscreenImageOverlay(preview) {
-                vm.onEvent(ConnectEvent.DismissImage)
+                vm.onEvent(ConnectEvent.DismissHint)
             }
         }
     }

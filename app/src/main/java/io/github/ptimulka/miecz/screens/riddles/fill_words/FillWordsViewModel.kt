@@ -1,15 +1,11 @@
 package io.github.ptimulka.miecz.screens.riddles.fill_words
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import io.github.ptimulka.miecz.helpers.FillWordsPartBuilder
 import io.github.ptimulka.miecz.helpers.foldPolishChars
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
+import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
+import io.github.ptimulka.miecz.screens.riddles.base.RiddleEvent
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 data class FillWordsArgs(
     val verseText: String,
@@ -17,24 +13,19 @@ data class FillWordsArgs(
     val chapter: Int,
     val number: String,
     val isEasy: Boolean,
-    val moreWords: Boolean
+    val moreWords: Boolean,
+    val hasHint: Boolean = false
 )
 
 class FillWordsViewModel(
     private val args: FillWordsArgs
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(
-        FillWordsUiState(
-            book = args.book,
-            chapter = args.chapter,
-            number = args.number
-        )
+) : BaseRiddleViewModel<FillWordsUiState>(
+    FillWordsUiState(
+        book = args.book,
+        chapter = args.chapter,
+        number = args.number
     )
-    val state = _state.asStateFlow()
-
-    private val _effects = Channel<FillWordsEffect>()
-    val effects = _effects.receiveAsFlow()
+) {
 
     init {
         val parts = FillWordsPartBuilder.build(args.verseText, args.isEasy, args.moreWords)
@@ -50,17 +41,10 @@ class FillWordsViewModel(
     fun onEvent(event: FillWordsEvent) {
         when (event) {
             is FillWordsEvent.UpdateInput -> updateInput(event.index, event.value)
-            FillWordsEvent.Check -> checkAnswer()
-            FillWordsEvent.DismissResult -> {
-                val s = _state.value
-                val phase = s.phase
-                if (phase is FillWordsUiState.Phase.Result && phase.correct) {
-                    viewModelScope.launch { _effects.send(FillWordsEffect.Success) }
-                }
-                _state.update { it.copy(phase = FillWordsUiState.Phase.Answering) }
-            }
-            FillWordsEvent.ShowHint -> _state.update { it.copy(phase = FillWordsUiState.Phase.ShowingHintImage) }
-            FillWordsEvent.DismissHint -> _state.update { it.copy(phase = FillWordsUiState.Phase.Answering) }
+            FillWordsEvent.Check -> onBaseEvent(RiddleEvent.Check)
+            FillWordsEvent.DismissResult -> onBaseEvent(RiddleEvent.DismissResult)
+            FillWordsEvent.ShowHint -> onBaseEvent(RiddleEvent.ShowHint)
+            FillWordsEvent.DismissHint -> onBaseEvent(RiddleEvent.DismissHint)
         }
     }
 
@@ -77,7 +61,7 @@ class FillWordsViewModel(
         }
     }
 
-    private fun checkAnswer() {
+    override fun checkAnswer() {
         val s = _state.value
         val fillableParts = s.verseParts.filterIsInstance<VersePart.WordToFill>()
         val wrongIndices = mutableSetOf<Int>()
@@ -92,11 +76,11 @@ class FillWordsViewModel(
             }
         }
 
-        _state.update { 
-            it.copy(
-                wrongInputIndices = wrongIndices,
-                phase = FillWordsUiState.Phase.Result(correct = allCorrect)
-            )
-        }
+        _state.update { it.copy(wrongInputIndices = wrongIndices) }
+        setResult(allCorrect, args.hasHint)
+    }
+
+    override fun updatePhase(state: FillWordsUiState, newPhase: RiddlePhase): FillWordsUiState {
+        return state.copy(phase = newPhase)
     }
 }

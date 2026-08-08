@@ -30,16 +30,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,13 +53,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.components.game.RiddleCheckButton
-import io.github.ptimulka.miecz.components.game.RiddleHint
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.helpers.DiffPart
 import io.github.ptimulka.miecz.helpers.DiffType
 import io.github.ptimulka.miecz.helpers.createPolishSpeechIntent
 import io.github.ptimulka.miecz.helpers.rememberSpeechLauncher
+import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
+
+private const val SIMILARITY_THRESHOLD = 90.0f
 
 @Composable
 fun FillWholeVerseRiddleScreen(
@@ -70,6 +76,9 @@ fun FillWholeVerseRiddleScreen(
     onSuccess: () -> Unit,
     onShieldLoss: () -> Boolean
 ) {
+    val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
+    val hasHint = hintBitmap != null
+
     val vm: FillWholeVerseViewModel = viewModel(
         key = "FillWholeVerseVM_${book}_${chapter}_${number}",
         factory = object : ViewModelProvider.Factory {
@@ -80,7 +89,8 @@ fun FillWholeVerseRiddleScreen(
                         verseText = verseText,
                         book = book,
                         chapter = chapter,
-                        number = number
+                        number = number,
+                        hasHint = hasHint
                     )
                 ) as T
             }
@@ -88,13 +98,12 @@ fun FillWholeVerseRiddleScreen(
     )
 
     val state by vm.state.collectAsStateWithLifecycle()
-    val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
     var showResultDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(vm.effects) {
         vm.effects.collect { effect ->
             when (effect) {
-                FillWholeVerseEffect.Success -> onSuccess()
+                is RiddleEffect.Success -> onSuccess()
             }
         }
     }
@@ -102,14 +111,14 @@ fun FillWholeVerseRiddleScreen(
     val phase = state.phase
     LaunchedEffect(phase) {
         when (phase) {
-            is FillWholeVerseUiState.Phase.Result -> {
+            is RiddlePhase.Result -> {
                 showResultDialog = if (!phase.correct) {
                     !onShieldLoss()
                 } else {
                     true
                 }
             }
-            FillWholeVerseUiState.Phase.Answering -> {
+            RiddlePhase.Answering -> {
                 showResultDialog = false
             }
             else -> {}
@@ -140,9 +149,9 @@ fun FillWholeVerseRiddleScreen(
             )
         }
 
-        if (phase is FillWholeVerseUiState.Phase.ShowingHintImage && hintBitmap != null) {
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hintBitmap != null) {
             FullscreenImageOverlay(hintBitmap) { vm.onEvent(FillWholeVerseEvent.DismissHint) }
-        } else if (showResultDialog && phase is FillWholeVerseUiState.Phase.Result) {
+        } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,
                 dismissable = false,
@@ -295,7 +304,7 @@ private fun InputArea(
         label = { Text(stringResource(id = R.string.fill_whole_verse_caption)) },
         trailingIcon = {
             IconButton(onClick = {
-                speechLauncher.launch(createPolishSpeechIntent(prompt = extraPrompt))
+                speechLauncher.launch(io.github.ptimulka.miecz.helpers.createPolishSpeechIntent(prompt = extraPrompt))
             }) {
                 Icon(
                     painter = painterResource(id = R.drawable.microphone),
@@ -330,4 +339,15 @@ private fun DiffView(diffs: List<DiffPart>) {
             )
         }
     }
+}
+
+@Composable
+private fun RiddleHint(text: String) {
+    Text(
+        text = text,
+        fontSize = 12.sp,
+        color = Color.Gray,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.padding(horizontal = 16.dp)
+    )
 }

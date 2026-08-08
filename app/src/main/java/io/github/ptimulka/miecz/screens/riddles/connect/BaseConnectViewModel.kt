@@ -3,6 +3,7 @@ package io.github.ptimulka.miecz.screens.riddles.connect
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +19,7 @@ abstract class BaseConnectViewModel(
     protected val _state = MutableStateFlow(ConnectUiState())
     val state = _state.asStateFlow()
 
-    private val _effects = Channel<ConnectEffect>()
+    private val _effects = Channel<RiddleEffect>()
     val effects = _effects.receiveAsFlow()
 
     private var startTimeMs: Long = System.currentTimeMillis()
@@ -27,7 +28,7 @@ abstract class BaseConnectViewModel(
         when (event) {
             is ConnectEvent.SelectLeft -> selectLeft(event.item)
             is ConnectEvent.SelectRight -> selectRight(event.item)
-            ConnectEvent.DismissImage -> dismissImage()
+            ConnectEvent.DismissHint -> dismissImage()
         }
     }
 
@@ -110,7 +111,7 @@ abstract class BaseConnectViewModel(
         
         val elapsed = _state.value.completedElapsedMs
         if (elapsed >= 0) {
-            viewModelScope.launch { _effects.send(ConnectEffect.Success(elapsed)) }
+            viewModelScope.launch { _effects.send(RiddleEffect.Success(elapsed)) }
         }
     }
 

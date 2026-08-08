@@ -50,6 +50,8 @@ import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.VerseDisplay
 import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
 @Composable
 fun FillSiglaRiddleScreen(
@@ -94,7 +96,7 @@ fun FillSiglaRiddleScreen(
     LaunchedEffect(vm.effects) {
         vm.effects.collect { effect ->
             when (effect) {
-                FillSiglaEffect.Success -> onSuccess()
+                is RiddleEffect.Success -> onSuccess()
             }
         }
     }
@@ -102,14 +104,14 @@ fun FillSiglaRiddleScreen(
     val phase = state.phase
     LaunchedEffect(phase) {
         when (phase) {
-            is FillSiglaUiState.Phase.Result -> {
+            is RiddlePhase.Result -> {
                 showResultDialog = if (!phase.correct) {
                     !onShieldLoss()
                 } else {
                     true
                 }
             }
-            FillSiglaUiState.Phase.Answering -> {
+            RiddlePhase.Answering -> {
                 showResultDialog = false
             }
             else -> {}
@@ -142,9 +144,9 @@ fun FillSiglaRiddleScreen(
             )
         }
 
-        if (phase is FillSiglaUiState.Phase.ShowingImageReward && hintBitmap != null) {
-            FullscreenImageOverlay(hintBitmap) { vm.onEvent(FillSiglaEvent.DismissImage) }
-        } else if (showResultDialog && phase is FillSiglaUiState.Phase.Result) {
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hintBitmap != null) {
+            FullscreenImageOverlay(hintBitmap) { vm.onEvent(FillSiglaEvent.DismissHint) }
+        } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,
                 onConfirm = { vm.onEvent(FillSiglaEvent.DismissResult) }

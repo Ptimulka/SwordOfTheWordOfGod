@@ -1,5 +1,6 @@
 package io.github.ptimulka.miecz.screens.riddles
 
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import io.github.ptimulka.miecz.screens.riddles.multi_quiz.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -49,8 +50,8 @@ class MultiQuizViewModelTest {
         viewModel.onEvent(MultiQuizEvent.Check)
         
         val phase = viewModel.state.value.phase
-        assertTrue(phase is MultiQuizUiState.Phase.Result)
-        assertTrue((phase as MultiQuizUiState.Phase.Result).correct)
+        assertTrue(phase is RiddlePhase.Result)
+        assertTrue((phase as RiddlePhase.Result).correct)
     }
 
     @Test
@@ -62,8 +63,8 @@ class MultiQuizViewModelTest {
         viewModel.onEvent(MultiQuizEvent.Check)
         
         val state = viewModel.state.value
-        assertTrue(state.phase is MultiQuizUiState.Phase.Result)
-        assertFalse((state.phase as MultiQuizUiState.Phase.Result).correct)
+        assertTrue(state.phase is RiddlePhase.Result)
+        assertFalse((state.phase as RiddlePhase.Result).correct)
         assertEquals("Wrong", state.wrongBook)
         assertNull(state.wrongChapter)
         assertNull(state.wrongVerse)

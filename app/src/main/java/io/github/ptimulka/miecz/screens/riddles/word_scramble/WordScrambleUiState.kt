@@ -1,6 +1,8 @@
 package io.github.ptimulka.miecz.screens.riddles.word_scramble
 
 import io.github.ptimulka.miecz.data.WordItem
+import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleUiState
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
 data class WordScrambleUiState(
     val book: String,
@@ -10,13 +12,7 @@ data class WordScrambleUiState(
     val availableWords: List<WordItem> = emptyList(),
     val wrongWords: Set<WordItem> = emptySet(),
     val selectedWordForReorder: WordItem? = null,
-    val phase: Phase = Phase.Answering
-) {
+    override val phase: RiddlePhase = RiddlePhase.Answering
+) : BaseRiddleUiState {
     val checkEnabled: Boolean get() = availableWords.isEmpty()
-
-    sealed interface Phase {
-        data object Answering : Phase
-        data object ShowingHintImage : Phase
-        data class Result(val correct: Boolean) : Phase
-    }
 }

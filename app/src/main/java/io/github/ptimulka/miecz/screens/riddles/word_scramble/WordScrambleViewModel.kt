@@ -1,15 +1,11 @@
 package io.github.ptimulka.miecz.screens.riddles.word_scramble
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import io.github.ptimulka.miecz.data.WordItem
 import io.github.ptimulka.miecz.helpers.WordScramblePartBuilder
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
+import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
+import io.github.ptimulka.miecz.screens.riddles.base.RiddleEvent
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import java.util.Collections
 
 data class WordScrambleArgs(
@@ -17,24 +13,19 @@ data class WordScrambleArgs(
     val book: String,
     val chapter: Int,
     val number: String,
-    val isEasy: Boolean
+    val isEasy: Boolean,
+    val hasHint: Boolean = false
 )
 
 class WordScrambleViewModel(
     private val args: WordScrambleArgs
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(
-        WordScrambleUiState(
-            book = args.book,
-            chapter = args.chapter,
-            number = args.number
-        )
+) : BaseRiddleViewModel<WordScrambleUiState>(
+    WordScrambleUiState(
+        book = args.book,
+        chapter = args.chapter,
+        number = args.number
     )
-    val state = _state.asStateFlow()
-
-    private val _effects = Channel<WordScrambleEffect>()
-    val effects = _effects.receiveAsFlow()
+) {
 
     private val correctWordsStrings = WordScramblePartBuilder.build(args.verseText, args.isEasy)
     private val initialShuffledWords = correctWordsStrings.mapIndexed { index, word ->
@@ -53,17 +44,10 @@ class WordScrambleViewModel(
             is WordScrambleEvent.MoveLeft -> moveWord(event.index, -1)
             is WordScrambleEvent.MoveRight -> moveWord(event.index, 1)
             WordScrambleEvent.Reset -> reset()
-            WordScrambleEvent.Check -> checkAnswer()
-            WordScrambleEvent.DismissResult -> {
-                val s = _state.value
-                val phase = s.phase
-                if (phase is WordScrambleUiState.Phase.Result && phase.correct) {
-                    viewModelScope.launch { _effects.send(WordScrambleEffect.Success) }
-                }
-                _state.update { it.copy(phase = WordScrambleUiState.Phase.Answering) }
-            }
-            WordScrambleEvent.ShowHint -> _state.update { it.copy(phase = WordScrambleUiState.Phase.ShowingHintImage) }
-            WordScrambleEvent.DismissHint -> _state.update { it.copy(phase = WordScrambleUiState.Phase.Answering) }
+            WordScrambleEvent.Check -> onBaseEvent(RiddleEvent.Check)
+            WordScrambleEvent.DismissResult -> onBaseEvent(RiddleEvent.DismissResult)
+            WordScrambleEvent.ShowHint -> onBaseEvent(RiddleEvent.ShowHint)
+            WordScrambleEvent.DismissHint -> onBaseEvent(RiddleEvent.DismissHint)
         }
     }
 
@@ -106,12 +90,12 @@ class WordScrambleViewModel(
                 availableWords = initialShuffledWords,
                 wrongWords = emptySet(),
                 selectedWordForReorder = null,
-                phase = WordScrambleUiState.Phase.Answering
+                phase = RiddlePhase.Answering
             )
         }
     }
 
-    private fun checkAnswer() {
+    override fun checkAnswer() {
         val s = _state.value
         val wrongWords = mutableSetOf<WordItem>()
         var allCorrect = true
@@ -127,11 +111,11 @@ class WordScrambleViewModel(
             }
         }
 
-        _state.update { 
-            it.copy(
-                wrongWords = wrongWords,
-                phase = WordScrambleUiState.Phase.Result(correct = allCorrect)
-            )
-        }
+        _state.update { it.copy(wrongWords = wrongWords) }
+        setResult(allCorrect, args.hasHint)
+    }
+
+    override fun updatePhase(state: WordScrambleUiState, newPhase: RiddlePhase): WordScrambleUiState {
+        return state.copy(phase = newPhase)
     }
 }

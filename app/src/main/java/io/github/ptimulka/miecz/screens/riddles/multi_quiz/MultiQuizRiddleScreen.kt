@@ -48,6 +48,8 @@ import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
 import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
 @Composable
 fun MultiQuizRiddleScreen(
@@ -90,7 +92,7 @@ fun MultiQuizRiddleScreen(
     LaunchedEffect(vm.effects) {
         vm.effects.collect { effect ->
             when (effect) {
-                MultiQuizEffect.Success -> onSuccess()
+                is RiddleEffect.Success -> onSuccess()
             }
         }
     }
@@ -98,14 +100,14 @@ fun MultiQuizRiddleScreen(
     val phase = state.phase
     LaunchedEffect(phase) {
         when (phase) {
-            is MultiQuizUiState.Phase.Result -> {
+            is RiddlePhase.Result -> {
                 showResultDialog = if (!phase.correct) {
                     !onShieldLoss()
                 } else {
                     true
                 }
             }
-            MultiQuizUiState.Phase.Answering -> {
+            RiddlePhase.Answering -> {
                 showResultDialog = false
             }
             else -> {}
@@ -134,9 +136,9 @@ fun MultiQuizRiddleScreen(
             )
         }
 
-        if (phase is MultiQuizUiState.Phase.ShowingImageReward && hintBitmap != null) {
-            FullscreenImageOverlay(hintBitmap) { vm.onEvent(MultiQuizEvent.DismissImage) }
-        } else if (showResultDialog && phase is MultiQuizUiState.Phase.Result) {
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hintBitmap != null) {
+            FullscreenImageOverlay(hintBitmap) { vm.onEvent(MultiQuizEvent.DismissHint) }
+        } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,
                 onConfirm = { vm.onEvent(MultiQuizEvent.DismissResult) }

@@ -1,9 +1,9 @@
 package io.github.ptimulka.miecz.screens.riddles
 
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import io.github.ptimulka.miecz.screens.riddles.fill_sigla.FillSiglaArgs
 import io.github.ptimulka.miecz.screens.riddles.fill_sigla.FillSiglaEvent
 import io.github.ptimulka.miecz.screens.riddles.fill_sigla.FillSiglaType
-import io.github.ptimulka.miecz.screens.riddles.fill_sigla.FillSiglaUiState
 import io.github.ptimulka.miecz.screens.riddles.fill_sigla.FillSiglaViewModel
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -20,8 +20,8 @@ class FillSiglaViewModelTest {
         viewModel.onEvent(FillSiglaEvent.Check)
         
         val phase = viewModel.state.value.phase
-        assertTrue(phase is FillSiglaUiState.Phase.Result)
-        assertTrue((phase as FillSiglaUiState.Phase.Result).correct)
+        assertTrue(phase is RiddlePhase.Result)
+        assertTrue((phase as RiddlePhase.Result).correct)
     }
 
     @Test
@@ -32,7 +32,7 @@ class FillSiglaViewModelTest {
         viewModel.onEvent(FillSiglaEvent.UpdateInput("5"))
         viewModel.onEvent(FillSiglaEvent.Check)
         
-        assertTrue((viewModel.state.value.phase as FillSiglaUiState.Phase.Result).correct)
+        assertTrue((viewModel.state.value.phase as RiddlePhase.Result).correct)
     }
 
     @Test
@@ -43,7 +43,7 @@ class FillSiglaViewModelTest {
         viewModel.onEvent(FillSiglaEvent.UpdateInput("2")) // Within 1-3
         viewModel.onEvent(FillSiglaEvent.Check)
         
-        assertTrue((viewModel.state.value.phase as FillSiglaUiState.Phase.Result).correct)
+        assertTrue((viewModel.state.value.phase as RiddlePhase.Result).correct)
     }
 
     @Test
@@ -55,7 +55,7 @@ class FillSiglaViewModelTest {
         viewModel.onEvent(FillSiglaEvent.Check)
         
         val phase = viewModel.state.value.phase
-        assertTrue(phase is FillSiglaUiState.Phase.Result)
-        assertFalse((phase as FillSiglaUiState.Phase.Result).correct)
+        assertTrue(phase is RiddlePhase.Result)
+        assertFalse((phase as RiddlePhase.Result).correct)
     }
 }

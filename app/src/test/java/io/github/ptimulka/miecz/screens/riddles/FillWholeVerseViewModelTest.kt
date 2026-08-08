@@ -1,8 +1,8 @@
 package io.github.ptimulka.miecz.screens.riddles
 
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import io.github.ptimulka.miecz.screens.riddles.fill_whole_verse.FillWholeVerseArgs
 import io.github.ptimulka.miecz.screens.riddles.fill_whole_verse.FillWholeVerseEvent
-import io.github.ptimulka.miecz.screens.riddles.fill_whole_verse.FillWholeVerseUiState
 import io.github.ptimulka.miecz.screens.riddles.fill_whole_verse.FillWholeVerseViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -27,8 +27,8 @@ class FillWholeVerseViewModelTest {
         viewModel.onEvent(FillWholeVerseEvent.Check)
         
         val phase = viewModel.state.value.phase
-        assertTrue(phase is FillWholeVerseUiState.Phase.Result)
-        assertTrue((phase as FillWholeVerseUiState.Phase.Result).correct)
+        assertTrue(phase is RiddlePhase.Result)
+        assertTrue((phase as RiddlePhase.Result).correct)
     }
 
     @Test
@@ -39,7 +39,7 @@ class FillWholeVerseViewModelTest {
                 "że syna swego dał aby każdy kto wierzy miał życie wieczne."))
         viewModel.onEvent(FillWholeVerseEvent.Check)
         
-        assertTrue((viewModel.state.value.phase as FillWholeVerseUiState.Phase.Result).correct)
+        assertTrue((viewModel.state.value.phase as RiddlePhase.Result).correct)
     }
 
     @Test
@@ -52,7 +52,7 @@ class FillWholeVerseViewModelTest {
         viewModel.onEvent(FillWholeVerseEvent.Check)
         
         val state = viewModel.state.value
-        assertTrue((state.phase as FillWholeVerseUiState.Phase.Result).correct)
+        assertTrue((state.phase as RiddlePhase.Result).correct)
         assertEquals(100f, state.similarityScore)
     }
 
@@ -66,7 +66,7 @@ class FillWholeVerseViewModelTest {
                 "że syna swego dał aby każdy kto wierzy miał zycie wieczne."))
         viewModel.onEvent(FillWholeVerseEvent.Check)
         
-        assertTrue((viewModel.state.value.phase as FillWholeVerseUiState.Phase.Result).correct)
+        assertTrue((viewModel.state.value.phase as RiddlePhase.Result).correct)
         assertTrue(viewModel.state.value.similarityScore >= 90f)
     }
 
@@ -78,7 +78,7 @@ class FillWholeVerseViewModelTest {
         viewModel.onEvent(FillWholeVerseEvent.Check)
         
         val state = viewModel.state.value
-        assertFalse((state.phase as FillWholeVerseUiState.Phase.Result).correct)
+        assertFalse((state.phase as RiddlePhase.Result).correct)
         assertTrue(state.diffs.isNotEmpty())
     }
 }

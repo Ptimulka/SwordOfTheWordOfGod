@@ -1,15 +1,12 @@
 package io.github.ptimulka.miecz.screens.riddles.quiz
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.QuizAnswerBuilder
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
+import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
+import io.github.ptimulka.miecz.screens.riddles.base.RiddleEvent
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 data class QuizArgs(
     val verseText: String,
@@ -25,13 +22,7 @@ data class QuizArgs(
 
 class QuizViewModel(
     private val args: QuizArgs
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(QuizUiState(verseText = args.verseText))
-    val state = _state.asStateFlow()
-
-    private val _effects = Channel<QuizEffect>()
-    val effects = _effects.receiveAsFlow()
+) : BaseRiddleViewModel<QuizUiState>(QuizUiState(verseText = args.verseText)) {
 
     private val correctAnswer = "${args.book} ${args.chapter},${args.number}"
 
@@ -50,29 +41,19 @@ class QuizViewModel(
     fun onEvent(event: QuizEvent) {
         when (event) {
             is QuizEvent.Select -> _state.update { it.copy(selectedAnswer = event.answer) }
-            QuizEvent.Check -> checkAnswer()
-            QuizEvent.DismissResult -> {
-                val s = _state.value
-                val phase = s.phase
-                if (phase is QuizUiState.Phase.Result && phase.correct) {
-                    viewModelScope.launch { _effects.send(QuizEffect.Success) }
-                }
-                _state.update { it.copy(phase = QuizUiState.Phase.Answering) }
-            }
-            QuizEvent.DismissImage -> {
-                _state.update { it.copy(phase = QuizUiState.Phase.Result(correct = true)) }
-            }
+            QuizEvent.Check -> onBaseEvent(RiddleEvent.Check)
+            QuizEvent.DismissResult -> onBaseEvent(RiddleEvent.DismissResult)
+            QuizEvent.DismissHint -> onBaseEvent(RiddleEvent.DismissHint)
         }
     }
 
-    private fun checkAnswer() {
+    override fun checkAnswer() {
         val selected = _state.value.selectedAnswer ?: return
         val isCorrect = selected == correctAnswer
+        setResult(isCorrect, args.hasHint)
+    }
 
-        if (isCorrect && args.hasHint) {
-            _state.update { it.copy(phase = QuizUiState.Phase.ShowingImageReward) }
-        } else {
-            _state.update { it.copy(phase = QuizUiState.Phase.Result(correct = isCorrect)) }
-        }
+    override fun updatePhase(state: QuizUiState, newPhase: RiddlePhase): QuizUiState {
+        return state.copy(phase = newPhase)
     }
 }

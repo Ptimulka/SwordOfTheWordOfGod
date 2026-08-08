@@ -1,5 +1,6 @@
 package io.github.ptimulka.miecz.screens.riddles
 
+import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import io.github.ptimulka.miecz.screens.riddles.word_scramble.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -83,8 +84,8 @@ class WordScrambleViewModelTest {
         viewModel.onEvent(WordScrambleEvent.Check)
         
         val phase = viewModel.state.value.phase
-        assertTrue(phase is WordScrambleUiState.Phase.Result)
-        assertTrue((phase as WordScrambleUiState.Phase.Result).correct)
+        assertTrue(phase is RiddlePhase.Result)
+        assertTrue((phase as RiddlePhase.Result).correct)
     }
 
     @Test
@@ -105,8 +106,8 @@ class WordScrambleViewModelTest {
         
         val state = viewModel.state.value
         val phase = state.phase
-        assertTrue(phase is WordScrambleUiState.Phase.Result)
-        assertFalse((phase as WordScrambleUiState.Phase.Result).correct)
+        assertTrue(phase is RiddlePhase.Result)
+        assertFalse((phase as RiddlePhase.Result).correct)
         assertTrue(state.wrongWords.contains(word1))
         assertTrue(state.wrongWords.contains(word0))
     }
@@ -127,7 +128,7 @@ class WordScrambleViewModelTest {
         assertTrue(state.placedWords.isEmpty())
         assertTrue(state.wrongWords.isEmpty())
         assertEquals(null, state.selectedWordForReorder)
-        assertEquals(WordScrambleUiState.Phase.Answering, state.phase)
+        assertEquals(RiddlePhase.Answering, state.phase)
     }
 
     @Test
@@ -135,9 +136,9 @@ class WordScrambleViewModelTest {
         val viewModel = WordScrambleViewModel(defaultArgs)
         
         viewModel.onEvent(WordScrambleEvent.ShowHint)
-        assertEquals(WordScrambleUiState.Phase.ShowingHintImage, viewModel.state.value.phase)
+        assertEquals(RiddlePhase.ShowingHint, viewModel.state.value.phase)
         
         viewModel.onEvent(WordScrambleEvent.DismissHint)
-        assertEquals(WordScrambleUiState.Phase.Answering, viewModel.state.value.phase)
+        assertEquals(RiddlePhase.Answering, viewModel.state.value.phase)
     }
 }
