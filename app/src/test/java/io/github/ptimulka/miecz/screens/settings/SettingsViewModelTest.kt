@@ -3,7 +3,7 @@ package io.github.ptimulka.miecz.screens.settings
 import android.content.Context
 import io.github.ptimulka.miecz.helpers.MainDispatcherRule
 import io.github.ptimulka.miecz.helpers.NotificationScheduler
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.repositories.SectionRepository
 import io.github.ptimulka.miecz.repositories.SettingsRepository
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
@@ -24,7 +24,7 @@ class SettingsViewModelTest {
     private val context: Context = mock()
     private val settingsRepo: SettingsRepository = mock()
     private val progressRepo: UserProgressRepository = mock()
-    private val mnemonicRepo: MnemonicPicturesRepository = mock()
+    private val mnemonicRepo: MnemonicRepository = mock()
     private val sectionRepo: SectionRepository = mock()
     private val groupsRepo: VersesGroupsRepository = mock()
     private val notificationScheduler: NotificationScheduler = mock()

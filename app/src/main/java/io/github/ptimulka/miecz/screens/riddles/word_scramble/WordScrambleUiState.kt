@@ -12,7 +12,8 @@ data class WordScrambleUiState(
     val availableWords: List<WordItem> = emptyList(),
     val wrongWords: Set<WordItem> = emptySet(),
     val selectedWordForReorder: WordItem? = null,
-    override val phase: RiddlePhase = RiddlePhase.Answering
+    override val phase: RiddlePhase = RiddlePhase.Answering,
+    override val hintBitmap: android.graphics.Bitmap? = null
 ) : BaseRiddleUiState {
     val checkEnabled: Boolean get() = availableWords.isEmpty()
 }

@@ -14,17 +14,25 @@ data class WordScrambleArgs(
     val chapter: Int,
     val number: String,
     val isEasy: Boolean,
+    val sectionId: Int = 0,
+    val verseIndex: Int = 0,
+    val assetName: String? = null,
     val hasHint: Boolean = false
 )
 
 class WordScrambleViewModel(
-    private val args: WordScrambleArgs
+    private val args: WordScrambleArgs,
+    mnemonicRepo: io.github.ptimulka.miecz.repositories.MnemonicRepository? = null
 ) : BaseRiddleViewModel<WordScrambleUiState>(
-    WordScrambleUiState(
+    initialState = WordScrambleUiState(
         book = args.book,
         chapter = args.chapter,
         number = args.number
-    )
+    ),
+    mnemonicRepo = mnemonicRepo,
+    sectionId = args.sectionId,
+    verseIndex = args.verseIndex,
+    assetName = args.assetName
 ) {
 
     private val correctWordsStrings = WordScramblePartBuilder.build(args.verseText, args.isEasy)
@@ -117,5 +125,9 @@ class WordScrambleViewModel(
 
     override fun updatePhase(state: WordScrambleUiState, newPhase: RiddlePhase): WordScrambleUiState {
         return state.copy(phase = newPhase)
+    }
+
+    override fun updateHintBitmap(state: WordScrambleUiState, bitmap: android.graphics.Bitmap?): WordScrambleUiState {
+        return state.copy(hintBitmap = bitmap)
     }
 }

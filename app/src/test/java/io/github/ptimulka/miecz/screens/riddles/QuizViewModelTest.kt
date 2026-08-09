@@ -19,6 +19,7 @@ class QuizViewModelTest {
         sectionVerses = emptyList(),
         sectionId = 1,
         verseIndex = 0,
+        assetName = null,
         hasHint = false
     )
 

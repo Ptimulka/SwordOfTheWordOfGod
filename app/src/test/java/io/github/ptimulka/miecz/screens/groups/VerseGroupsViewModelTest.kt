@@ -4,7 +4,7 @@ import io.github.ptimulka.miecz.data.Section
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.data.VerseGroup
 import io.github.ptimulka.miecz.helpers.MainDispatcherRule
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.repositories.ProgressRepository
 import io.github.ptimulka.miecz.repositories.SectionRepository
 import io.github.ptimulka.miecz.repositories.VersesGroupsRepository
@@ -25,7 +25,7 @@ class VerseGroupsViewModelTest {
     private val sectionRepo: SectionRepository = mock()
     private val groupsRepo: VersesGroupsRepository = mock()
     private val progressRepo: ProgressRepository = mock()
-    private val mnemonicRepo: MnemonicPicturesRepository = mock()
+    private val mnemonicRepo: MnemonicRepository = mock()
 
     private val verse = Verse("Jan", 3, "16", "Tak bowiem Bóg umiłował świat")
     private val section = Section(1, "Ewangelie", listOf(verse), emptyList())

@@ -5,5 +5,6 @@ import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
 data class FillSiglaUiState(
     val userInput: String = "",
-    override val phase: RiddlePhase = RiddlePhase.Answering
+    override val phase: RiddlePhase = RiddlePhase.Answering,
+    override val hintBitmap: android.graphics.Bitmap? = null
 ) : BaseRiddleUiState

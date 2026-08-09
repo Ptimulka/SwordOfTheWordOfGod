@@ -3,6 +3,8 @@ package io.github.ptimulka.miecz.screens.riddles.connect
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.ptimulka.miecz.data.Verse
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -13,7 +15,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 abstract class BaseConnectViewModel(
-    private val hintBitmaps: Map<Int, Bitmap>
+    protected val verses: List<Verse>,
+    protected val sectionId: Int,
+    protected val assetNames: List<String>,
+    protected val mnemonicRepo: MnemonicRepository
 ) : ViewModel() {
 
     protected val _state = MutableStateFlow(ConnectUiState())
@@ -23,6 +28,23 @@ abstract class BaseConnectViewModel(
     val effects = _effects.receiveAsFlow()
 
     private var startTimeMs: Long = System.currentTimeMillis()
+
+    init {
+        loadHintBitmaps()
+    }
+
+    private fun loadHintBitmaps() {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val bitmaps = mutableMapOf<Int, Bitmap>()
+            verses.forEachIndexed { index, verse ->
+                val assetName = assetNames.getOrNull(index)
+                mnemonicRepo.loadActivePicture(sectionId, index, assetName)?.let {
+                    bitmaps[verse.hashCode()] = it
+                }
+            }
+            _state.update { it.copy(buttonBitmaps = bitmaps) }
+        }
+    }
 
     fun onEvent(event: ConnectEvent) {
         when (event) {
@@ -75,7 +97,7 @@ abstract class BaseConnectViewModel(
             _state.update { it.copy(justMatchedId = id) }
             delay(300) // Match animation time
             
-            val bitmap = hintBitmaps[id]
+            val bitmap = _state.value.buttonBitmaps[id]
             if (bitmap != null) {
                 _state.update { it.copy(previewBitmap = bitmap, justMatchedId = null) }
             } else {
@@ -86,7 +108,7 @@ abstract class BaseConnectViewModel(
 
     private fun dismissImage() {
         val s = _state.value
-        val id = s.selectedLeft?.id ?: return // The matched ID
+        val id = s.selectedLeft?.id ?: s.selectedRight?.id ?: return
         _state.update { it.copy(previewBitmap = null) }
         removeMatched(id)
     }

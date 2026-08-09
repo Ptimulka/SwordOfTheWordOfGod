@@ -11,5 +11,6 @@ data class FillWholeVerseUiState(
     val userInput: String = "",
     val similarityScore: Float = 0f,
     val diffs: List<DiffPart> = emptyList(),
-    override val phase: RiddlePhase = RiddlePhase.Answering
+    override val phase: RiddlePhase = RiddlePhase.Answering,
+    override val hintBitmap: android.graphics.Bitmap? = null
 ) : BaseRiddleUiState

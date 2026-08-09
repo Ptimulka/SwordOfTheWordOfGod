@@ -26,7 +26,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.data.Verse
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.screens.mnemonic.DrawingScreen
 import io.github.ptimulka.miecz.screens.mnemonic.ImageImportEditScreen
 import io.github.ptimulka.miecz.screens.mnemonic.MnemonicEffect
@@ -81,7 +81,7 @@ class MnemonicPicturesActivity : ComponentActivity() {
                         override fun <T : ViewModel> create(modelClass: Class<T>): T {
                             return MnemonicViewModel(
                                 sectionId, sectionName, verses, assetNames,
-                                MnemonicPicturesRepository(context)
+                                UserMnemonicPicturesRepository(context)
                             ) as T
                         }
                     }

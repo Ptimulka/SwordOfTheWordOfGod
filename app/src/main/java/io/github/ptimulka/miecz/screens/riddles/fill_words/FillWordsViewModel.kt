@@ -14,17 +14,25 @@ data class FillWordsArgs(
     val number: String,
     val isEasy: Boolean,
     val moreWords: Boolean,
+    val sectionId: Int = 0,
+    val verseIndex: Int = 0,
+    val assetName: String? = null,
     val hasHint: Boolean = false
 )
 
 class FillWordsViewModel(
-    private val args: FillWordsArgs
+    private val args: FillWordsArgs,
+    mnemonicRepo: io.github.ptimulka.miecz.repositories.MnemonicRepository? = null
 ) : BaseRiddleViewModel<FillWordsUiState>(
-    FillWordsUiState(
+    initialState = FillWordsUiState(
         book = args.book,
         chapter = args.chapter,
         number = args.number
-    )
+    ),
+    mnemonicRepo = mnemonicRepo,
+    sectionId = args.sectionId,
+    verseIndex = args.verseIndex,
+    assetName = args.assetName
 ) {
 
     init {
@@ -82,5 +90,9 @@ class FillWordsViewModel(
 
     override fun updatePhase(state: FillWordsUiState, newPhase: RiddlePhase): FillWordsUiState {
         return state.copy(phase = newPhase)
+    }
+
+    override fun updateHintBitmap(state: FillWordsUiState, bitmap: android.graphics.Bitmap?): FillWordsUiState {
+        return state.copy(hintBitmap = bitmap)
     }
 }

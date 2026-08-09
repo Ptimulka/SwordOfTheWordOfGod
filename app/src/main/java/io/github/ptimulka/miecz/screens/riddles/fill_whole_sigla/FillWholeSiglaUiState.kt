@@ -8,7 +8,8 @@ data class FillWholeSiglaUiState(
     val chapterInput: String = "",
     val verseInput: String = "",
     val wrongIndices: Set<Int> = emptySet(),
-    override val phase: RiddlePhase = RiddlePhase.Answering
+    override val phase: RiddlePhase = RiddlePhase.Answering,
+    override val hintBitmap: android.graphics.Bitmap? = null
 ) : BaseRiddleUiState {
     val allFieldsFilled: Boolean get() = bookInput.isNotBlank() && chapterInput.isNotBlank() && verseInput.isNotBlank()
 }

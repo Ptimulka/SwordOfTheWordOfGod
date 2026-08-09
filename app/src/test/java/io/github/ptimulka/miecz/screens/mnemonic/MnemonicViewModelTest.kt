@@ -3,7 +3,7 @@ package io.github.ptimulka.miecz.screens.mnemonic
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.MainDispatcherRule
 import io.github.ptimulka.miecz.repositories.ChosenPicture
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -21,7 +21,7 @@ class MnemonicViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository: MnemonicPicturesRepository = mock()
+    private val repository: MnemonicRepository = mock()
     private val verse = Verse("Book", 1, "1", "Text")
     private val verses = listOf(verse)
     private val assets = listOf("asset.webp")

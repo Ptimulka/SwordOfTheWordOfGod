@@ -15,7 +15,8 @@ data class FillWordsUiState(
     val verseParts: List<VersePart> = emptyList(),
     val userInputs: List<String> = emptyList(),
     val wrongInputIndices: Set<Int> = emptySet(),
-    override val phase: RiddlePhase = RiddlePhase.Answering
+    override val phase: RiddlePhase = RiddlePhase.Answering,
+    override val hintBitmap: android.graphics.Bitmap? = null
 ) : BaseRiddleUiState {
     val allFieldsFilled: Boolean get() = userInputs.all { it.isNotEmpty() }
 }

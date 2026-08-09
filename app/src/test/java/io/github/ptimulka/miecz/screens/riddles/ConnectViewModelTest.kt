@@ -4,6 +4,7 @@ import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.MainDispatcherRule
 import io.github.ptimulka.miecz.screens.riddles.connect.ConnectEvent
 import io.github.ptimulka.miecz.screens.riddles.connect.ConnectPairsViewModel
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
@@ -11,12 +12,14 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.mock
 
 class ConnectViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
+    private val mnemonicRepo: io.github.ptimulka.miecz.repositories.MnemonicRepository = mock()
     private val verses = listOf(
         Verse("Rdz", 1, "1", "Tekst 1"),
         Verse("J", 1, "1", "Tekst 2")
@@ -25,7 +28,7 @@ class ConnectViewModelTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `matching a correct pair removes items from state`() = runTest {
-        val viewModel = ConnectPairsViewModel(verses, emptyMap())
+        val viewModel = ConnectPairsViewModel(verses, 1, emptyList(), mnemonicRepo)
         val state = viewModel.state.value
         
         val left = state.leftItems.first()
@@ -41,7 +44,7 @@ class ConnectViewModelTest {
 
     @Test
     fun `incorrect pair triggers lockout`() {
-        val viewModel = ConnectPairsViewModel(verses, emptyMap())
+        val viewModel = ConnectPairsViewModel(verses, 1, emptyList(), mnemonicRepo)
         val state = viewModel.state.value
         
         val left = state.leftItems.first()

@@ -10,7 +10,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 abstract class BaseRiddleViewModel<S : BaseRiddleUiState>(
-    initialState: S
+    initialState: S,
+    private val mnemonicRepo: io.github.ptimulka.miecz.repositories.MnemonicRepository? = null,
+    private val sectionId: Int = 0,
+    private val verseIndex: Int = 0,
+    private val assetName: String? = null
 ) : ViewModel() {
 
     protected val _state = MutableStateFlow(initialState)
@@ -18,6 +22,19 @@ abstract class BaseRiddleViewModel<S : BaseRiddleUiState>(
 
     private val _effects = Channel<RiddleEffect>()
     val effects = _effects.receiveAsFlow()
+
+    init {
+        loadHintBitmap()
+    }
+
+    private fun loadHintBitmap() {
+        if (mnemonicRepo != null) {
+            viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                val bitmap = mnemonicRepo.loadActivePicture(sectionId, verseIndex, assetName)
+                _state.update { updateHintBitmap(it, bitmap) }
+            }
+        }
+    }
 
     fun onBaseEvent(event: RiddleEvent) {
         when (event) {
@@ -45,6 +62,7 @@ abstract class BaseRiddleViewModel<S : BaseRiddleUiState>(
     protected abstract fun checkAnswer()
     
     protected abstract fun updatePhase(state: S, newPhase: RiddlePhase): S
+    protected abstract fun updateHintBitmap(state: S, bitmap: android.graphics.Bitmap?): S
 
     protected fun emitSuccess(elapsedMs: Long? = null) {
         viewModelScope.launch {

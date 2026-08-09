@@ -47,7 +47,6 @@ fun ConnectLayout(
     captionRes: Int,
     state: ConnectUiState,
     onEvent: (ConnectEvent) -> Unit,
-    hintBitmaps: Map<Int, android.graphics.Bitmap> = emptyMap(),
     rightColumnWeight: Float = 1f,
     showImagesOnButtons: Boolean = false
 ) {
@@ -111,7 +110,7 @@ fun ConnectLayout(
                                 .height(buttonHeight)
                                 .graphicsLayer(scaleX = if (isMatched) scale else 1f, scaleY = if (isMatched) scale else 1f)
                         ) {
-                            val bitmap = hintBitmaps[item.id]
+                            val bitmap = state.buttonBitmaps[item.id]
                             if (showImagesOnButtons) {
                                 // Pairs style: Always large font, image if available
                                 if (isLandscape) {

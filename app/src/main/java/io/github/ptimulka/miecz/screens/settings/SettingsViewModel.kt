@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.helpers.NotificationScheduler
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.repositories.SectionRepository
 import io.github.ptimulka.miecz.repositories.SettingsRepository
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
@@ -17,7 +17,7 @@ class SettingsViewModel(
     private val context: Context,
     private val settingsRepo: SettingsRepository,
     private val progressRepo: UserProgressRepository,
-    private val mnemonicRepo: MnemonicPicturesRepository,
+    private val mnemonicRepo: MnemonicRepository,
     private val sectionRepo: SectionRepository,
     private val groupsRepo: VersesGroupsRepository,
     private val notificationScheduler: NotificationScheduler,

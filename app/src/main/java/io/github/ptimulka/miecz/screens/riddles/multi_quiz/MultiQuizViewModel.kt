@@ -10,12 +10,22 @@ data class MultiQuizArgs(
     val book: String,
     val chapter: Int,
     val number: String,
-    val hasHint: Boolean
+    val sectionId: Int = 0,
+    val verseIndex: Int = 0,
+    val assetName: String? = null,
+    val hasHint: Boolean = false
 )
 
 class MultiQuizViewModel(
-    private val args: MultiQuizArgs
-) : BaseRiddleViewModel<MultiQuizUiState>(MultiQuizUiState()) {
+    private val args: MultiQuizArgs,
+    mnemonicRepo: io.github.ptimulka.miecz.repositories.MnemonicRepository? = null
+) : BaseRiddleViewModel<MultiQuizUiState>(
+    initialState = MultiQuizUiState(),
+    mnemonicRepo = mnemonicRepo,
+    sectionId = args.sectionId,
+    verseIndex = args.verseIndex,
+    assetName = args.assetName
+) {
 
     private val correctBook = args.book
     private val correctChapter = args.chapter.toString()
@@ -67,5 +77,9 @@ class MultiQuizViewModel(
 
     override fun updatePhase(state: MultiQuizUiState, newPhase: RiddlePhase): MultiQuizUiState {
         return state.copy(phase = newPhase)
+    }
+
+    override fun updateHintBitmap(state: MultiQuizUiState, bitmap: android.graphics.Bitmap?): MultiQuizUiState {
+        return state.copy(hintBitmap = bitmap)
     }
 }

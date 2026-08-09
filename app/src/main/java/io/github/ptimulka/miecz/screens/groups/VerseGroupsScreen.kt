@@ -58,7 +58,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.data.Verse
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.repositories.UserSectionRepository
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
 import io.github.ptimulka.miecz.repositories.UserVersesGroupsRepository
@@ -77,7 +77,7 @@ fun VerseGroupsScreen(contentPadding: PaddingValues = PaddingValues()) {
                     UserSectionRepository(context),
                     UserVersesGroupsRepository(context),
                     UserProgressRepository(context),
-                    MnemonicPicturesRepository(context),
+                    UserMnemonicPicturesRepository(context),
                     assetList
                 ) as T
             }

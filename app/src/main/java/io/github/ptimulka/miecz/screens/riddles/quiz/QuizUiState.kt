@@ -7,7 +7,8 @@ data class QuizUiState(
     val verseText: String,
     val answers: List<String> = emptyList(),
     val selectedAnswer: String? = null,
-    override val phase: RiddlePhase = RiddlePhase.Answering
+    override val phase: RiddlePhase = RiddlePhase.Answering,
+    override val hintBitmap: android.graphics.Bitmap? = null
 ) : BaseRiddleUiState {
     val checkEnabled: Boolean get() = selectedAnswer != null
 }

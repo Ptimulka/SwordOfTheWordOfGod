@@ -11,12 +11,22 @@ data class FillSiglaArgs(
     val chapter: Int,
     val number: String,
     val fillType: FillSiglaType,
-    val hasHint: Boolean
+    val sectionId: Int = 0,
+    val verseIndex: Int = 0,
+    val assetName: String? = null,
+    val hasHint: Boolean = false
 )
 
 class FillSiglaViewModel(
-    private val args: FillSiglaArgs
-) : BaseRiddleViewModel<FillSiglaUiState>(FillSiglaUiState()) {
+    private val args: FillSiglaArgs,
+    mnemonicRepo: io.github.ptimulka.miecz.repositories.MnemonicRepository? = null
+) : BaseRiddleViewModel<FillSiglaUiState>(
+    initialState = FillSiglaUiState(),
+    mnemonicRepo = mnemonicRepo,
+    sectionId = args.sectionId,
+    verseIndex = args.verseIndex,
+    assetName = args.assetName
+) {
 
     fun onEvent(event: FillSiglaEvent) {
         when (event) {
@@ -54,5 +64,9 @@ class FillSiglaViewModel(
 
     override fun updatePhase(state: FillSiglaUiState, newPhase: RiddlePhase): FillSiglaUiState {
         return state.copy(phase = newPhase)
+    }
+
+    override fun updateHintBitmap(state: FillSiglaUiState, bitmap: android.graphics.Bitmap?): FillSiglaUiState {
+        return state.copy(hintBitmap = bitmap)
     }
 }

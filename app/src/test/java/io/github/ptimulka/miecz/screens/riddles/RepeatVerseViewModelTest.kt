@@ -3,6 +3,7 @@ package io.github.ptimulka.miecz.screens.riddles
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.MainDispatcherRule
 import io.github.ptimulka.miecz.repositories.ProgressRepository
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.repeat_verse.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -17,15 +18,16 @@ class RepeatVerseViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val progressRepo: ProgressRepository = mock()
+    private val mnemonicRepo: MnemonicRepository = mock()
     private val verses = listOf(
         Verse("Rdz", 1, "1", "Na początku Bóg stworzył niebo i ziemię.")
     )
-    private val defaultArgs = RepeatVerseArgs(1, verses)
+    private val defaultArgs = RepeatVerseArgs(1, verses, emptyList())
 
     @Test
     fun `selecting a verse updates state with current repeat count`() {
         whenever(progressRepo.getVerseRepeatCountToday(1, 0)).thenReturn(3)
-        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo)
+        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo, mnemonicRepo)
         
         viewModel.onEvent(RepeatVerseEvent.SelectVerse(0))
         
@@ -38,7 +40,7 @@ class RepeatVerseViewModelTest {
     fun `processing valid speech result increments repeat count`() {
         whenever(progressRepo.getVerseRepeatCountToday(1, 0)).thenReturn(0)
         whenever(progressRepo.incrementVerseRepeatToday(1, 0)).thenReturn(1)
-        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo)
+        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo, mnemonicRepo)
         
         viewModel.onEvent(RepeatVerseEvent.SelectVerse(0))
         viewModel.onEvent(RepeatVerseEvent.ProcessResult("Na poczatku Bog stworzyl niebo i ziemie"))
@@ -51,7 +53,7 @@ class RepeatVerseViewModelTest {
     @Test
     fun `processing invalid speech result does not increment count`() {
         whenever(progressRepo.getVerseRepeatCountToday(1, 0)).thenReturn(0)
-        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo)
+        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo, mnemonicRepo)
         
         viewModel.onEvent(RepeatVerseEvent.SelectVerse(0))
         viewModel.onEvent(RepeatVerseEvent.ProcessResult("Zupelnie inny tekst"))

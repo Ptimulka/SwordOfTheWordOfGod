@@ -56,8 +56,7 @@ import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleHint
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.VerseDisplay
-import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
@@ -74,9 +73,6 @@ fun FillWholeSiglaRiddleScreen(
     onShieldLoss: () -> Boolean
 ) {
     val context = LocalContext.current
-    val hasHint = remember(sectionId, verseIndex, assetName) {
-        MnemonicPicturesRepository(context).loadActivePicture(sectionId, verseIndex, assetName) != null
-    }
 
     val vm: FillWholeSiglaViewModel = viewModel(
         key = "FillWholeSiglaVM_${book}_${chapter}_${number}",
@@ -88,15 +84,18 @@ fun FillWholeSiglaRiddleScreen(
                         book = book,
                         chapter = chapter,
                         number = number,
-                        hasHint = hasHint
-                    )
+                        sectionId = sectionId,
+                        verseIndex = verseIndex,
+                        assetName = assetName,
+                        hasHint = true
+                    ),
+                    UserMnemonicPicturesRepository(context)
                 ) as T
             }
         }
     )
 
     val state by vm.state.collectAsStateWithLifecycle()
-    val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
     var showResultDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(vm.effects) {
@@ -142,15 +141,16 @@ fun FillWholeSiglaRiddleScreen(
             )
         }
 
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hintBitmap != null) {
-            FullscreenImageOverlay(hintBitmap) { vm.onEvent(FillWholeSiglaEvent.DismissHint) }
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && state.hintBitmap != null) {
+            FullscreenImageOverlay(state.hintBitmap!!) { vm.onEvent(FillWholeSiglaEvent.DismissHint) }
         } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,
                 onConfirm = { vm.onEvent(FillWholeSiglaEvent.DismissResult) }
             )
         }
-    }}
+    }
+}
 
 @Composable
 private fun PortraitFillWholeSiglaLayout(

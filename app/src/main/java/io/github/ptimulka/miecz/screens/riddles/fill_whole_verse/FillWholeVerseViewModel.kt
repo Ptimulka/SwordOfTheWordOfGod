@@ -13,17 +13,25 @@ data class FillWholeVerseArgs(
     val book: String,
     val chapter: Int,
     val number: String,
+    val sectionId: Int = 0,
+    val verseIndex: Int = 0,
+    val assetName: String? = null,
     val hasHint: Boolean = false
 )
 
 class FillWholeVerseViewModel(
-    private val args: FillWholeVerseArgs
+    private val args: FillWholeVerseArgs,
+    mnemonicRepo: io.github.ptimulka.miecz.repositories.MnemonicRepository? = null
 ) : BaseRiddleViewModel<FillWholeVerseUiState>(
-    FillWholeVerseUiState(
+    initialState = FillWholeVerseUiState(
         book = args.book,
         chapter = args.chapter,
         number = args.number
-    )
+    ),
+    mnemonicRepo = mnemonicRepo,
+    sectionId = args.sectionId,
+    verseIndex = args.verseIndex,
+    assetName = args.assetName
 ) {
 
     fun onEvent(event: FillWholeVerseEvent) {
@@ -75,5 +83,9 @@ class FillWholeVerseViewModel(
 
     override fun updatePhase(state: FillWholeVerseUiState, newPhase: RiddlePhase): FillWholeVerseUiState {
         return state.copy(phase = newPhase)
+    }
+
+    override fun updateHintBitmap(state: FillWholeVerseUiState, bitmap: android.graphics.Bitmap?): FillWholeVerseUiState {
+        return state.copy(hintBitmap = bitmap)
     }
 }

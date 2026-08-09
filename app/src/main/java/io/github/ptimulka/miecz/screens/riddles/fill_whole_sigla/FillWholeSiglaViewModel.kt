@@ -10,12 +10,22 @@ data class FillWholeSiglaArgs(
     val book: String,
     val chapter: Int,
     val number: String,
-    val hasHint: Boolean
+    val sectionId: Int = 0,
+    val verseIndex: Int = 0,
+    val assetName: String? = null,
+    val hasHint: Boolean = false
 )
 
 class FillWholeSiglaViewModel(
-    private val args: FillWholeSiglaArgs
-) : BaseRiddleViewModel<FillWholeSiglaUiState>(FillWholeSiglaUiState()) {
+    private val args: FillWholeSiglaArgs,
+    mnemonicRepo: io.github.ptimulka.miecz.repositories.MnemonicRepository? = null
+) : BaseRiddleViewModel<FillWholeSiglaUiState>(
+    initialState = FillWholeSiglaUiState(),
+    mnemonicRepo = mnemonicRepo,
+    sectionId = args.sectionId,
+    verseIndex = args.verseIndex,
+    assetName = args.assetName
+) {
 
     fun onEvent(event: FillWholeSiglaEvent) {
         when (event) {
@@ -61,5 +71,9 @@ class FillWholeSiglaViewModel(
 
     override fun updatePhase(state: FillWholeSiglaUiState, newPhase: RiddlePhase): FillWholeSiglaUiState {
         return state.copy(phase = newPhase)
+    }
+
+    override fun updateHintBitmap(state: FillWholeSiglaUiState, bitmap: android.graphics.Bitmap?): FillWholeSiglaUiState {
+        return state.copy(hintBitmap = bitmap)
     }
 }

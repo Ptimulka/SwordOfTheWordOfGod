@@ -1,14 +1,16 @@
 package io.github.ptimulka.miecz.screens.riddles.connect
 
-import android.graphics.Bitmap
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.ConnectDataBuilder
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import kotlinx.coroutines.flow.update
 
 class ConnectPartsViewModel(
     verses: List<Verse>,
-    hintBitmaps: Map<Int, Bitmap>
-) : BaseConnectViewModel(hintBitmaps) {
+    sectionId: Int,
+    assetNames: List<String>,
+    mnemonicRepo: MnemonicRepository
+) : BaseConnectViewModel(verses, sectionId, assetNames, mnemonicRepo) {
 
     init {
         val (left, right) = ConnectDataBuilder.buildPartsData(verses)

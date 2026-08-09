@@ -1,12 +1,10 @@
 package io.github.ptimulka.miecz.screens.riddles.connect
 
-import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
@@ -16,7 +14,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.data.Verse
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 
 @Composable
@@ -27,20 +25,16 @@ fun ConnectPartsRiddleScreen(
     onSuccess: (elapsedMs: Long) -> Unit
 ) {
     val context = LocalContext.current
-    val hintBitmaps: Map<Int, Bitmap> = remember(sectionId, sectionVerses) {
-        val repo = MnemonicPicturesRepository(context)
-        sectionVerses.mapIndexed { index, verse ->
-            val assetName = assetNames.getOrNull(index)
-            verse.hashCode() to repo.loadActivePicture(sectionId, index, assetName)
-        }.mapNotNull { (key, bitmap) -> bitmap?.let { key to it } }.toMap()
-    }
 
     val vm: ConnectPartsViewModel = viewModel(
         key = "ConnectPartsVM_${sectionId}_${sectionVerses.hashCode()}",
         factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return ConnectPartsViewModel(sectionVerses, hintBitmaps) as T
+                return ConnectPartsViewModel(
+                    sectionVerses, sectionId, assetNames,
+                    UserMnemonicPicturesRepository(context)
+                ) as T
             }
         }
     )
@@ -60,7 +54,6 @@ fun ConnectPartsRiddleScreen(
             captionRes = R.string.connect_parts_caption,
             state = state,
             onEvent = vm::onEvent,
-            hintBitmaps = hintBitmaps,
             rightColumnWeight = 1f,
             showImagesOnButtons = false
         )

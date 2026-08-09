@@ -12,12 +12,10 @@ import java.io.File
 
 enum class ChosenPicture { NONE, DEFAULT, USER, IMPORTED }
 
-class MnemonicPicturesRepository(private val context: Context) {
+class UserMnemonicPicturesRepository(private val context: Context) : MnemonicRepository {
 
     private val prefs: SharedPreferences =
         context.getSharedPreferences("mnemonic_choices", Context.MODE_PRIVATE)
-
-    // ── User-drawn picture ────────────────────────────────────────────────────
 
     private fun pictureFile(sectionId: Int, verseIndex: Int): File {
         val dir = File(context.filesDir, "mnemonic")
@@ -25,29 +23,26 @@ class MnemonicPicturesRepository(private val context: Context) {
         return File(dir, "section_${sectionId}_verse_${verseIndex}.png")
     }
 
-    fun savePicture(sectionId: Int, verseIndex: Int, bitmap: Bitmap) {
+    override fun savePicture(sectionId: Int, verseIndex: Int, bitmap: Bitmap) {
         pictureFile(sectionId, verseIndex).outputStream().use {
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
         }
     }
 
-    fun loadPicture(sectionId: Int, verseIndex: Int): Bitmap? {
+    override fun loadPicture(sectionId: Int, verseIndex: Int): Bitmap? {
         val file = pictureFile(sectionId, verseIndex)
         return if (file.exists()) BitmapFactory.decodeFile(file.absolutePath) else null
     }
 
-    fun deletePicture(sectionId: Int, verseIndex: Int) {
+    override fun deletePicture(sectionId: Int, verseIndex: Int) {
         pictureFile(sectionId, verseIndex).delete()
     }
 
-    /** Deletes every drawn and imported picture along with the saved picture choices. */
-    fun clearAllPictures() {
+    override fun clearAllPictures() {
         prefs.edit().clear().apply()
         File(context.filesDir, "mnemonic").deleteRecursively()
         File(context.filesDir, "mnemonic_imported").deleteRecursively()
     }
-
-    // ── Imported picture ──────────────────────────────────────────────────────
 
     private fun importedPictureFile(sectionId: Int, verseIndex: Int): File {
         val dir = File(context.filesDir, "mnemonic_imported")
@@ -55,24 +50,18 @@ class MnemonicPicturesRepository(private val context: Context) {
         return File(dir, "section_${sectionId}_verse_${verseIndex}.png")
     }
 
-    fun saveImportedPicture(sectionId: Int, verseIndex: Int, bitmap: Bitmap) {
+    override fun saveImportedPicture(sectionId: Int, verseIndex: Int, bitmap: Bitmap) {
         importedPictureFile(sectionId, verseIndex).outputStream().use {
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
         }
     }
 
-    fun loadImportedPicture(sectionId: Int, verseIndex: Int): Bitmap? {
+    override fun loadImportedPicture(sectionId: Int, verseIndex: Int): Bitmap? {
         val file = importedPictureFile(sectionId, verseIndex)
         return if (file.exists()) BitmapFactory.decodeFile(file.absolutePath) else null
     }
 
-    // ── Default AI-generated picture ─────────────────────────────────────────
-
-    /**
-     * Asset filename pattern: default_mnemonics/section01_01_1Kor13-13.webp
-     * The [assetName] is the bare filename without directory, e.g. "section01_01_1Kor13-13.webp".
-     */
-    fun loadDefaultPicture(assetName: String): Bitmap? {
+    override fun loadDefaultPicture(assetName: String): Bitmap? {
         return try {
             context.assets.open("default_mnemonics/$assetName").use { stream ->
                 BitmapFactory.decodeStream(stream)
@@ -82,23 +71,18 @@ class MnemonicPicturesRepository(private val context: Context) {
         }
     }
 
-    // ── Chosen picture preference ─────────────────────────────────────────────
-
     private fun choiceKey(sectionId: Int, verseIndex: Int) = "choice_${sectionId}_${verseIndex}"
 
-    fun saveChoice(sectionId: Int, verseIndex: Int, choice: ChosenPicture) {
+    override fun saveChoice(sectionId: Int, verseIndex: Int, choice: ChosenPicture) {
         prefs.edit().putString(choiceKey(sectionId, verseIndex), choice.name).apply()
     }
 
-    // Returns null when no choice has ever been saved (distinct from NONE = explicitly "no picture")
-    fun loadChoice(sectionId: Int, verseIndex: Int): ChosenPicture? {
+    override fun loadChoice(sectionId: Int, verseIndex: Int): ChosenPicture? {
         val raw = prefs.getString(choiceKey(sectionId, verseIndex), null) ?: return null
         return try { ChosenPicture.valueOf(raw) } catch (_: Exception) { null }
     }
 
-    // ── Gallery export ────────────────────────────────────────────────────────
-
-    fun downloadAllImages(
+    override fun downloadAllImages(
         sectionId: Int,
         verses: List<Verse>,
         assetNames: List<String>
@@ -141,14 +125,7 @@ class MnemonicPicturesRepository(private val context: Context) {
         }
     }
 
-    // ── Active bitmap (used by riddle hint) ───────────────────────────────────
-
-    /**
-     * Returns the bitmap that should be shown as a hint: user picture if chosen,
-     * default if chosen, imported if chosen, null if NONE explicitly. When nothing has been chosen yet,
-     * auto-selects: default image if available, otherwise imported, otherwise user, otherwise null.
-     */
-    fun loadActivePicture(sectionId: Int, verseIndex: Int, defaultAssetName: String?): Bitmap? {
+    override fun loadActivePicture(sectionId: Int, verseIndex: Int, defaultAssetName: String?): Bitmap? {
         val userBitmap by lazy { loadPicture(sectionId, verseIndex) }
         val importedBitmap by lazy { loadImportedPicture(sectionId, verseIndex) }
         val defaultBitmap by lazy { defaultAssetName?.let { loadDefaultPicture(it) } }

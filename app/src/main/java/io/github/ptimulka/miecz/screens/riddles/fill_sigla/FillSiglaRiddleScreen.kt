@@ -26,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -48,8 +47,7 @@ import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleHint
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.VerseDisplay
-import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
@@ -67,9 +65,6 @@ fun FillSiglaRiddleScreen(
     onShieldLoss: () -> Boolean
 ) {
     val context = LocalContext.current
-    val hasHint = remember(sectionId, verseIndex, assetName) {
-        MnemonicPicturesRepository(context).loadActivePicture(sectionId, verseIndex, assetName) != null
-    }
 
     val vm: FillSiglaViewModel = viewModel(
         key = "FillSiglaVM_${book}_${chapter}_${number}_${fillType}",
@@ -82,15 +77,18 @@ fun FillSiglaRiddleScreen(
                         chapter = chapter,
                         number = number,
                         fillType = fillType,
-                        hasHint = hasHint
-                    )
+                        sectionId = sectionId,
+                        verseIndex = verseIndex,
+                        assetName = assetName,
+                        hasHint = true
+                    ),
+                    UserMnemonicPicturesRepository(context)
                 ) as T
             }
         }
     )
 
     val state by vm.state.collectAsStateWithLifecycle()
-    val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
     var showResultDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(vm.effects) {
@@ -144,8 +142,8 @@ fun FillSiglaRiddleScreen(
             )
         }
 
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hintBitmap != null) {
-            FullscreenImageOverlay(hintBitmap) { vm.onEvent(FillSiglaEvent.DismissHint) }
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && state.hintBitmap != null) {
+            FullscreenImageOverlay(state.hintBitmap!!) { vm.onEvent(FillSiglaEvent.DismissHint) }
         } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,

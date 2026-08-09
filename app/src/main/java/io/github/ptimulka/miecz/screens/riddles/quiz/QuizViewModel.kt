@@ -3,6 +3,7 @@ package io.github.ptimulka.miecz.screens.riddles.quiz
 import androidx.lifecycle.viewModelScope
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.QuizAnswerBuilder
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEvent
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
@@ -17,12 +18,20 @@ data class QuizArgs(
     val sectionVerses: List<Verse>,
     val sectionId: Int,
     val verseIndex: Int,
+    val assetName: String?,
     val hasHint: Boolean
 )
 
 class QuizViewModel(
-    private val args: QuizArgs
-) : BaseRiddleViewModel<QuizUiState>(QuizUiState(verseText = args.verseText)) {
+    private val args: QuizArgs,
+    mnemonicRepo: MnemonicRepository? = null
+) : BaseRiddleViewModel<QuizUiState>(
+    initialState = QuizUiState(verseText = args.verseText),
+    mnemonicRepo = mnemonicRepo,
+    sectionId = args.sectionId,
+    verseIndex = args.verseIndex,
+    assetName = args.assetName
+) {
 
     private val correctAnswer = "${args.book} ${args.chapter},${args.number}"
 
@@ -55,5 +64,9 @@ class QuizViewModel(
 
     override fun updatePhase(state: QuizUiState, newPhase: RiddlePhase): QuizUiState {
         return state.copy(phase = newPhase)
+    }
+
+    override fun updateHintBitmap(state: QuizUiState, bitmap: android.graphics.Bitmap?): QuizUiState {
+        return state.copy(hintBitmap = bitmap)
     }
 }

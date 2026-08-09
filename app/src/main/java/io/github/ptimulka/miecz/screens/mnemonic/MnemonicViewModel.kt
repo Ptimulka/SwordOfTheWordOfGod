@@ -7,7 +7,7 @@ import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.MnemonicImageHelper
 import io.github.ptimulka.miecz.repositories.ChosenPicture
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -23,7 +23,7 @@ class MnemonicViewModel(
     private val sectionName: String,
     private val verses: List<Verse>,
     private val assetNames: List<String>,
-    private val repository: MnemonicPicturesRepository,
+    private val repository: MnemonicRepository,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
 

@@ -57,7 +57,7 @@ import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleHint
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
-import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
+import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
@@ -75,8 +75,7 @@ fun FillWordsRiddleScreen(
     onSuccess: () -> Unit,
     onShieldLoss: () -> Boolean
 ) {
-    val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
-    val hasHint = hintBitmap != null
+    val context = LocalContext.current
     
     val vm: FillWordsViewModel = viewModel(
         key = "FillWordsVM_${book}_${chapter}_${number}_${isEasy}_${moreWords}",
@@ -91,8 +90,12 @@ fun FillWordsRiddleScreen(
                         number = number,
                         isEasy = isEasy,
                         moreWords = moreWords,
-                        hasHint = hasHint
-                    )
+                        sectionId = sectionId,
+                        verseIndex = verseIndex,
+                        assetName = assetName,
+                        hasHint = true
+                    ),
+                    UserMnemonicPicturesRepository(context)
                 ) as T
             }
         }
@@ -130,12 +133,11 @@ fun FillWordsRiddleScreen(
         FillWordsContent(
             state = state,
             isEasy = isEasy,
-            hintBitmap = hintBitmap,
             onEvent = vm::onEvent
         )
 
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hintBitmap != null) {
-            FullscreenImageOverlay(hintBitmap) { vm.onEvent(FillWordsEvent.DismissHint) }
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && state.hintBitmap != null) {
+            FullscreenImageOverlay(state.hintBitmap!!) { vm.onEvent(FillWordsEvent.DismissHint) }
         } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,
@@ -150,7 +152,6 @@ fun FillWordsRiddleScreen(
 private fun FillWordsContent(
     state: FillWordsUiState,
     isEasy: Boolean,
-    hintBitmap: android.graphics.Bitmap?,
     onEvent: (FillWordsEvent) -> Unit
 ) {
     Column(
@@ -173,7 +174,7 @@ private fun FillWordsContent(
                 style = MaterialTheme.typography.titleLarge.copy(fontSize = 24.sp, fontWeight = FontWeight.Bold),
                 color = colorResource(id = R.color.game_button_yellow_dark)
             )
-            if (hintBitmap != null) {
+            if (state.hintBitmap != null) {
                 Spacer(modifier = Modifier.width(4.dp))
                 IconButton(onClick = { onEvent(FillWordsEvent.ShowHint) }) {
                     Icon(

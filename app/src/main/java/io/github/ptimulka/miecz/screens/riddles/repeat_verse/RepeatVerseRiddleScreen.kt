@@ -71,8 +71,9 @@ import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
 import io.github.ptimulka.miecz.helpers.createPolishSpeechIntent
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
+import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 
 private const val SIMILARITY_THRESHOLD = 50f
 private val MAX_REPEATS = UserProgressRepository.MAX_VERSE_REPEATS_PER_DAY
@@ -85,8 +86,6 @@ fun RepeatVerseRiddleScreen(
     onSuccess: () -> Unit
 ) {
     val context = LocalContext.current
-    val progressRepository = remember { UserProgressRepository(context) }
-    val mnemonicRepository = remember { MnemonicPicturesRepository(context) }
 
     val vm: RepeatVerseViewModel = viewModel(
         key = "RepeatVerseVM_${sectionId}",
@@ -94,8 +93,9 @@ fun RepeatVerseRiddleScreen(
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return RepeatVerseViewModel(
-                    RepeatVerseArgs(sectionId, sectionVerses),
-                    progressRepository
+                    RepeatVerseArgs(sectionId, sectionVerses, assetNames),
+                    UserProgressRepository(context),
+                    UserMnemonicPicturesRepository(context)
                 ) as T
             }
         }
@@ -158,6 +158,7 @@ fun RepeatVerseRiddleScreen(
             when (effect) {
                 RepeatVerseEffect.RequestPermission -> permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                 is RepeatVerseEffect.StartListening -> startListening(effect.preferOffline)
+                is RiddleEffect.Success -> onSuccess()
             }
         }
     }
@@ -166,32 +167,27 @@ fun RepeatVerseRiddleScreen(
 
     Box(Modifier.fillMaxSize()) {
         if (isLandscape) {
-            LandscapeRepeatLayout(state, sectionVerses, sectionId, assetNames, mnemonicRepository, vm::onEvent)
+            LandscapeRepeatLayout(state, sectionVerses, sectionId, assetNames, UserMnemonicPicturesRepository(context), vm::onEvent)
         } else {
-            PortraitRepeatLayout(state, sectionVerses, sectionId, assetNames, mnemonicRepository, vm::onEvent)
+            PortraitRepeatLayout(state, sectionVerses, sectionId, assetNames, UserMnemonicPicturesRepository(context), vm::onEvent)
         }
 
-        state.zoomIndex?.let { zi ->
-            val zoomBitmap = remember(zi) {
-                mnemonicRepository.loadActivePicture(sectionId, zi, assetNames.getOrNull(zi))
-            }
-            if (zoomBitmap != null) {
-                Box(
+        if (state.zoomIndex != null && state.hintBitmap != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+                    .clickable { vm.onEvent(RepeatVerseEvent.ShowZoom(null)) },
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    bitmap = state.hintBitmap!!.asImageBitmap(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black)
-                        .clickable { vm.onEvent(RepeatVerseEvent.ShowZoom(null)) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        bitmap = zoomBitmap.asImageBitmap(),
-                        contentDescription = null,
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier
-                            .fillMaxWidth(0.9f)
-                            .fillMaxHeight(0.85f)
-                    )
-                }
+                        .fillMaxWidth(0.9f)
+                        .fillMaxHeight(0.85f)
+                )
             }
         }
     }
@@ -203,7 +199,7 @@ private fun PortraitRepeatLayout(
     sectionVerses: List<Verse>,
     sectionId: Int,
     assetNames: List<String>,
-    mnemonicRepository: MnemonicPicturesRepository,
+    mnemonicRepository: UserMnemonicPicturesRepository,
     onEvent: (RepeatVerseEvent) -> Unit
 ) {
     Column(
@@ -241,7 +237,7 @@ private fun LandscapeRepeatLayout(
     sectionVerses: List<Verse>,
     sectionId: Int,
     assetNames: List<String>,
-    mnemonicRepository: MnemonicPicturesRepository,
+    mnemonicRepository: UserMnemonicPicturesRepository,
     onEvent: (RepeatVerseEvent) -> Unit
 ) {
     Row(
@@ -284,7 +280,7 @@ private fun GalleryArea(
     sectionVerses: List<Verse>,
     sectionId: Int,
     assetNames: List<String>,
-    mnemonicRepository: MnemonicPicturesRepository,
+    mnemonicRepository: UserMnemonicPicturesRepository,
     onEvent: (RepeatVerseEvent) -> Unit,
     isLandscape: Boolean = false
 ) {

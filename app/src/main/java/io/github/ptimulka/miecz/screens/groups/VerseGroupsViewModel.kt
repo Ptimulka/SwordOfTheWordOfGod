@@ -2,7 +2,7 @@ package io.github.ptimulka.miecz.screens.groups
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.repositories.ProgressRepository
 import io.github.ptimulka.miecz.repositories.SectionRepository
 import io.github.ptimulka.miecz.repositories.VersesGroupsRepository
@@ -15,7 +15,7 @@ class VerseGroupsViewModel(
     private val sectionRepo: SectionRepository,
     private val groupsRepo: VersesGroupsRepository,
     private val progressRepo: ProgressRepository,
-    private val mnemonicRepo: MnemonicPicturesRepository,
+    private val mnemonicRepo: MnemonicRepository,
     private val assetList: Set<String>
 ) : ViewModel() {
 

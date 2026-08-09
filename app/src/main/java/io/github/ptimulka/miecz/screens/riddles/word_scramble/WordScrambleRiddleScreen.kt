@@ -8,7 +8,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -57,8 +56,8 @@ import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
-import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.data.WordItem
+import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
@@ -75,8 +74,7 @@ fun WordScrambleRiddleScreen(
     onSuccess: () -> Unit,
     onShieldLoss: () -> Boolean
 ) {
-    val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
-    val hasHint = hintBitmap != null
+    val context = LocalContext.current
 
     val vm: WordScrambleViewModel = viewModel(
         key = "WordScrambleVM_${book}_${chapter}_${number}_${isEasy}",
@@ -90,8 +88,12 @@ fun WordScrambleRiddleScreen(
                         chapter = chapter,
                         number = number,
                         isEasy = isEasy,
-                        hasHint = hasHint
-                    )
+                        sectionId = sectionId,
+                        verseIndex = verseIndex,
+                        assetName = assetName,
+                        hasHint = true
+                    ),
+                    UserMnemonicPicturesRepository(context)
                 ) as T
             }
         }
@@ -132,19 +134,17 @@ fun WordScrambleRiddleScreen(
         if (isLandscape) {
             LandscapeWordScrambleLayout(
                 state = state,
-                hintBitmap = hintBitmap,
                 onEvent = vm::onEvent
             )
         } else {
             PortraitWordScrambleLayout(
                 state = state,
-                hintBitmap = hintBitmap,
                 onEvent = vm::onEvent
             )
         }
 
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hintBitmap != null) {
-            FullscreenImageOverlay(hintBitmap) { vm.onEvent(WordScrambleEvent.DismissHint) }
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && state.hintBitmap != null) {
+            FullscreenImageOverlay(state.hintBitmap!!) { vm.onEvent(WordScrambleEvent.DismissHint) }
         } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,
@@ -157,11 +157,10 @@ fun WordScrambleRiddleScreen(
 @Composable
 private fun PortraitWordScrambleLayout(
     state: WordScrambleUiState,
-    hintBitmap: android.graphics.Bitmap?,
     onEvent: (WordScrambleEvent) -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
-        ScrambleTopBar(state.book, state.chapter, state.number, hintBitmap) { onEvent(WordScrambleEvent.ShowHint) }
+        ScrambleTopBar(state.book, state.chapter, state.number, state.hintBitmap != null) { onEvent(WordScrambleEvent.ShowHint) }
 
         Column(Modifier.fillMaxSize().padding(16.dp)) {
             AnswerArea(Modifier.weight(1f), state, onEvent)
@@ -179,11 +178,10 @@ private fun PortraitWordScrambleLayout(
 @Composable
 private fun LandscapeWordScrambleLayout(
     state: WordScrambleUiState,
-    hintBitmap: android.graphics.Bitmap?,
     onEvent: (WordScrambleEvent) -> Unit
 ) {
     Column(Modifier.fillMaxSize()) {
-        ScrambleTopBar(state.book, state.chapter, state.number, hintBitmap) { onEvent(WordScrambleEvent.ShowHint) }
+        ScrambleTopBar(state.book, state.chapter, state.number, state.hintBitmap != null) { onEvent(WordScrambleEvent.ShowHint) }
 
         Row(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 8.dp)) {
             AnswerArea(Modifier.weight(1f).fillMaxHeight(), state, onEvent)
@@ -205,7 +203,7 @@ private fun ScrambleTopBar(
     book: String,
     chapter: Int,
     number: String,
-    hintBitmap: android.graphics.Bitmap?,
+    hasHint: Boolean,
     onHintClick: () -> Unit
 ) {
     Row(
@@ -218,7 +216,7 @@ private fun ScrambleTopBar(
             style = MaterialTheme.typography.titleLarge.copy(fontSize = 24.sp, fontWeight = FontWeight.Bold),
             color = colorResource(id = R.color.game_button_yellow_dark)
         )
-        if (hintBitmap != null) {
+        if (hasHint) {
             Spacer(Modifier.width(4.dp))
             IconButton(onClick = onHintClick) {
                 Icon(
@@ -231,6 +229,7 @@ private fun ScrambleTopBar(
     }
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun AnswerArea(
     modifier: Modifier,
@@ -245,7 +244,7 @@ private fun AnswerArea(
             .clickable { onEvent(WordScrambleEvent.SelectForReorder(null)) }
     ) {
         Column(Modifier.verticalScroll(rememberScrollState())) {
-            FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            androidx.compose.foundation.layout.FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 state.placedWords.forEachIndexed { index, wordItem ->
                     WordChip(
                         text = wordItem.text,
@@ -276,11 +275,12 @@ private fun AnswerArea(
     }
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun SelectionArea(modifier: Modifier, availableWords: List<WordItem>, onWordClick: (WordItem) -> Unit) {
     Box(modifier) {
         Column(Modifier.verticalScroll(rememberScrollState())) {
-            FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            androidx.compose.foundation.layout.FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 availableWords.forEach { wordItem ->
                     WordChip(text = wordItem.text, onClick = { onWordClick(wordItem) })
                 }

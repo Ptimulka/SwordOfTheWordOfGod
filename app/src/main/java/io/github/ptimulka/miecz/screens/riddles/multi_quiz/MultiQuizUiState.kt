@@ -13,7 +13,8 @@ data class MultiQuizUiState(
     val wrongBook: String? = null,
     val wrongChapter: String? = null,
     val wrongVerse: String? = null,
-    override val phase: RiddlePhase = RiddlePhase.Answering
+    override val phase: RiddlePhase = RiddlePhase.Answering,
+    override val hintBitmap: android.graphics.Bitmap? = null
 ) : BaseRiddleUiState {
     val checkEnabled: Boolean get() = selectedBook != null && selectedChapter != null && selectedVerse != null
 }

@@ -22,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -43,10 +42,9 @@ import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
-import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
-import io.github.ptimulka.miecz.repositories.MnemonicPicturesRepository
+import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
@@ -65,9 +63,6 @@ fun QuizRiddleScreen(
     onShieldLoss: () -> Boolean
 ) {
     val context = LocalContext.current
-    val hasHint = remember(sectionId, verseIndex, assetName) {
-        MnemonicPicturesRepository(context).loadActivePicture(sectionId, verseIndex, assetName) != null
-    }
 
     val vm: QuizViewModel = viewModel(
         key = "QuizVM_${book}_${chapter}_${number}_${isEasy}",
@@ -84,16 +79,16 @@ fun QuizRiddleScreen(
                         sectionVerses = sectionVerses,
                         sectionId = sectionId,
                         verseIndex = verseIndex,
-                        hasHint = hasHint
-                    )
+                        assetName = assetName,
+                        hasHint = true // The VM will check if it exists
+                    ),
+                    UserMnemonicPicturesRepository(context)
                 ) as T
             }
         }
     )
 
     val state by vm.state.collectAsStateWithLifecycle()
-    val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
-
     var showResultDialog by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(vm.effects) {
@@ -139,15 +134,16 @@ fun QuizRiddleScreen(
             )
         }
 
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hintBitmap != null) {
-            FullscreenImageOverlay(hintBitmap) { vm.onEvent(QuizEvent.DismissHint) }
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && state.hintBitmap != null) {
+            FullscreenImageOverlay(state.hintBitmap!!) { vm.onEvent(QuizEvent.DismissHint) }
         } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,
                 onConfirm = { vm.onEvent(QuizEvent.DismissResult) }
             )
         }
-    }}
+    }
+}
 
 @Composable
 fun PortraitQuizLayout(

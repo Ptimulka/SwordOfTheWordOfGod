@@ -53,16 +53,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.components.game.RiddleCheckButton
+import io.github.ptimulka.miecz.components.game.RiddleHint
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
-import io.github.ptimulka.miecz.components.game.rememberMnemonicPicture
+import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.helpers.DiffPart
 import io.github.ptimulka.miecz.helpers.DiffType
 import io.github.ptimulka.miecz.helpers.createPolishSpeechIntent
 import io.github.ptimulka.miecz.helpers.rememberSpeechLauncher
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
-
-private const val SIMILARITY_THRESHOLD = 90.0f
 
 @Composable
 fun FillWholeVerseRiddleScreen(
@@ -76,8 +75,7 @@ fun FillWholeVerseRiddleScreen(
     onSuccess: () -> Unit,
     onShieldLoss: () -> Boolean
 ) {
-    val hintBitmap = rememberMnemonicPicture(sectionId, verseIndex, assetName)
-    val hasHint = hintBitmap != null
+    val context = LocalContext.current
 
     val vm: FillWholeVerseViewModel = viewModel(
         key = "FillWholeVerseVM_${book}_${chapter}_${number}",
@@ -90,8 +88,12 @@ fun FillWholeVerseRiddleScreen(
                         book = book,
                         chapter = chapter,
                         number = number,
-                        hasHint = hasHint
-                    )
+                        sectionId = sectionId,
+                        verseIndex = verseIndex,
+                        assetName = assetName,
+                        hasHint = true
+                    ),
+                    UserMnemonicPicturesRepository(context)
                 ) as T
             }
         }
@@ -136,21 +138,19 @@ fun FillWholeVerseRiddleScreen(
         if (isLandscape) {
             LandscapeFillWholeVerseLayout(
                 state = state,
-                hintBitmap = hintBitmap,
                 onEvent = vm::onEvent,
                 speechLauncher = speechLauncher
             )
         } else {
             PortraitFillWholeVerseLayout(
                 state = state,
-                hintBitmap = hintBitmap,
                 onEvent = vm::onEvent,
                 speechLauncher = speechLauncher
             )
         }
 
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hintBitmap != null) {
-            FullscreenImageOverlay(hintBitmap) { vm.onEvent(FillWholeVerseEvent.DismissHint) }
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && state.hintBitmap != null) {
+            FullscreenImageOverlay(state.hintBitmap!!) { vm.onEvent(FillWholeVerseEvent.DismissHint) }
         } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,
@@ -179,7 +179,6 @@ fun FillWholeVerseRiddleScreen(
 @Composable
 private fun PortraitFillWholeVerseLayout(
     state: FillWholeVerseUiState,
-    hintBitmap: android.graphics.Bitmap?,
     onEvent: (FillWholeVerseEvent) -> Unit,
     speechLauncher: androidx.activity.result.ActivityResultLauncher<android.content.Intent>
 ) {
@@ -194,7 +193,7 @@ private fun PortraitFillWholeVerseLayout(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        VerseInfoArea(state.book, state.chapter, state.number, hintBitmap) { 
+        VerseInfoArea(state.book, state.chapter, state.number, state.hintBitmap != null) { 
             onEvent(FillWholeVerseEvent.ShowHint) 
         }
 
@@ -217,7 +216,6 @@ private fun PortraitFillWholeVerseLayout(
 @Composable
 private fun LandscapeFillWholeVerseLayout(
     state: FillWholeVerseUiState,
-    hintBitmap: android.graphics.Bitmap?,
     onEvent: (FillWholeVerseEvent) -> Unit,
     speechLauncher: androidx.activity.result.ActivityResultLauncher<android.content.Intent>
 ) {
@@ -232,7 +230,7 @@ private fun LandscapeFillWholeVerseLayout(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        VerseInfoArea(state.book, state.chapter, state.number, hintBitmap) { 
+        VerseInfoArea(state.book, state.chapter, state.number, state.hintBitmap != null) { 
             onEvent(FillWholeVerseEvent.ShowHint) 
         }
 
@@ -257,7 +255,7 @@ private fun VerseInfoArea(
     book: String,
     chapter: Int,
     number: String,
-    hintBitmap: android.graphics.Bitmap?,
+    hasHint: Boolean,
     onHintClick: () -> Unit
 ) {
     Row(
@@ -272,7 +270,7 @@ private fun VerseInfoArea(
             ),
             color = colorResource(id = R.color.game_button_yellow_dark)
         )
-        if (hintBitmap != null) {
+        if (hasHint) {
             Spacer(modifier = Modifier.width(4.dp))
             IconButton(onClick = onHintClick) {
                 Icon(

@@ -9,6 +9,7 @@ sealed interface RiddlePhase {
 
 interface BaseRiddleUiState {
     val phase: RiddlePhase
+    val hintBitmap: android.graphics.Bitmap?
 }
 
 sealed interface RiddleEvent {
