@@ -23,7 +23,7 @@ abstract class BaseRiddleViewModel<S : BaseRiddleUiState>(
     protected val _state = MutableStateFlow(initialState)
     val state = _state.asStateFlow()
 
-    private val _effects = Channel<RiddleEffect>()
+    protected val _effects = Channel<RiddleEffect>()
     val effects = _effects.receiveAsFlow()
 
     init {

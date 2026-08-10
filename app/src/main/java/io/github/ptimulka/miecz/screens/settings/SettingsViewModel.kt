@@ -1,6 +1,5 @@
 package io.github.ptimulka.miecz.screens.settings
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.helpers.NotificationScheduler

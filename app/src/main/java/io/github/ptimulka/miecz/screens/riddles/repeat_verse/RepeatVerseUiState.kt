@@ -1,5 +1,6 @@
 package io.github.ptimulka.miecz.screens.riddles.repeat_verse
 
+import android.graphics.Bitmap
 import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleUiState
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
@@ -14,6 +15,7 @@ data class RepeatVerseUiState(
     val sectionRetentionToday: Int = 0,
     val isSectionFinished: Boolean = false,
     val maxedIndices: Set<Int> = emptySet(),
+    val thumbnails: List<Bitmap?> = emptyList(),
     override val phase: RiddlePhase = RiddlePhase.Answering,
-    override val hintBitmap: android.graphics.Bitmap? = null
+    override val hintBitmap: Bitmap? = null
 ) : BaseRiddleUiState

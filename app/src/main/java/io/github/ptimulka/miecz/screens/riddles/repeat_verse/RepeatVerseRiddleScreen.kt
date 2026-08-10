@@ -1,6 +1,7 @@
 package io.github.ptimulka.miecz.screens.riddles.repeat_verse
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Bundle
@@ -63,6 +64,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -165,11 +167,19 @@ fun RepeatVerseRiddleScreen(
 
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
+    val onMicClick = {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            startListening()
+        } else {
+            vm.onEvent(RepeatVerseEvent.RequestPermission)
+        }
+    }
+
     Box(Modifier.fillMaxSize()) {
         if (isLandscape) {
-            LandscapeRepeatLayout(state, sectionVerses, sectionId, assetNames, UserMnemonicPicturesRepository(context), vm::onEvent)
+            LandscapeRepeatLayout(state, sectionVerses, onMicClick, vm::onEvent)
         } else {
-            PortraitRepeatLayout(state, sectionVerses, sectionId, assetNames, UserMnemonicPicturesRepository(context), vm::onEvent)
+            PortraitRepeatLayout(state, sectionVerses, onMicClick, vm::onEvent)
         }
 
         val hint = state.hintBitmap
@@ -198,9 +208,7 @@ fun RepeatVerseRiddleScreen(
 private fun PortraitRepeatLayout(
     state: RepeatVerseUiState,
     sectionVerses: List<Verse>,
-    sectionId: Int,
-    assetNames: List<String>,
-    mnemonicRepository: UserMnemonicPicturesRepository,
+    onMicClick: () -> Unit,
     onEvent: (RepeatVerseEvent) -> Unit
 ) {
     Column(
@@ -213,16 +221,13 @@ private fun PortraitRepeatLayout(
             Modifier.fillMaxWidth().weight(1f),
             state,
             sectionVerses,
-            sectionId,
-            assetNames,
-            mnemonicRepository,
             onEvent
         )
         Spacer(modifier = Modifier.height(12.dp))
         
         val selectedVerse = state.selectedIndex?.let { sectionVerses.getOrNull(it) }
         if (selectedVerse != null) {
-            VerseContentArea(selectedVerse, state, onEvent, isLandscape = false)
+            VerseContentArea(selectedVerse, state, onMicClick, isLandscape = false)
         } else {
             EmptyHintArea(isLandscape = false)
         }
@@ -236,9 +241,7 @@ private fun PortraitRepeatLayout(
 private fun LandscapeRepeatLayout(
     state: RepeatVerseUiState,
     sectionVerses: List<Verse>,
-    sectionId: Int,
-    assetNames: List<String>,
-    mnemonicRepository: UserMnemonicPicturesRepository,
+    onMicClick: () -> Unit,
     onEvent: (RepeatVerseEvent) -> Unit
 ) {
     Row(
@@ -250,9 +253,6 @@ private fun LandscapeRepeatLayout(
             Modifier.fillMaxHeight().weight(1f),
             state,
             sectionVerses,
-            sectionId,
-            assetNames,
-            mnemonicRepository,
             onEvent,
             isLandscape = true
         )
@@ -266,7 +266,7 @@ private fun LandscapeRepeatLayout(
         ) {
             val selectedVerse = state.selectedIndex?.let { sectionVerses.getOrNull(it) }
             if (selectedVerse != null) {
-                VerseContentArea(selectedVerse, state, onEvent, isLandscape = true)
+                VerseContentArea(selectedVerse, state, onMicClick, isLandscape = true)
             } else {
                 EmptyHintArea(isLandscape = true)
             }
@@ -279,9 +279,6 @@ private fun GalleryArea(
     modifier: Modifier,
     state: RepeatVerseUiState,
     sectionVerses: List<Verse>,
-    sectionId: Int,
-    assetNames: List<String>,
-    mnemonicRepository: UserMnemonicPicturesRepository,
     onEvent: (RepeatVerseEvent) -> Unit,
     isLandscape: Boolean = false
 ) {
@@ -292,9 +289,7 @@ private fun GalleryArea(
         verticalArrangement = if (isLandscape) Arrangement.spacedBy(6.dp, Alignment.CenterVertically) else Arrangement.spacedBy(6.dp)
     ) {
         itemsIndexed(sectionVerses) { index, verse ->
-            val bitmap = remember(sectionId, index, assetNames) {
-                mnemonicRepository.loadActivePicture(sectionId, index, assetNames.getOrNull(index))
-            }
+            val bitmap = state.thumbnails.getOrNull(index)
             VerseThumbnail(
                 bitmap = bitmap,
                 sigla = "${verse.book} ${verse.chapter},${verse.number}",
@@ -311,7 +306,7 @@ private fun GalleryArea(
 private fun ColumnScope.VerseContentArea(
     verse: Verse,
     state: RepeatVerseUiState,
-    onEvent: (RepeatVerseEvent) -> Unit,
+    onMicClick: () -> Unit,
     isLandscape: Boolean
 ) {
     val feedbackText = when {
@@ -363,11 +358,11 @@ private fun ColumnScope.VerseContentArea(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)
         ) {
-            MicButton(state, onEvent)
+            MicButton(state, onMicClick)
             RetentionCaptionArea(state, Modifier.widthIn(max = 200.dp))
         }
     } else {
-        MicButton(state, onEvent)
+        MicButton(state, onMicClick)
     }
 }
 
@@ -405,9 +400,9 @@ private fun RetentionCaptionArea(state: RepeatVerseUiState, modifier: Modifier) 
 }
 
 @Composable
-private fun MicButton(state: RepeatVerseUiState, onEvent: (RepeatVerseEvent) -> Unit) {
+private fun MicButton(state: RepeatVerseUiState, onClick: () -> Unit) {
     Button(
-        onClick = { onEvent(RepeatVerseEvent.RequestPermission) },
+        onClick = onClick,
         enabled = state.selectedIndex != null && state.repeatCount < MAX_REPEATS,
         colors = ButtonDefaults.buttonColors(
             containerColor = when {

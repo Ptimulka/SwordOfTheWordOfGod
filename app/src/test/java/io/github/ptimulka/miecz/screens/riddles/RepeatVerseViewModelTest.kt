@@ -9,6 +9,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 
@@ -61,5 +63,20 @@ class RepeatVerseViewModelTest {
         val state = viewModel.state.value
         assertEquals(0, state.repeatCount)
         assertTrue(state.lastSimilarity < 50f)
+    }
+
+    @Test
+    fun `initial load fetches all thumbnails`() {
+        val bitmap: android.graphics.Bitmap = mock()
+        whenever(mnemonicRepo.loadActivePicture(any(), any(), anyOrNull())).thenReturn(bitmap)
+        
+        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo, mnemonicRepo, mainDispatcherRule.testDispatcher)
+        
+        // Wait for background loading
+        mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
+        
+        val state = viewModel.state.value
+        assertEquals(1, state.thumbnails.size)
+        assertEquals(bitmap, state.thumbnails[0])
     }
 }

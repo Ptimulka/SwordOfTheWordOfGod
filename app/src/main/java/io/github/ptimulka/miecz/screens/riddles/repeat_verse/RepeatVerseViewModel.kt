@@ -9,6 +9,7 @@ import io.github.ptimulka.miecz.repositories.ProgressRepository
 import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -24,7 +25,8 @@ data class RepeatVerseArgs(
 class RepeatVerseViewModel(
     private val args: RepeatVerseArgs,
     private val progressRepository: ProgressRepository,
-    private val mnemonicRepo: MnemonicRepository
+    private val mnemonicRepo: MnemonicRepository,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : BaseRiddleViewModel<RepeatVerseUiState>(
     initialState = RepeatVerseUiState(),
     mnemonicRepo = mnemonicRepo,
@@ -33,6 +35,16 @@ class RepeatVerseViewModel(
 
     init {
         updateRetentionState()
+        loadAllThumbnails()
+    }
+
+    private fun loadAllThumbnails() {
+        viewModelScope.launch(ioDispatcher) {
+            val thumbs = args.sectionVerses.mapIndexed { index, _ ->
+                mnemonicRepo.loadActivePicture(args.sectionId, index, args.assetNames.getOrNull(index))
+            }
+            _state.update { it.copy(thumbnails = thumbs) }
+        }
     }
 
     fun onEvent(event: RepeatVerseEvent) {
@@ -43,7 +55,7 @@ class RepeatVerseViewModel(
             is RepeatVerseEvent.ProcessResult -> processResult(event.recognized)
             is RepeatVerseEvent.ShowZoom -> _state.update { it.copy(zoomIndex = event.index) }
             RepeatVerseEvent.RequestPermission -> viewModelScope.launch { 
-                // Handled in screen
+                _effects.send(RepeatVerseEffect.RequestPermission)
             }
         }
     }
@@ -62,20 +74,11 @@ class RepeatVerseViewModel(
                 selectedIndex = index,
                 repeatCount = if (index != null) progressRepository.getVerseRepeatCountToday(args.sectionId, index) else 0,
                 lastSimilarity = -1f,
-                partialText = ""
+                partialText = "",
+                hintBitmap = if (index != null) it.thumbnails.getOrNull(index) else null
             )
         }
         updateRetentionState()
-        
-        // Load the bitmap for the thumbnail zoom
-        if (index != null) {
-            viewModelScope.launch(Dispatchers.IO) {
-                val bitmap = mnemonicRepo.loadActivePicture(args.sectionId, index, args.assetNames.getOrNull(index))
-                _state.update { it.copy(hintBitmap = bitmap) }
-            }
-        } else {
-            _state.update { it.copy(hintBitmap = null) }
-        }
     }
 
     private fun processResult(recognized: String) {
