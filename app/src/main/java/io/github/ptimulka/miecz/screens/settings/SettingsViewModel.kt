@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 class SettingsViewModel(
-    private val context: Context,
     private val settingsRepo: SettingsRepository,
     private val progressRepo: UserProgressRepository,
     private val mnemonicRepo: MnemonicRepository,
@@ -77,8 +76,8 @@ class SettingsViewModel(
 
     private fun refreshAchievements() {
         val stats = AchievementStats(
-            bestParts = progressRepo.getBestTimeOverall(RiddleType.CONNECT_PARTS.name, context),
-            bestPairs = progressRepo.getBestTimeOverall(RiddleType.CONNECT_PAIRS.name, context),
+            bestParts = progressRepo.getBestTimeOverall(RiddleType.CONNECT_PARTS.name, sectionRepo, groupsRepo),
+            bestPairs = progressRepo.getBestTimeOverall(RiddleType.CONNECT_PAIRS.name, sectionRepo, groupsRepo),
             levelStreak = progressRepo.getLevelStreak(),
             bestLevelStreak = run {
                 progressRepo.reconcileBestStreaks()

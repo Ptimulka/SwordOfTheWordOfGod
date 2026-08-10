@@ -1,6 +1,5 @@
 package io.github.ptimulka.miecz.screens.riddles.quiz
 
-import androidx.lifecycle.viewModelScope
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.QuizAnswerBuilder
 import io.github.ptimulka.miecz.repositories.MnemonicRepository

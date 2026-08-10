@@ -1,6 +1,5 @@
 package io.github.ptimulka.miecz.screens.settings
 
-import android.content.Context
 import io.github.ptimulka.miecz.helpers.MainDispatcherRule
 import io.github.ptimulka.miecz.helpers.NotificationScheduler
 import io.github.ptimulka.miecz.repositories.MnemonicRepository
@@ -21,7 +20,6 @@ class SettingsViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val context: Context = mock()
     private val settingsRepo: SettingsRepository = mock()
     private val progressRepo: UserProgressRepository = mock()
     private val mnemonicRepo: MnemonicRepository = mock()
@@ -37,7 +35,7 @@ class SettingsViewModelTest {
         whenever(sectionRepo.loadInitialSections()).thenReturn(emptyList())
         whenever(groupsRepo.loadVerseGroups()).thenReturn(emptyList())
         
-        val viewModel = SettingsViewModel(context, settingsRepo, progressRepo, mnemonicRepo, sectionRepo, groupsRepo, notificationScheduler, "1.2.3")
+        val viewModel = SettingsViewModel(settingsRepo, progressRepo, mnemonicRepo, sectionRepo, groupsRepo, notificationScheduler, "1.2.3")
         
         val state = viewModel.state.value
         assertTrue(state.notificationsEnabled)
@@ -50,7 +48,7 @@ class SettingsViewModelTest {
     fun `toggleNotifications updates repo and state`() {
         whenever(sectionRepo.loadInitialSections()).thenReturn(emptyList())
         whenever(groupsRepo.loadVerseGroups()).thenReturn(emptyList())
-        val viewModel = SettingsViewModel(context, settingsRepo, progressRepo, mnemonicRepo, sectionRepo, groupsRepo, notificationScheduler, "1.0")
+        val viewModel = SettingsViewModel(settingsRepo, progressRepo, mnemonicRepo, sectionRepo, groupsRepo, notificationScheduler, "1.0")
         
         viewModel.onEvent(SettingsEvent.ToggleNotifications(true))
         
@@ -63,7 +61,7 @@ class SettingsViewModelTest {
     fun `finalConfirmReset clears all data`() {
         whenever(sectionRepo.loadInitialSections()).thenReturn(emptyList())
         whenever(groupsRepo.loadVerseGroups()).thenReturn(emptyList())
-        val viewModel = SettingsViewModel(context, settingsRepo, progressRepo, mnemonicRepo, sectionRepo, groupsRepo, notificationScheduler, "1.0")
+        val viewModel = SettingsViewModel(settingsRepo, progressRepo, mnemonicRepo, sectionRepo, groupsRepo, notificationScheduler, "1.0")
         
         viewModel.onEvent(SettingsEvent.FinalConfirmReset)
         
@@ -76,7 +74,7 @@ class SettingsViewModelTest {
     fun `requestReset shows confirm dialog`() {
         whenever(sectionRepo.loadInitialSections()).thenReturn(emptyList())
         whenever(groupsRepo.loadVerseGroups()).thenReturn(emptyList())
-        val viewModel = SettingsViewModel(context, settingsRepo, progressRepo, mnemonicRepo, sectionRepo, groupsRepo, notificationScheduler, "1.0")
+        val viewModel = SettingsViewModel(settingsRepo, progressRepo, mnemonicRepo, sectionRepo, groupsRepo, notificationScheduler, "1.0")
         
         viewModel.onEvent(SettingsEvent.RequestReset)
         

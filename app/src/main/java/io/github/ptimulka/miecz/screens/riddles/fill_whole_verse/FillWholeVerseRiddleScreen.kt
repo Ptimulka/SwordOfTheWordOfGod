@@ -149,8 +149,9 @@ fun FillWholeVerseRiddleScreen(
             )
         }
 
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && state.hintBitmap != null) {
-            FullscreenImageOverlay(state.hintBitmap!!) { vm.onEvent(FillWholeVerseEvent.DismissHint) }
+        val hint = state.hintBitmap
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hint != null) {
+            FullscreenImageOverlay(hint) { vm.onEvent(FillWholeVerseEvent.DismissHint) }
         } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,

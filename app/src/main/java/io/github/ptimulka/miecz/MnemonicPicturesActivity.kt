@@ -69,7 +69,12 @@ class MnemonicPicturesActivity : ComponentActivity() {
 
         val sectionId = intent.getIntExtra(ARG_SECTION_ID, 0)
         val sectionName = intent.getStringExtra(ARG_SECTION_NAME) ?: ""
-        val verses = intent.getParcelableArrayListExtra<Verse>(ARG_VERSES) ?: arrayListOf()
+        val verses = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableArrayListExtra(ARG_VERSES, Verse::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableArrayListExtra(ARG_VERSES)
+        } ?: arrayListOf()
         val assetNames = intent.getStringArrayListExtra(ARG_ASSET_NAMES) ?: arrayListOf()
 
         setContent {

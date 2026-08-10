@@ -1,6 +1,8 @@
 package io.github.ptimulka.miecz.screens.riddles.fill_sigla
 
+import android.graphics.Bitmap
 import io.github.ptimulka.miecz.helpers.BookNameNormalizer
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEvent
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
@@ -19,7 +21,7 @@ data class FillSiglaArgs(
 
 class FillSiglaViewModel(
     private val args: FillSiglaArgs,
-    mnemonicRepo: io.github.ptimulka.miecz.repositories.MnemonicRepository? = null
+    mnemonicRepo: MnemonicRepository? = null
 ) : BaseRiddleViewModel<FillSiglaUiState>(
     initialState = FillSiglaUiState(),
     mnemonicRepo = mnemonicRepo,
@@ -66,7 +68,7 @@ class FillSiglaViewModel(
         return state.copy(phase = newPhase)
     }
 
-    override fun updateHintBitmap(state: FillSiglaUiState, bitmap: android.graphics.Bitmap?): FillSiglaUiState {
+    override fun updateHintBitmap(state: FillSiglaUiState, bitmap: Bitmap?): FillSiglaUiState {
         return state.copy(hintBitmap = bitmap)
     }
 }

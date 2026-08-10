@@ -81,7 +81,11 @@ interface ProgressRepository {
     // ── Best times ────────────────────────────────────────────────────────────
     fun getBestTime(sectionId: Int, riddleType: String): Long
     fun updateBestTime(sectionId: Int, riddleType: String, elapsedMs: Long): Boolean
-    fun getBestTimeOverall(riddleType: String, context: Context): BestTimeEntry?
+    fun getBestTimeOverall(
+        riddleType: String,
+        sectionRepo: SectionRepository,
+        groupsRepo: VersesGroupsRepository
+    ): BestTimeEntry?
 
     // ── Achievement tallies ───────────────────────────────────────────────────
     fun getTotalReviewedVerses(): Int

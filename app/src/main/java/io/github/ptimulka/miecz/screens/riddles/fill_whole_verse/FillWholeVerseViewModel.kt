@@ -1,8 +1,10 @@
 package io.github.ptimulka.miecz.screens.riddles.fill_whole_verse
 
+import android.graphics.Bitmap
 import io.github.ptimulka.miecz.helpers.calculateWordSimilarity
 import io.github.ptimulka.miecz.helpers.diffWords
 import io.github.ptimulka.miecz.helpers.normalizeVerseText
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEvent
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
@@ -21,7 +23,7 @@ data class FillWholeVerseArgs(
 
 class FillWholeVerseViewModel(
     private val args: FillWholeVerseArgs,
-    mnemonicRepo: io.github.ptimulka.miecz.repositories.MnemonicRepository? = null
+    mnemonicRepo: MnemonicRepository? = null
 ) : BaseRiddleViewModel<FillWholeVerseUiState>(
     initialState = FillWholeVerseUiState(
         book = args.book,
@@ -85,7 +87,7 @@ class FillWholeVerseViewModel(
         return state.copy(phase = newPhase)
     }
 
-    override fun updateHintBitmap(state: FillWholeVerseUiState, bitmap: android.graphics.Bitmap?): FillWholeVerseUiState {
+    override fun updateHintBitmap(state: FillWholeVerseUiState, bitmap: Bitmap?): FillWholeVerseUiState {
         return state.copy(hintBitmap = bitmap)
     }
 }

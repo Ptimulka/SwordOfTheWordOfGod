@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.main.LevelButtonState
+import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.data.Section
 import io.github.ptimulka.miecz.repositories.ProgressRepository
 import io.github.ptimulka.miecz.repositories.RiddlesOrderRepository
@@ -75,8 +76,8 @@ class GameLevelViewModel(
             val isSiglaFinished = progressRepo.isSiglaFinished(section.id)
             val isVerseFinished = progressRepo.isVerseFinished(section.id)
             
-            val connectsDone = progressRepo.isConnectDoneToday(section.id, io.github.ptimulka.miecz.data.RiddleType.CONNECT_PARTS.name) &&
-                              progressRepo.isConnectDoneToday(section.id, io.github.ptimulka.miecz.data.RiddleType.CONNECT_PAIRS.name)
+            val connectsDone = progressRepo.isConnectDoneToday(section.id, RiddleType.CONNECT_PARTS.name) &&
+                              progressRepo.isConnectDoneToday(section.id, RiddleType.CONNECT_PAIRS.name)
             
             val versesMaxed = section.verses.indices.all {
                 progressRepo.retentionContributionForRepeats(
@@ -129,8 +130,8 @@ class GameLevelViewModel(
                 isSiglaFinished = isSiglaFinished,
                 isVerseFinished = isVerseFinished,
                 dailyRetentionMaxed = connectsDone && versesMaxed,
-                bestTimeParts = progressRepo.getBestTime(section.id, io.github.ptimulka.miecz.data.RiddleType.CONNECT_PARTS.name),
-                bestTimePairs = progressRepo.getBestTime(section.id, io.github.ptimulka.miecz.data.RiddleType.CONNECT_PAIRS.name)
+                bestTimeParts = progressRepo.getBestTime(section.id, RiddleType.CONNECT_PARTS.name),
+                bestTimePairs = progressRepo.getBestTime(section.id, RiddleType.CONNECT_PAIRS.name)
             )
         }
 

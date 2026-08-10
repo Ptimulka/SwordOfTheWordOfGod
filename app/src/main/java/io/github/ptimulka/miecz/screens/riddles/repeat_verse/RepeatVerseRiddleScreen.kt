@@ -172,7 +172,8 @@ fun RepeatVerseRiddleScreen(
             PortraitRepeatLayout(state, sectionVerses, sectionId, assetNames, UserMnemonicPicturesRepository(context), vm::onEvent)
         }
 
-        if (state.zoomIndex != null && state.hintBitmap != null) {
+        val hint = state.hintBitmap
+        if (state.zoomIndex != null && hint != null) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -181,7 +182,7 @@ fun RepeatVerseRiddleScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    bitmap = state.hintBitmap!!.asImageBitmap(),
+                    bitmap = hint.asImageBitmap(),
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
                     modifier = Modifier

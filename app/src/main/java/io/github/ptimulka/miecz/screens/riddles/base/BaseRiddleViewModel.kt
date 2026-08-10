@@ -1,7 +1,10 @@
 package io.github.ptimulka.miecz.screens.riddles.base
 
+import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,7 +14,7 @@ import kotlinx.coroutines.launch
 
 abstract class BaseRiddleViewModel<S : BaseRiddleUiState>(
     initialState: S,
-    private val mnemonicRepo: io.github.ptimulka.miecz.repositories.MnemonicRepository? = null,
+    private val mnemonicRepo: MnemonicRepository? = null,
     private val sectionId: Int = 0,
     private val verseIndex: Int = 0,
     private val assetName: String? = null
@@ -29,7 +32,7 @@ abstract class BaseRiddleViewModel<S : BaseRiddleUiState>(
 
     private fun loadHintBitmap() {
         if (mnemonicRepo != null) {
-            viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            viewModelScope.launch(Dispatchers.IO) {
                 val bitmap = mnemonicRepo.loadActivePicture(sectionId, verseIndex, assetName)
                 _state.update { updateHintBitmap(it, bitmap) }
             }
@@ -62,7 +65,7 @@ abstract class BaseRiddleViewModel<S : BaseRiddleUiState>(
     protected abstract fun checkAnswer()
     
     protected abstract fun updatePhase(state: S, newPhase: RiddlePhase): S
-    protected abstract fun updateHintBitmap(state: S, bitmap: android.graphics.Bitmap?): S
+    protected abstract fun updateHintBitmap(state: S, bitmap: Bitmap?): S
 
     protected fun emitSuccess(elapsedMs: Long? = null) {
         viewModelScope.launch {

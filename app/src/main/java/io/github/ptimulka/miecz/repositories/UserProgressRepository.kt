@@ -430,11 +430,14 @@ class UserProgressRepository(
         } else false
     }
 
-    override fun getBestTimeOverall(riddleType: String, context: android.content.Context): BestTimeEntry? {
+    override fun getBestTimeOverall(
+        riddleType: String,
+        sectionRepo: SectionRepository,
+        groupsRepo: VersesGroupsRepository
+    ): BestTimeEntry? {
         val prefix = KEY_BEST_TIME_PREFIX
         val suffix = "_$riddleType"
-        val sectionRepo = UserSectionRepository(context)
-        val verseGroups by lazy { UserVersesGroupsRepository(context).loadVerseGroups().associateBy { it.id } }
+        val verseGroups by lazy { groupsRepo.loadVerseGroups().associateBy { it.id } }
         return prefs.all
             .filter { (key, _) -> key.startsWith(prefix) && key.endsWith(suffix) }
             .mapNotNull { (key, value) ->

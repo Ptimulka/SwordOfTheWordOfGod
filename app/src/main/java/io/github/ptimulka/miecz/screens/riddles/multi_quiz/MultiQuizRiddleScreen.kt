@@ -136,8 +136,9 @@ fun MultiQuizRiddleScreen(
             )
         }
 
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && state.hintBitmap != null) {
-            FullscreenImageOverlay(state.hintBitmap!!) { vm.onEvent(MultiQuizEvent.DismissHint) }
+        val hint = state.hintBitmap
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hint != null) {
+            FullscreenImageOverlay(hint) { vm.onEvent(MultiQuizEvent.DismissHint) }
         } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,

@@ -59,7 +59,6 @@ fun SettingsScreen(innerPadding: PaddingValues) {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 return SettingsViewModel(
-                    context.applicationContext,
                     SettingsRepository(context),
                     UserProgressRepository(context),
                     UserMnemonicPicturesRepository(context),

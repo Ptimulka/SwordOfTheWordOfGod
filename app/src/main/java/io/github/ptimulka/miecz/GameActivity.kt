@@ -46,7 +46,12 @@ class GameActivity : ComponentActivity() {
         val sectionId = intent.getIntExtra(ARG_SECTION_ID, 0)
         val sectionName = intent.getStringExtra(ARG_SECTION_NAME) ?: ""
         val levelNumber = intent.getIntExtra(ARG_LEVEL_NUMBER, 0)
-        val sectionVerses = intent.getParcelableArrayListExtra<Verse>(ARG_SECTION_VERSES) ?: arrayListOf()
+        val sectionVerses = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableArrayListExtra(ARG_SECTION_VERSES, Verse::class.java)
+        } else {
+            @Suppress("DEPRECATION")
+            intent.getParcelableArrayListExtra(ARG_SECTION_VERSES)
+        } ?: arrayListOf()
         val assetNames = intent.getStringArrayListExtra(ARG_ASSET_NAMES) ?: arrayListOf()
 
         // Hide system bars

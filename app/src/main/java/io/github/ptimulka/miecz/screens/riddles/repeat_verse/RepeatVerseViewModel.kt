@@ -1,5 +1,6 @@
 package io.github.ptimulka.miecz.screens.riddles.repeat_verse
 
+import android.graphics.Bitmap
 import androidx.lifecycle.viewModelScope
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.calculateWordSimilarity
@@ -7,8 +8,8 @@ import io.github.ptimulka.miecz.helpers.normalizeVerseText
 import io.github.ptimulka.miecz.repositories.ProgressRepository
 import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
-import io.github.ptimulka.miecz.screens.riddles.base.RiddleEvent
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -51,7 +52,7 @@ class RepeatVerseViewModel(
     override fun updatePhase(state: RepeatVerseUiState, newPhase: RiddlePhase): RepeatVerseUiState {
         return state.copy(phase = newPhase)
     }
-    override fun updateHintBitmap(state: RepeatVerseUiState, bitmap: android.graphics.Bitmap?): RepeatVerseUiState {
+    override fun updateHintBitmap(state: RepeatVerseUiState, bitmap: Bitmap?): RepeatVerseUiState {
         return state.copy(hintBitmap = bitmap)
     }
 
@@ -68,7 +69,7 @@ class RepeatVerseViewModel(
         
         // Load the bitmap for the thumbnail zoom
         if (index != null) {
-            viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            viewModelScope.launch(Dispatchers.IO) {
                 val bitmap = mnemonicRepo.loadActivePicture(args.sectionId, index, args.assetNames.getOrNull(index))
                 _state.update { it.copy(hintBitmap = bitmap) }
             }
