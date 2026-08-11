@@ -1,0 +1,67 @@
+package io.github.ptimulka.miecz.screens.riddles.connect
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.ptimulka.miecz.R
+import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
+import io.github.ptimulka.miecz.data.Verse
+import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
+import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
+
+@Composable
+fun ConnectPairsRiddleScreen(
+    sectionVerses: List<Verse>,
+    sectionId: Int,
+    assetNames: List<String> = emptyList(),
+    onSuccess: (elapsedMs: Long) -> Unit
+) {
+    val context = LocalContext.current
+
+    val vm: ConnectPairsViewModel = viewModel(
+        key = "ConnectPairsVM_${sectionId}_${sectionVerses.hashCode()}",
+        factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return ConnectPairsViewModel(
+                    sectionVerses, sectionId, assetNames,
+                    UserMnemonicPicturesRepository(context)
+                ) as T
+            }
+        }
+    )
+
+    val state by vm.state.collectAsStateWithLifecycle()
+
+    LaunchedEffect(vm.effects) {
+        vm.effects.collect { effect ->
+            when (effect) {
+                is RiddleEffect.Success -> onSuccess(effect.elapsedMs ?: 0L)
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        ConnectLayout(
+            captionRes = R.string.connect_pairs_caption,
+            state = state,
+            onEvent = vm::onEvent,
+            rightColumnWeight = 3f,
+            showImagesOnButtons = true
+        )
+
+        state.previewBitmap?.let { preview ->
+            FullscreenImageOverlay(preview) {
+                vm.onEvent(ConnectEvent.DismissHint)
+            }
+        }
+    }
+}

@@ -194,7 +194,7 @@
     <string name="picture_chosen_user">Twój</string>
     <string name="image_import_save">Zapisz</string>
     <string name="image_import_load_failed">Nie udało się wczytać obrazka. Spróbuj wybrać mniejszy plik.</string>
-    <string name="mnemonic_pictures_info">Obrazki są pomocne przy zapamiętywaniu sigli wersetów. Możesz zostać przy domyślnych obrazkach wygenerowanych przez sztuczną inteligencję, narysować swój prosty obrazek lub zupełnie zrezygnować z obrazka.</string>
+    <string name="mnemonic_pictures_info">Obrazki są pomocne przy zapamiętywaniu sigli wersetów. Możesz zostać przy domyślnych obrazkach wygenerowanych przez sztuczną inteligencję, narysować swój prosty obrazek, zaimportować, lub zupełnie zrezygnować z obrazka.</string>
     <string name="download_all_images">Pobierz wybrane obrazki</string>
     <string name="download_images_done">Zapisano %1$d obrazków do galerii</string>
     <string name="download_images_none">Brak obrazków do pobrania</string>

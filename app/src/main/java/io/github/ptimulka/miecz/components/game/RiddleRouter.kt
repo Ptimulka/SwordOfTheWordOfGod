@@ -5,7 +5,17 @@ import androidx.compose.runtime.key
 import io.github.ptimulka.miecz.data.Riddle
 import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.data.Verse
-import io.github.ptimulka.miecz.screens.riddles.*
+import io.github.ptimulka.miecz.screens.riddles.quiz.QuizRiddleScreen
+import io.github.ptimulka.miecz.screens.riddles.fill_words.FillWordsRiddleScreen
+import io.github.ptimulka.miecz.screens.riddles.fill_sigla.FillSiglaRiddleScreen
+import io.github.ptimulka.miecz.screens.riddles.fill_sigla.FillSiglaType
+import io.github.ptimulka.miecz.screens.riddles.multi_quiz.MultiQuizRiddleScreen
+import io.github.ptimulka.miecz.screens.riddles.word_scramble.WordScrambleRiddleScreen
+import io.github.ptimulka.miecz.screens.riddles.fill_whole_verse.FillWholeVerseRiddleScreen
+import io.github.ptimulka.miecz.screens.riddles.fill_whole_sigla.FillWholeSiglaRiddleScreen
+import io.github.ptimulka.miecz.screens.riddles.connect.ConnectPairsRiddleScreen
+import io.github.ptimulka.miecz.screens.riddles.connect.ConnectPartsRiddleScreen
+import io.github.ptimulka.miecz.screens.riddles.repeat_verse.RepeatVerseRiddleScreen
 
 @Composable
 fun RiddleRouter(

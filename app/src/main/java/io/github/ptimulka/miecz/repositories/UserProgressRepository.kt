@@ -5,8 +5,11 @@ import android.content.SharedPreferences
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-class UserProgressRepository(context: Context) {
-    private val prefs: SharedPreferences = context.getSharedPreferences("user_progress", Context.MODE_PRIVATE)
+class UserProgressRepository(
+    context: Context,
+    private val prefs: SharedPreferences = context.getSharedPreferences("user_progress", Context.MODE_PRIVATE),
+    private val currentTimeProvider: () -> Long = { System.currentTimeMillis() }
+) : ProgressRepository {
 
     companion object {
         private const val KEY_CURRENT_SECTION = "current_section"
@@ -44,52 +47,52 @@ class UserProgressRepository(context: Context) {
         private const val KEY_TOTAL_ALOUD_REPEATS = "total_aloud_repeats"
     }
 
-    fun getCurrentSection(): Int {
+    override fun getCurrentSection(): Int {
         return prefs.getInt(KEY_CURRENT_SECTION, 1)
     }
 
-    fun setCurrentSection(sectionId: Int) {
+    override fun setCurrentSection(sectionId: Int) {
         prefs.edit().putInt(KEY_CURRENT_SECTION, sectionId).apply()
     }
 
-    fun isLevelFinished(sectionId: Int, level: Int): Boolean {
+    override fun isLevelFinished(sectionId: Int, level: Int): Boolean {
         return prefs.getBoolean("${KEY_LEVEL_FINISHED_PREFIX}${sectionId}_$level", false)
     }
 
-    fun setLevelFinished(sectionId: Int, level: Int, finished: Boolean) {
+    override fun setLevelFinished(sectionId: Int, level: Int, finished: Boolean) {
         prefs.edit().putBoolean("${KEY_LEVEL_FINISHED_PREFIX}${sectionId}_$level", finished).apply()
     }
 
-    fun isSiglaFinished(sectionId: Int): Boolean {
+    override fun isSiglaFinished(sectionId: Int): Boolean {
         return prefs.getBoolean("$KEY_SIGLA_FINISHED_PREFIX$sectionId", false)
     }
 
-    fun setSiglaFinished(sectionId: Int, finished: Boolean) {
+    override fun setSiglaFinished(sectionId: Int, finished: Boolean) {
         prefs.edit().putBoolean("$KEY_SIGLA_FINISHED_PREFIX$sectionId", finished).apply()
     }
 
-    fun isVerseFinished(sectionId: Int): Boolean {
+    override fun isVerseFinished(sectionId: Int): Boolean {
         return prefs.getBoolean("$KEY_VERSE_FINISHED_PREFIX$sectionId", false)
     }
 
-    fun setVerseFinished(sectionId: Int, finished: Boolean) {
+    override fun setVerseFinished(sectionId: Int, finished: Boolean) {
         prefs.edit().putBoolean("$KEY_VERSE_FINISHED_PREFIX$sectionId", finished).apply()
     }
 
-    fun areSpecialChallengesFinished(sectionId: Int): Boolean {
+    override fun areSpecialChallengesFinished(sectionId: Int): Boolean {
         return isSiglaFinished(sectionId) && isVerseFinished(sectionId)
     }
 
-    fun getRetention(sectionId: Int): Int {
+    override fun getRetention(sectionId: Int): Int {
         return prefs.getInt("$KEY_RETENTION_PREFIX$sectionId", 0)
     }
 
-    fun setRetention(sectionId: Int, retention: Int) {
+    override fun setRetention(sectionId: Int, retention: Int) {
         prefs.edit().putInt("$KEY_RETENTION_PREFIX$sectionId", retention).apply()
     }
 
     /** Adds [amount] retention to the section (capped at 100) and returns how much was actually gained. */
-    fun addRetention(sectionId: Int, amount: Int): Int {
+    override fun addRetention(sectionId: Int, amount: Int): Int {
         val old = getRetention(sectionId)
         val new = (old + amount).coerceIn(0, MAX_RETENTION)
         if (new != old) setRetention(sectionId, new)
@@ -100,7 +103,7 @@ class UserProgressRepository(context: Context) {
      * Applies a daily retention decay of RETENTION_DAILY_DECAY% per elapsed day to every section
      * (floored at 0). Idempotent within a day. Finished sections still display 100% regardless.
      */
-    fun applyDailyRetentionDecay() {
+    override fun applyDailyRetentionDecay() {
         val today = todayString()
         val last = prefs.getString(KEY_RETENTION_DECAY_DATE, null)
         if (last == null || last == today) {
@@ -138,7 +141,7 @@ class UserProgressRepository(context: Context) {
         "$KEY_CONNECT_DONE_DATE_PREFIX${sectionId}_$riddleType"
 
     /** True if the given connect level (parts/pairs) was already completed today for this section. */
-    fun isConnectDoneToday(sectionId: Int, riddleType: String): Boolean {
+    override fun isConnectDoneToday(sectionId: Int, riddleType: String): Boolean {
         return prefs.getString(connectDoneDateKey(sectionId, riddleType), "") == todayString()
     }
 
@@ -147,7 +150,7 @@ class UserProgressRepository(context: Context) {
      * for each section + riddle type. Returns how much retention was actually gained (0 if already
      * done today or already at the cap).
      */
-    fun awardRetentionForConnectLevel(sectionId: Int, riddleType: String): Int {
+    override fun awardRetentionForConnectLevel(sectionId: Int, riddleType: String): Int {
         if (isConnectDoneToday(sectionId, riddleType)) return 0
         prefs.edit().putString(connectDoneDateKey(sectionId, riddleType), todayString()).apply()
         return addRetention(sectionId, RETENTION_GAIN_PER_CONNECT)
@@ -158,13 +161,13 @@ class UserProgressRepository(context: Context) {
      * completion. Must be called BEFORE the level is marked finished. Returns how much retention
      * was actually gained (0 if the level was already finished before, or already at the cap).
      */
-    fun awardRetentionForStandardLevel(sectionId: Int, levelNumber: Int): Int {
+    override fun awardRetentionForStandardLevel(sectionId: Int, levelNumber: Int): Int {
         if (isLevelFinished(sectionId, levelNumber)) return 0
         return addRetention(sectionId, RETENTION_GAIN_PER_STANDARD_LEVEL)
     }
 
     /** How many times the given verse in the given section was repeated today (0..MAX_VERSE_REPEATS_PER_DAY). */
-    fun getVerseRepeatCountToday(sectionId: Int, verseIndex: Int): Int {
+    override fun getVerseRepeatCountToday(sectionId: Int, verseIndex: Int): Int {
         val dateKey = "$KEY_VERSE_REPEAT_DATE_PREFIX${sectionId}_$verseIndex"
         if (prefs.getString(dateKey, "") != todayString()) return 0
         return prefs.getInt("$KEY_VERSE_REPEAT_COUNT_PREFIX${sectionId}_$verseIndex", 0)
@@ -174,7 +177,7 @@ class UserProgressRepository(context: Context) {
      * Retention (%) a single verse contributes for a given number of repeats today:
      * 5 repeats → 1%, 8 → 2%, 10 → 3%. Max 3% per verse (→ up to 30% per 10-verse section per day).
      */
-    fun retentionContributionForRepeats(count: Int): Int = when {
+    override fun retentionContributionForRepeats(count: Int): Int = when {
         count >= 10 -> 3
         count >= 8 -> 2
         count >= 5 -> 1
@@ -182,7 +185,7 @@ class UserProgressRepository(context: Context) {
     }
 
     /** Increments today's repeat count for the verse (capped at MAX_VERSE_REPEATS_PER_DAY) and returns the new value. */
-    fun incrementVerseRepeatToday(sectionId: Int, verseIndex: Int): Int {
+    override fun incrementVerseRepeatToday(sectionId: Int, verseIndex: Int): Int {
         val current = getVerseRepeatCountToday(sectionId, verseIndex)
         val next = (current + 1).coerceAtMost(MAX_VERSE_REPEATS_PER_DAY)
         // Award the retention delta when a repeat threshold (5/8/10) is crossed
@@ -198,14 +201,14 @@ class UserProgressRepository(context: Context) {
         return next
     }
 
-    fun saveCustomSection(sectionId: Int, groupId1: Int, groupId2: Int) {
+    override fun saveCustomSection(sectionId: Int, groupId1: Int, groupId2: Int) {
         prefs.edit()
             .putString("$KEY_CUSTOM_SECTION_PREFIX$sectionId", "$groupId1,$groupId2")
             .putInt(KEY_CUSTOM_SECTIONS_COUNT, getCustomSectionsCount().coerceAtLeast(sectionId - 4)) // Assuming first custom is 5
             .apply()
     }
 
-    fun getCustomSectionGroups(sectionId: Int): Pair<Int, Int>? {
+    override fun getCustomSectionGroups(sectionId: Int): Pair<Int, Int>? {
         val data = prefs.getString("$KEY_CUSTOM_SECTION_PREFIX$sectionId", null) ?: return null
         val parts = data.split(",")
         return if (parts.size == 2) {
@@ -213,11 +216,11 @@ class UserProgressRepository(context: Context) {
         } else null
     }
 
-    fun getCustomSectionsCount(): Int {
+    override fun getCustomSectionsCount(): Int {
         return prefs.getInt(KEY_CUSTOM_SECTIONS_COUNT, 0)
     }
 
-    fun getAllUsedGroupIds(): Set<Int> {
+    override fun getAllUsedGroupIds(): Set<Int> {
         val usedIds = mutableSetOf<Int>()
         val count = getCustomSectionsCount()
         for (i in 1..count) {
@@ -230,48 +233,48 @@ class UserProgressRepository(context: Context) {
         return usedIds
     }
 
-    fun getRepeatSectionIndex(): Int {
+    override fun getRepeatSectionIndex(): Int {
         return prefs.getInt(KEY_REPEAT_SECTION_INDEX, 0)
     }
 
-    fun getRepeatVerseIndex(): Int {
+    override fun getRepeatVerseIndex(): Int {
         return prefs.getInt(KEY_REPEAT_VERSE_INDEX, 0)
     }
 
-    fun saveRepeatProgress(sectionIndex: Int, verseIndex: Int) {
+    override fun saveRepeatProgress(sectionIndex: Int, verseIndex: Int) {
         prefs.edit()
             .putInt(KEY_REPEAT_SECTION_INDEX, sectionIndex)
             .putInt(KEY_REPEAT_VERSE_INDEX, verseIndex)
             .apply()
     }
 
-    fun getShieldsCount(): Int {
+    override fun getShieldsCount(): Int {
         return prefs.getInt(KEY_SHIELDS_COUNT, MAX_SHIELDS)
     }
 
-    fun setShieldsCount(count: Int) {
+    override fun setShieldsCount(count: Int) {
         val validatedCount = count.coerceIn(MIN_SHIELDS, MAX_SHIELDS)
         prefs.edit().putInt(KEY_SHIELDS_COUNT, validatedCount).apply()
     }
 
-    fun decreaseShields(): Int {
+    override fun decreaseShields(): Int {
         val current = getShieldsCount()
         if(current == MAX_SHIELDS) {
-            saveShieldUpdateTime(System.currentTimeMillis())
+            saveShieldUpdateTime(currentTimeProvider())
         }
         val next = (current - 1).coerceAtLeast(MIN_SHIELDS)
         setShieldsCount(next)
         return next
     }
 
-    fun increaseShields(): Int {
+    override fun increaseShields(): Int {
         val current = getShieldsCount()
         val next = (current + 1).coerceAtMost(MAX_SHIELDS)
         setShieldsCount(next)
         return next
     }
 
-    fun getLastShieldUpdateTime(): Long {
+    override fun getLastShieldUpdateTime(): Long {
         return prefs.getLong(KEY_LAST_SHIELD_UPDATE, 0L)
     }
 
@@ -279,14 +282,14 @@ class UserProgressRepository(context: Context) {
         prefs.edit().putLong(KEY_LAST_SHIELD_UPDATE, time).apply()
     }
 
-    fun refreshShields(): Int {
+    override fun refreshShields(): Int {
         val currentShields = getShieldsCount()
         if (currentShields >= MAX_SHIELDS) {
             return MAX_SHIELDS
         }
 
         val lastUpdate = getLastShieldUpdateTime()
-        val currentTime = System.currentTimeMillis()
+        val currentTime = currentTimeProvider()
 
         if (lastUpdate == 0L) {
             saveShieldUpdateTime(currentTime)
@@ -314,35 +317,35 @@ class UserProgressRepository(context: Context) {
         return currentShields
     }
 
-    fun setPendingRepeatHint() {
+    override fun setPendingRepeatHint() {
         prefs.edit().putBoolean(KEY_PENDING_REPEAT_HINT, true).apply()
     }
 
-    fun consumePendingRepeatHint(): Boolean {
+    override fun consumePendingRepeatHint(): Boolean {
         val has = prefs.getBoolean(KEY_PENDING_REPEAT_HINT, false)
         if (has) prefs.edit().remove(KEY_PENDING_REPEAT_HINT).apply()
         return has
     }
 
     /** Remembers that a new section was just unlocked, so the levels screen can congratulate the user. */
-    fun setPendingSectionUnlocked(sectionId: Int) {
+    override fun setPendingSectionUnlocked(sectionId: Int) {
         prefs.edit().putInt(KEY_PENDING_SECTION_UNLOCKED, sectionId).apply()
     }
 
     /** Returns the just-unlocked section id (and clears it), or -1 if none is pending. */
-    fun consumePendingSectionUnlocked(): Int {
+    override fun consumePendingSectionUnlocked(): Int {
         val id = prefs.getInt(KEY_PENDING_SECTION_UNLOCKED, -1)
         if (id != -1) prefs.edit().remove(KEY_PENDING_SECTION_UNLOCKED).apply()
         return id
     }
 
-    fun getTimeToNextShield(): Long {
+    override fun getTimeToNextShield(): Long {
         if (getShieldsCount() >= MAX_SHIELDS) return 0L
 
         val lastUpdate = getLastShieldUpdateTime()
         if (lastUpdate == 0L) return 0L
 
-        val currentTime = System.currentTimeMillis()
+        val currentTime = currentTimeProvider()
         val elapsed = currentTime - lastUpdate
 
         if (elapsed >= SHIELD_REGEN_TIME_MS) return 0L
@@ -351,20 +354,20 @@ class UserProgressRepository(context: Context) {
         return remaining.coerceAtLeast(0L)
     }
 
-    fun getLevelStreak(): Int = prefs.getInt(KEY_LEVEL_STREAK, 0)
+    override fun getLevelStreak(): Int = prefs.getInt(KEY_LEVEL_STREAK, 0)
 
-    fun incrementLevelStreak() {
+    override fun incrementLevelStreak() {
         prefs.edit().putInt(KEY_LEVEL_STREAK, getLevelStreak() + 1).apply()
     }
 
-    fun resetLevelStreak() {
+    override fun resetLevelStreak() {
         prefs.edit().putInt(KEY_LEVEL_STREAK, 0).apply()
     }
 
-    fun getBestLevelStreak(): Int = prefs.getInt(KEY_BEST_LEVEL_STREAK, 0)
+    override fun getBestLevelStreak(): Int = prefs.getInt(KEY_BEST_LEVEL_STREAK, 0)
 
     // Returns true if this is a new record
-    fun updateBestLevelStreak(current: Int): Boolean {
+    override fun updateBestLevelStreak(current: Int): Boolean {
         val best = getBestLevelStreak()
         return if (current > best) {
             prefs.edit().putInt(KEY_BEST_LEVEL_STREAK, current).apply()
@@ -373,7 +376,7 @@ class UserProgressRepository(context: Context) {
     }
 
     /** Repairs the invariant "best >= current" for both streaks (e.g. for legacy data). */
-    fun reconcileBestStreaks() {
+    override fun reconcileBestStreaks() {
         val editor = prefs.edit()
         if (getLevelStreak() > getBestLevelStreak()) {
             editor.putInt(KEY_BEST_LEVEL_STREAK, getLevelStreak())
@@ -386,16 +389,16 @@ class UserProgressRepository(context: Context) {
 
     private fun todayString(): String {
         val sdf = SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
-        return sdf.format(java.util.Date())
+        return sdf.format(java.util.Date(currentTimeProvider()))
     }
 
-    fun hasPlayedToday(): Boolean = prefs.getString(KEY_LAST_PLAYED_DATE, "") == todayString()
+    override fun hasPlayedToday(): Boolean = prefs.getString(KEY_LAST_PLAYED_DATE, "") == todayString()
 
-    fun getCurrentDayStreak(): Int = prefs.getInt(KEY_DAY_STREAK, 0)
+    override fun getCurrentDayStreak(): Int = prefs.getInt(KEY_DAY_STREAK, 0)
 
-    fun getBestDayStreak(): Int = prefs.getInt(KEY_BEST_DAY_STREAK, 0)
+    override fun getBestDayStreak(): Int = prefs.getInt(KEY_BEST_DAY_STREAK, 0)
 
-    fun updateDayStreak() {
+    override fun updateDayStreak() {
         val today = todayString()
         val lastPlayed = prefs.getString(KEY_LAST_PLAYED_DATE, "") ?: ""
         if (lastPlayed == today) return
@@ -414,12 +417,12 @@ class UserProgressRepository(context: Context) {
             .apply()
     }
 
-    fun getBestTime(sectionId: Int, riddleType: String): Long {
+    override fun getBestTime(sectionId: Int, riddleType: String): Long {
         return prefs.getLong("${KEY_BEST_TIME_PREFIX}${sectionId}_$riddleType", -1L)
     }
 
     // Returns true if this is a new record
-    fun updateBestTime(sectionId: Int, riddleType: String, elapsedMs: Long): Boolean {
+    override fun updateBestTime(sectionId: Int, riddleType: String, elapsedMs: Long): Boolean {
         val current = getBestTime(sectionId, riddleType)
         return if (current < 0 || elapsedMs < current) {
             prefs.edit().putLong("${KEY_BEST_TIME_PREFIX}${sectionId}_$riddleType", elapsedMs).apply()
@@ -427,13 +430,14 @@ class UserProgressRepository(context: Context) {
         } else false
     }
 
-    data class BestTimeEntry(val sectionId: Int, val sectionName: String, val timeMs: Long)
-
-    fun getBestTimeOverall(riddleType: String, context: android.content.Context): BestTimeEntry? {
+    override fun getBestTimeOverall(
+        riddleType: String,
+        sectionRepo: SectionRepository,
+        groupsRepo: VersesGroupsRepository
+    ): BestTimeEntry? {
         val prefix = KEY_BEST_TIME_PREFIX
         val suffix = "_$riddleType"
-        val sectionRepo = SectionRepository(context)
-        val verseGroups by lazy { VersesGroupsRepository(context).loadVerseGroups().associateBy { it.id } }
+        val verseGroups by lazy { groupsRepo.loadVerseGroups().associateBy { it.id } }
         return prefs.all
             .filter { (key, _) -> key.startsWith(prefix) && key.endsWith(suffix) }
             .mapNotNull { (key, value) ->
@@ -453,17 +457,17 @@ class UserProgressRepository(context: Context) {
     // ── Achievement tallies ───────────────────────────────────────────────────
 
     // Total reviewed verses (lifetime, from Review)
-    fun getTotalReviewedVerses(): Int = prefs.getInt(KEY_TOTAL_REVIEWED_VERSES, 0)
+    override fun getTotalReviewedVerses(): Int = prefs.getInt(KEY_TOTAL_REVIEWED_VERSES, 0)
 
-    fun addTotalReviewedVerses(count: Int) {
+    override fun addTotalReviewedVerses(count: Int) {
         if (count <= 0) return
         prefs.edit().putInt(KEY_TOTAL_REVIEWED_VERSES, getTotalReviewedVerses() + count).apply()
     }
 
     // Total aloud repetitions (lifetime, from "Wymawiaj wersety")
-    fun getTotalAloudRepeats(): Int = prefs.getInt(KEY_TOTAL_ALOUD_REPEATS, 0)
+    override fun getTotalAloudRepeats(): Int = prefs.getInt(KEY_TOTAL_ALOUD_REPEATS, 0)
 
-    fun incrementTotalAloudRepeats() {
+    override fun incrementTotalAloudRepeats() {
         prefs.edit().putInt(KEY_TOTAL_ALOUD_REPEATS, getTotalAloudRepeats() + 1).apply()
     }
 
@@ -471,12 +475,12 @@ class UserProgressRepository(context: Context) {
      * Wipes every stored progress value: current section, finished levels and challenges,
      * retention, streaks, best times, shields and achievement tallies.
      */
-    fun clearAllProgress() {
+    override fun clearAllProgress() {
         prefs.edit().clear().apply()
     }
 
     // Count of finished standard levels + special challenges (sigla/verse)
-    fun getFinishedLevelsCount(): Int {
+    override fun getFinishedLevelsCount(): Int {
         var count = 0
         for ((key, value) in prefs.all) {
             if (value == true &&

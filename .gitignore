@@ -15,6 +15,7 @@
 .cxx
 local.properties
 /.idea/markdown.xml
+/.idea/planningMode.xml
 
 # Signing secrets — never commit
 keystore.properties

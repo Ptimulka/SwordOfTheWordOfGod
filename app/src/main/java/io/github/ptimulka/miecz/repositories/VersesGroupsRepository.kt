@@ -6,9 +6,13 @@ import io.github.ptimulka.miecz.helpers.parseVerse
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-class VersesGroupsRepository(private val context: Context) {
+interface VersesGroupsRepository {
+    fun loadVerseGroups(): List<VerseGroup>
+}
 
-    fun loadVerseGroups(): List<VerseGroup> {
+class UserVersesGroupsRepository(private val context: Context) : VersesGroupsRepository {
+
+    override fun loadVerseGroups(): List<VerseGroup> {
         val verseGroups = mutableListOf<VerseGroup>()
         try {
             val assetManager = context.assets
@@ -33,7 +37,6 @@ class VersesGroupsRepository(private val context: Context) {
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            // Consider logging the error or handling it as needed
         }
         return verseGroups.sortedBy { it.id }
     }

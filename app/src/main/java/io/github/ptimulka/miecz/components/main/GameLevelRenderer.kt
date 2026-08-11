@@ -6,8 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,23 +31,18 @@ import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.data.Section
 import io.github.ptimulka.miecz.helpers.formatTime
 import io.github.ptimulka.miecz.helpers.launchGame
-import io.github.ptimulka.miecz.repositories.UserProgressRepository
+import io.github.ptimulka.miecz.screens.main.SectionState
 
 const val SPECIAL_CHALLENGE_RIDDLES_COUNT = 10
-
-// Retention rays fan out from the heart, reaching one more level per +8% (from 4% → level 1).
-private const val SECTION_LEVEL_COUNT = 12
 
 @OptIn(ExperimentalFoundationApi::class)
 fun LazyListScope.renderSection(
     section: Section,
+    sectionState: SectionState,
     isLocked: Boolean,
-    riddlesOrder: List<List<RiddleType>>,
-    userProgressRepository: UserProgressRepository,
-    refreshTrigger: Int,
+    isShieldsEmpty: Boolean,
     onShowVerses: (Section) -> Unit,
     onDrawPictures: (Section) -> Unit,
-    isShieldsEmpty: Boolean,
     onNoShieldsClick: () -> Unit
 ) {
     stickyHeader {
@@ -58,63 +52,28 @@ fun LazyListScope.renderSection(
     item {
         SectionTopButtonsArea(
             section = section,
+            sectionState = sectionState,
             isLocked = isLocked,
-            userProgressRepository = userProgressRepository,
-            refreshTrigger = refreshTrigger,
             onShowVerses = onShowVerses,
             onDrawPictures = onDrawPictures
         )
     }
 
-    itemsIndexed(riddlesOrder) { index, riddleListForLevel ->
-        val levelNumber = index + 1
-        val areChallengesFinished = remember(refreshTrigger, section.id) {
-            userProgressRepository.areSpecialChallengesFinished(section.id)
-        }
-        val isFinished = remember(refreshTrigger, section.id, levelNumber) {
-            userProgressRepository.isLevelFinished(section.id, levelNumber)
-        }
-        val isPreviousFinished = remember(refreshTrigger, section.id, levelNumber) {
-            if (levelNumber > 1) userProgressRepository.isLevelFinished(section.id, levelNumber - 1) else true
-        }
-
-        // Retention rays from the heart reach one more level per +8% (from 4% → level 1).
-        val effectiveRetention = remember(refreshTrigger, section.id, areChallengesFinished) {
-            if (areChallengesFinished) 100 else userProgressRepository.getRetention(section.id)
-        }
-        val raysReach = (if (effectiveRetention >= 4) ((effectiveRetention - 4) / 8) + 1 else 0)
-            .coerceAtMost(SECTION_LEVEL_COUNT)
-
-        // Two conditions to play a level: previous level finished AND retention rays reach it.
-        val progressionUnlocked = isFinished || isPreviousFinished || areChallengesFinished
-        val raysUnlocked = levelNumber <= raysReach
-        val state = when {
-            isLocked -> LevelButtonState.LOCKED
-            isFinished -> LevelButtonState.FULL          // already-finished levels stay playable
-            progressionUnlocked && raysUnlocked -> LevelButtonState.FULL
-            progressionUnlocked != raysUnlocked -> LevelButtonState.HALF
-            else -> LevelButtonState.LOCKED
-        }
-        val lockMessage = when {
-            isLocked || state == LevelButtonState.FULL -> null
-            !progressionUnlocked && !raysUnlocked -> stringResource(R.string.level_locked_need_both)
-            !progressionUnlocked -> stringResource(R.string.level_locked_need_previous)
-            else -> stringResource(R.string.level_locked_need_retention)
-        }
-
+    itemsIndexed(sectionState.levels) { index, levelState ->
+        val lockMessage = levelState.lockMessageRes?.let { stringResource(it) }
         val context = LocalContext.current
         LevelItem(
-            levelIndex = levelNumber,
+            levelIndex = levelState.levelNumber,
             index = index,
-            isFinished = isFinished,
-            state = state,
-            raysReach = raysReach,
+            isFinished = levelState.isFinished,
+            state = levelState.state,
+            raysReach = sectionState.raysReach,
             lockMessage = lockMessage,
             onLevelClick = {
                 if (isShieldsEmpty) {
                     onNoShieldsClick()
                 } else {
-                    launchGame(context, section, riddleListForLevel, levelNumber)
+                    launchGame(context, section, levelState.riddles, levelState.levelNumber)
                 }
             }
         )
@@ -123,10 +82,9 @@ fun LazyListScope.renderSection(
     item {
         SpecialChallengesRow(
             section = section,
+            sectionState = sectionState,
             isLocked = isLocked,
-            lastLevelNumber = riddlesOrder.size,
-            userProgressRepository = userProgressRepository,
-            refreshTrigger = refreshTrigger,
+            lastLevelNumber = sectionState.levels.size,
             isShieldsEmpty = isShieldsEmpty,
             onNoShieldsClick = onNoShieldsClick
         )
@@ -217,19 +175,14 @@ fun LazyListScope.renderAllVersesLearnedSection(nextId: Int, isLocked: Boolean) 
 @Composable
 private fun SectionTopButtonsArea(
     section: Section,
+    sectionState: SectionState,
     isLocked: Boolean,
-    userProgressRepository: UserProgressRepository,
-    refreshTrigger: Int,
     onShowVerses: (Section) -> Unit,
     onDrawPictures: (Section) -> Unit
 ) {
     val context = LocalContext.current
-    val bestTimeParts = remember(refreshTrigger, section.id) {
-        userProgressRepository.getBestTime(section.id, RiddleType.CONNECT_PARTS.name)
-    }
-    val bestTimePairs = remember(refreshTrigger, section.id) {
-        userProgressRepository.getBestTime(section.id, RiddleType.CONNECT_PAIRS.name)
-    }
+    val bestTimeParts = sectionState.bestTimeParts
+    val bestTimePairs = sectionState.bestTimePairs
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -291,23 +244,10 @@ private fun SectionTopButtonsArea(
         )
     }
     Spacer(modifier = Modifier.height(8.dp))
-    val retention = remember(refreshTrigger, section.id) {
-        userProgressRepository.getRetention(section.id)
-    }
-    val isSectionFinished = remember(refreshTrigger, section.id) {
-        userProgressRepository.areSpecialChallengesFinished(section.id)
-    }
-    val dailyRetentionMaxed = remember(refreshTrigger, section.id) {
-        val connectsDone =
-            userProgressRepository.isConnectDoneToday(section.id, RiddleType.CONNECT_PARTS.name) &&
-            userProgressRepository.isConnectDoneToday(section.id, RiddleType.CONNECT_PAIRS.name)
-        val versesMaxed = section.verses.indices.all {
-            userProgressRepository.retentionContributionForRepeats(
-                userProgressRepository.getVerseRepeatCountToday(section.id, it)
-            ) >= 3
-        }
-        connectsDone && versesMaxed
-    }
+    val retention = sectionState.retention
+    val isSectionFinished = sectionState.areSpecialChallengesFinished
+    val dailyRetentionMaxed = sectionState.dailyRetentionMaxed
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -339,10 +279,9 @@ private fun SectionTopButtonsArea(
 @Composable
 private fun SpecialChallengesRow(
     section: Section,
+    sectionState: SectionState,
     isLocked: Boolean,
     lastLevelNumber: Int,
-    userProgressRepository: UserProgressRepository,
-    refreshTrigger: Int,
     isShieldsEmpty: Boolean,
     onNoShieldsClick: () -> Unit
 ) {
@@ -350,11 +289,9 @@ private fun SpecialChallengesRow(
 
     // Hint shown only for the current section (reached but not yet finished) while its last
     // standard level is still not completed.
-    val showUnlockHint = remember(refreshTrigger, section.id, isLocked, lastLevelNumber) {
-        !isLocked &&
-            !userProgressRepository.areSpecialChallengesFinished(section.id) &&
-            !userProgressRepository.isLevelFinished(section.id, lastLevelNumber)
-    }
+    val showUnlockHint = !isLocked &&
+            !sectionState.areSpecialChallengesFinished &&
+            !sectionState.finishedLevels.contains(lastLevelNumber)
 
     Column(modifier = Modifier.fillMaxWidth()) {
         if (showUnlockHint) {
@@ -374,10 +311,7 @@ private fun SpecialChallengesRow(
             .padding(vertical = 16.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
             ChallengeButton(
                 isLocked = isLocked,
-                isFinished = remember(
-                    refreshTrigger,
-                    section.id
-                ) { userProgressRepository.isSiglaFinished(section.id) },
+                isFinished = sectionState.isSiglaFinished,
                 iconRes = if (isLocked) R.drawable.buttonsiglalow else R.drawable.buttonsigla,
                 labelRes = R.string.fill_whole_sigla_button_caption,
                 onClick = {
@@ -395,10 +329,7 @@ private fun SpecialChallengesRow(
             )
             ChallengeButton(
                 isLocked = isLocked,
-                isFinished = remember(
-                    refreshTrigger,
-                    section.id
-                ) { userProgressRepository.isVerseFinished(section.id) },
+                isFinished = sectionState.isVerseFinished,
                 iconRes = if (isLocked) R.drawable.buttonverselow else R.drawable.buttonverse,
                 labelRes = R.string.fill_whole_verse_button_caption,
                 onClick = {
