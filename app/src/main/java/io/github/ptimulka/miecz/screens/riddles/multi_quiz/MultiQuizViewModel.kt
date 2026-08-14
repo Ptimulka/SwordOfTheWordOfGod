@@ -1,10 +1,16 @@
 package io.github.ptimulka.miecz.screens.riddles.multi_quiz
 
 import io.github.ptimulka.miecz.helpers.MultiQuizAnswerBuilder
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEvent
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import kotlinx.coroutines.flow.update
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 
 data class MultiQuizArgs(
     val book: String,
@@ -16,15 +22,18 @@ data class MultiQuizArgs(
     val hasHint: Boolean = false
 )
 
-class MultiQuizViewModel(
-    private val args: MultiQuizArgs,
-    mnemonicRepo: io.github.ptimulka.miecz.repositories.MnemonicRepository? = null
+@HiltViewModel(assistedFactory = MultiQuizViewModel.Factory::class)
+class MultiQuizViewModel @AssistedInject constructor(
+    @Assisted private val args: MultiQuizArgs,
+    mnemonicRepo: MnemonicRepository,
+    ioDispatcher: CoroutineDispatcher
 ) : BaseRiddleViewModel<MultiQuizUiState>(
     initialState = MultiQuizUiState(),
     mnemonicRepo = mnemonicRepo,
     sectionId = args.sectionId,
     verseIndex = args.verseIndex,
-    assetName = args.assetName
+    assetName = args.assetName,
+    ioDispatcher = ioDispatcher
 ) {
 
     private val correctBook = args.book
@@ -81,5 +90,10 @@ class MultiQuizViewModel(
 
     override fun updateHintBitmap(state: MultiQuizUiState, bitmap: android.graphics.Bitmap?): MultiQuizUiState {
         return state.copy(hintBitmap = bitmap)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(args: MultiQuizArgs): MultiQuizViewModel
     }
 }

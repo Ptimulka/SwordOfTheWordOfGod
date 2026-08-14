@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.ptimulka.miecz.repositories.MnemonicRepository
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +18,8 @@ abstract class BaseRiddleViewModel<S : BaseRiddleUiState>(
     private val mnemonicRepo: MnemonicRepository? = null,
     private val sectionId: Int = 0,
     private val verseIndex: Int = 0,
-    private val assetName: String? = null
+    private val assetName: String? = null,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
 
     protected val _state = MutableStateFlow(initialState)
@@ -32,7 +34,7 @@ abstract class BaseRiddleViewModel<S : BaseRiddleUiState>(
 
     private fun loadHintBitmap() {
         if (mnemonicRepo != null) {
-            viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch(ioDispatcher) {
                 val bitmap = mnemonicRepo.loadActivePicture(sectionId, verseIndex, assetName)
                 _state.update { updateHintBitmap(it, bitmap) }
             }
@@ -68,13 +70,11 @@ abstract class BaseRiddleViewModel<S : BaseRiddleUiState>(
     protected abstract fun updateHintBitmap(state: S, bitmap: Bitmap?): S
 
     protected fun emitSuccess(elapsedMs: Long? = null) {
-        viewModelScope.launch {
-            _effects.send(RiddleEffect.Success(elapsedMs))
-        }
+        _effects.trySend(RiddleEffect.Success(elapsedMs))
     }
     
     protected fun setResult(correct: Boolean, hasHint: Boolean = false) {
-        if (correct && hasHint) {
+        if (correct && hasHint && _state.value.hintBitmap != null) {
             _state.update { updatePhase(it, RiddlePhase.ShowingReward) }
         } else {
             _state.update { updatePhase(it, RiddlePhase.Result(correct)) }

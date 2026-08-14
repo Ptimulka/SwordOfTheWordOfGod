@@ -28,7 +28,7 @@ class GameViewModelTest {
     fun `initialization shuffles riddles and loads shields`() = runTest {
         whenever(progressRepo.getShieldsCount()).thenReturn(3)
         
-        val viewModel = GameViewModel(1, "Section", 1, listOf(verse), emptyList(), riddleTypes, progressRepo, false)
+        val viewModel = GameViewModel(1, "Section", 1, listOf(verse), emptyList(), riddleTypes, false, progressRepo)
         
         val state = viewModel.state.value
         assertEquals(1, state.riddles.size)
@@ -38,7 +38,7 @@ class GameViewModelTest {
     @Test
     fun `onRiddleSuccess increments index or completes level`() = runTest {
         val manyRiddles = listOf(RiddleType.QUIZ_NORMAL.name, RiddleType.QUIZ_EASY.name)
-        val viewModel = GameViewModel(1, "Section", 1, listOf(verse, verse), emptyList(), manyRiddles, progressRepo, false)
+        val viewModel = GameViewModel(1, "Section", 1, listOf(verse, verse), emptyList(), manyRiddles, false, progressRepo)
         
         assertEquals(0, viewModel.state.value.currentIndex)
         
@@ -53,7 +53,7 @@ class GameViewModelTest {
     @Test
     fun `onShieldLoss decrements shields and shows dialog at zero`() = runTest {
         whenever(progressRepo.getShieldsCount()).thenReturn(1)
-        val viewModel = GameViewModel(1, "Section", 1, listOf(verse), emptyList(), riddleTypes, progressRepo, false)
+        val viewModel = GameViewModel(1, "Section", 1, listOf(verse), emptyList(), riddleTypes, false, progressRepo)
         
         viewModel.onEvent(GameEvent.OnShieldLoss)
         
@@ -70,7 +70,7 @@ class GameViewModelTest {
         val connectTypes = listOf(RiddleType.CONNECT_PAIRS.name)
         whenever(progressRepo.updateBestTime(any(), any(), any())).thenReturn(true)
         
-        val viewModel = GameViewModel(1, "Section", 1, listOf(verse), emptyList(), connectTypes, progressRepo, false)
+        val viewModel = GameViewModel(1, "Section", 1, listOf(verse), emptyList(), connectTypes, false, progressRepo)
         
         viewModel.onEvent(GameEvent.OnRiddleSuccess())
         
@@ -87,7 +87,7 @@ class GameViewModelTest {
         whenever(progressRepo.getShieldsCount()).thenReturn(5)
         whenever(progressRepo.updateBestLevelStreak(any())).thenReturn(true)
         
-        val viewModel = GameViewModel(1, "Section", 1, listOf(verse, verse, verse), emptyList(), mixedRiddles, progressRepo, false)
+        val viewModel = GameViewModel(1, "Section", 1, listOf(verse, verse, verse), emptyList(), mixedRiddles, false, progressRepo)
         
         // 1. Success 
         viewModel.onEvent(GameEvent.OnRiddleSuccess())

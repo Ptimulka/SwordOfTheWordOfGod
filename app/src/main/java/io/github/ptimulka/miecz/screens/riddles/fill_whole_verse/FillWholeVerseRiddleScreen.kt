@@ -37,28 +37,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleHint
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
-import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.helpers.DiffPart
 import io.github.ptimulka.miecz.helpers.DiffType
-import io.github.ptimulka.miecz.helpers.createPolishSpeechIntent
 import io.github.ptimulka.miecz.helpers.rememberSpeechLauncher
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
@@ -71,33 +65,29 @@ fun FillWholeVerseRiddleScreen(
     number: String,
     sectionId: Int,
     verseIndex: Int,
+    riddleIndex: Int = 0,
     assetName: String? = null,
     onSuccess: () -> Unit,
     onShieldLoss: () -> Boolean
 ) {
-    val context = LocalContext.current
+    val args = remember(verseText, book, chapter, number, sectionId, verseIndex, riddleIndex, assetName) {
+        FillWholeVerseArgs(
+            verseText = verseText,
+            book = book,
+            chapter = chapter,
+            number = number,
+            sectionId = sectionId,
+            verseIndex = verseIndex,
+            assetName = assetName,
+            hasHint = true
+        )
+    }
 
-    val vm: FillWholeVerseViewModel = viewModel(
-        key = "FillWholeVerseVM_${book}_${chapter}_${number}",
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return FillWholeVerseViewModel(
-                    FillWholeVerseArgs(
-                        verseText = verseText,
-                        book = book,
-                        chapter = chapter,
-                        number = number,
-                        sectionId = sectionId,
-                        verseIndex = verseIndex,
-                        assetName = assetName,
-                        hasHint = true
-                    ),
-                    UserMnemonicPicturesRepository(context)
-                ) as T
-            }
-        }
-    )
+    val vm: FillWholeVerseViewModel = hiltViewModel<FillWholeVerseViewModel, FillWholeVerseViewModel.Factory>(
+        key = "FillWholeVerseVM_${book}_${chapter}_${number}_${riddleIndex}"
+    ) { factory ->
+        factory.create(args)
+    }
 
     val state by vm.state.collectAsStateWithLifecycle()
     var showResultDialog by rememberSaveable { mutableStateOf(false) }
@@ -149,9 +139,8 @@ fun FillWholeVerseRiddleScreen(
             )
         }
 
-        val hint = state.hintBitmap
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hint != null) {
-            FullscreenImageOverlay(hint) { vm.onEvent(FillWholeVerseEvent.DismissHint) }
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && state.hintBitmap != null) {
+            FullscreenImageOverlay(state.hintBitmap!!) { vm.onEvent(FillWholeVerseEvent.DismissHint) }
         } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,
@@ -338,15 +327,4 @@ private fun DiffView(diffs: List<DiffPart>) {
             )
         }
     }
-}
-
-@Composable
-private fun RiddleHint(text: String) {
-    Text(
-        text = text,
-        fontSize = 12.sp,
-        color = Color.Gray,
-        textAlign = TextAlign.Center,
-        modifier = Modifier.padding(horizontal = 16.dp)
-    )
 }

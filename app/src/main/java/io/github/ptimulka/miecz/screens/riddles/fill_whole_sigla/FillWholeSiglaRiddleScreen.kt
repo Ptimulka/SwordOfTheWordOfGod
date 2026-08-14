@@ -30,33 +30,29 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleHint
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.VerseDisplay
-import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
@@ -68,32 +64,28 @@ fun FillWholeSiglaRiddleScreen(
     number: String,
     sectionId: Int = 0,
     verseIndex: Int = 0,
+    riddleIndex: Int = 0,
     assetName: String? = null,
     onSuccess: () -> Unit,
     onShieldLoss: () -> Boolean
 ) {
-    val context = LocalContext.current
+    val args = remember(book, chapter, number, sectionId, verseIndex, riddleIndex, assetName) {
+        FillWholeSiglaArgs(
+            book = book,
+            chapter = chapter,
+            number = number,
+            sectionId = sectionId,
+            verseIndex = verseIndex,
+            assetName = assetName,
+            hasHint = true
+        )
+    }
 
-    val vm: FillWholeSiglaViewModel = viewModel(
-        key = "FillWholeSiglaVM_${book}_${chapter}_${number}",
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return FillWholeSiglaViewModel(
-                    FillWholeSiglaArgs(
-                        book = book,
-                        chapter = chapter,
-                        number = number,
-                        sectionId = sectionId,
-                        verseIndex = verseIndex,
-                        assetName = assetName,
-                        hasHint = true
-                    ),
-                    UserMnemonicPicturesRepository(context)
-                ) as T
-            }
-        }
-    )
+    val vm: FillWholeSiglaViewModel = hiltViewModel<FillWholeSiglaViewModel, FillWholeSiglaViewModel.Factory>(
+        key = "FillWholeSiglaVM_${book}_${chapter}_${number}_${riddleIndex}"
+    ) { factory ->
+        factory.create(args)
+    }
 
     val state by vm.state.collectAsStateWithLifecycle()
     var showResultDialog by rememberSaveable { mutableStateOf(false) }

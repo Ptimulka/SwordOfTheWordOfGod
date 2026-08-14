@@ -43,16 +43,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
 import io.github.ptimulka.miecz.helpers.launchGame
-import io.github.ptimulka.miecz.repositories.UserVersesGroupsRepository
 
 @Composable
 fun RandomVerseScreen(contentPadding: PaddingValues = PaddingValues()) {
@@ -60,18 +57,7 @@ fun RandomVerseScreen(contentPadding: PaddingValues = PaddingValues()) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    val vm: RandomVerseViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return RandomVerseViewModel(
-                    UserVersesGroupsRepository(context), 
-                    context.getString(R.string.random_verse)
-                ) as T
-            }
-        }
-    )
-
+    val vm: RandomVerseViewModel = hiltViewModel()
     val state by vm.state.collectAsStateWithLifecycle()
 
     // Detect if this is a fresh tab entry or a rotation

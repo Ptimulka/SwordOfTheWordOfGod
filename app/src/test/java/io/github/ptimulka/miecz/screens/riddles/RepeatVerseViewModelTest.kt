@@ -29,7 +29,7 @@ class RepeatVerseViewModelTest {
     @Test
     fun `selecting a verse updates state with current repeat count`() {
         whenever(progressRepo.getVerseRepeatCountToday(1, 0)).thenReturn(3)
-        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo, mnemonicRepo)
+        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo, mnemonicRepo, mainDispatcherRule.testDispatcher)
         
         viewModel.onEvent(RepeatVerseEvent.SelectVerse(0))
         
@@ -42,7 +42,7 @@ class RepeatVerseViewModelTest {
     fun `processing valid speech result increments repeat count`() {
         whenever(progressRepo.getVerseRepeatCountToday(1, 0)).thenReturn(0)
         whenever(progressRepo.incrementVerseRepeatToday(1, 0)).thenReturn(1)
-        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo, mnemonicRepo)
+        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo, mnemonicRepo, mainDispatcherRule.testDispatcher)
         
         viewModel.onEvent(RepeatVerseEvent.SelectVerse(0))
         viewModel.onEvent(RepeatVerseEvent.ProcessResult("Na poczatku Bog stworzyl niebo i ziemie"))
@@ -55,7 +55,7 @@ class RepeatVerseViewModelTest {
     @Test
     fun `processing invalid speech result does not increment count`() {
         whenever(progressRepo.getVerseRepeatCountToday(1, 0)).thenReturn(0)
-        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo, mnemonicRepo)
+        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo, mnemonicRepo, mainDispatcherRule.testDispatcher)
         
         viewModel.onEvent(RepeatVerseEvent.SelectVerse(0))
         viewModel.onEvent(RepeatVerseEvent.ProcessResult("Zupelnie inny tekst"))

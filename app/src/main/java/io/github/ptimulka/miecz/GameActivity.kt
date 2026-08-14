@@ -14,17 +14,16 @@ import androidx.compose.ui.Modifier
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import io.github.ptimulka.miecz.data.Verse
-import io.github.ptimulka.miecz.repositories.UserProgressRepository
 import io.github.ptimulka.miecz.screens.game.GameEffect
 import io.github.ptimulka.miecz.screens.game.GameScreen
 import io.github.ptimulka.miecz.screens.game.GameViewModel
 import io.github.ptimulka.miecz.ui.theme.SwordOfTheWordOfGodTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class GameActivity : ComponentActivity() {
 
     companion object {
@@ -62,17 +61,16 @@ class GameActivity : ComponentActivity() {
 
         setContent {
             SwordOfTheWordOfGodTheme {
-                val vm: GameViewModel = viewModel(
-                    factory = object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            return GameViewModel(
-                                sectionId, sectionName, levelNumber, sectionVerses, assetNames, levelRiddleTypes,
-                                UserProgressRepository(this@GameActivity)
-                            ) as T
-                        }
-                    }
-                )
+                val vm: GameViewModel = hiltViewModel<GameViewModel, GameViewModel.Factory> { factory ->
+                    factory.create(
+                        sectionId = sectionId,
+                        sectionName = sectionName,
+                        levelNumber = levelNumber,
+                        sectionVerses = sectionVerses,
+                        assetNames = assetNames,
+                        levelRiddleTypeNames = levelRiddleTypes
+                    )
+                }
 
                 val state by vm.state.collectAsStateWithLifecycle()
 

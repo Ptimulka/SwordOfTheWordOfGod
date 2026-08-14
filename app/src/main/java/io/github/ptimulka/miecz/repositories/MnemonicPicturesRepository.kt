@@ -9,10 +9,14 @@ import android.os.Build
 import android.provider.MediaStore
 import io.github.ptimulka.miecz.data.Verse
 import java.io.File
+import javax.inject.Inject
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 enum class ChosenPicture { NONE, DEFAULT, USER, IMPORTED }
 
-class UserMnemonicPicturesRepository(private val context: Context) : MnemonicRepository {
+class UserMnemonicPicturesRepository @Inject constructor(
+    @param:ApplicationContext private val context: Context
+) : MnemonicRepository {
 
     private val prefs: SharedPreferences =
         context.getSharedPreferences("mnemonic_choices", Context.MODE_PRIVATE)

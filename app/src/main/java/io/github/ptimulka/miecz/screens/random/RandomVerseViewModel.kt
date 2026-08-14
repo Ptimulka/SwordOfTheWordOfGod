@@ -14,12 +14,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import javax.inject.Named
 
 private const val INITIAL_COUNTDOWN = 10
 
-class RandomVerseViewModel(
+@HiltViewModel
+class RandomVerseViewModel @Inject constructor(
     private val repository: VersesGroupsRepository,
-    private val sectionName: String
+    @param:Named("randomVerseTitle") private val sectionName: String
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RandomVerseUiState())

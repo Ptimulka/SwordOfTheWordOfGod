@@ -10,13 +10,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import javax.inject.Named
 
-class VerseGroupsViewModel(
+@HiltViewModel
+class VerseGroupsViewModel @Inject constructor(
     private val sectionRepo: SectionRepository,
     private val groupsRepo: VersesGroupsRepository,
     private val progressRepo: ProgressRepository,
     private val mnemonicRepo: MnemonicRepository,
-    private val assetList: Set<String>
+    @param:Named("assetList") private val assetList: Set<String>
 ) : ViewModel() {
 
     private val allSections = sectionRepo.loadInitialSections()

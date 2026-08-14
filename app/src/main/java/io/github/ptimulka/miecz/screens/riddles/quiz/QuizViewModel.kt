@@ -7,6 +7,11 @@ import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEvent
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import kotlinx.coroutines.flow.update
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 
 data class QuizArgs(
     val verseText: String,
@@ -21,15 +26,18 @@ data class QuizArgs(
     val hasHint: Boolean
 )
 
-class QuizViewModel(
-    private val args: QuizArgs,
-    mnemonicRepo: MnemonicRepository? = null
+@HiltViewModel(assistedFactory = QuizViewModel.Factory::class)
+class QuizViewModel @AssistedInject constructor(
+    @Assisted private val args: QuizArgs,
+    mnemonicRepo: MnemonicRepository,
+    ioDispatcher: CoroutineDispatcher
 ) : BaseRiddleViewModel<QuizUiState>(
     initialState = QuizUiState(verseText = args.verseText),
     mnemonicRepo = mnemonicRepo,
     sectionId = args.sectionId,
     verseIndex = args.verseIndex,
-    assetName = args.assetName
+    assetName = args.assetName,
+    ioDispatcher = ioDispatcher
 ) {
 
     private val correctAnswer = "${args.book} ${args.chapter},${args.number}"
@@ -67,5 +75,10 @@ class QuizViewModel(
 
     override fun updateHintBitmap(state: QuizUiState, bitmap: android.graphics.Bitmap?): QuizUiState {
         return state.copy(hintBitmap = bitmap)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(args: QuizArgs): QuizViewModel
     }
 }

@@ -6,38 +6,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.data.Verse
-import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 
 @Composable
 fun ConnectPartsRiddleScreen(
     sectionVerses: List<Verse>,
     sectionId: Int = 0,
+    riddleIndex: Int = 0,
     assetNames: List<String> = emptyList(),
     onSuccess: (elapsedMs: Long) -> Unit
 ) {
-    val context = LocalContext.current
-
-    val vm: ConnectPartsViewModel = viewModel(
-        key = "ConnectPartsVM_${sectionId}_${sectionVerses.hashCode()}",
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return ConnectPartsViewModel(
-                    sectionVerses, sectionId, assetNames,
-                    UserMnemonicPicturesRepository(context)
-                ) as T
-            }
-        }
-    )
+    val vm: ConnectPartsViewModel = hiltViewModel<ConnectPartsViewModel, ConnectPartsViewModel.Factory>(
+        key = "ConnectPartsVM_${sectionId}_${riddleIndex}"
+    ) { factory ->
+        factory.create(sectionVerses, sectionId, assetNames)
+    }
 
     val state by vm.state.collectAsStateWithLifecycle()
 

@@ -1,14 +1,22 @@
 package io.github.ptimulka.miecz.screens.riddles
 
+import io.github.ptimulka.miecz.helpers.MainDispatcherRule
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import io.github.ptimulka.miecz.screens.riddles.word_scramble.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.mock
 
 class WordScrambleViewModelTest {
 
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val mnemonicRepo: MnemonicRepository = mock()
     private val defaultArgs = WordScrambleArgs(
         verseText = "Na początku Bóg",
         book = "Rdz",
@@ -19,7 +27,7 @@ class WordScrambleViewModelTest {
 
     @Test
     fun `initial state has all words in available list`() {
-        val viewModel = WordScrambleViewModel(defaultArgs)
+        val viewModel = WordScrambleViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         val state = viewModel.state.value
         
         assertEquals(3, state.availableWords.size)
@@ -29,7 +37,7 @@ class WordScrambleViewModelTest {
 
     @Test
     fun `placing a word moves it from available to placed`() {
-        val viewModel = WordScrambleViewModel(defaultArgs)
+        val viewModel = WordScrambleViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         val word = viewModel.state.value.availableWords.first()
         
         viewModel.onEvent(WordScrambleEvent.PlaceWord(word))
@@ -42,7 +50,7 @@ class WordScrambleViewModelTest {
 
     @Test
     fun `unplacing a word moves it back to available`() {
-        val viewModel = WordScrambleViewModel(defaultArgs)
+        val viewModel = WordScrambleViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         val word = viewModel.state.value.availableWords.first()
         
         viewModel.onEvent(WordScrambleEvent.PlaceWord(word))
@@ -55,7 +63,7 @@ class WordScrambleViewModelTest {
 
     @Test
     fun `moving a word swaps positions in placed list`() {
-        val viewModel = WordScrambleViewModel(defaultArgs)
+        val viewModel = WordScrambleViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         val available = viewModel.state.value.availableWords
         
         viewModel.onEvent(WordScrambleEvent.PlaceWord(available[0]))
@@ -72,7 +80,7 @@ class WordScrambleViewModelTest {
 
     @Test
     fun `checking correct sequence updates phase to success`() {
-        val viewModel = WordScrambleViewModel(defaultArgs)
+        val viewModel = WordScrambleViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         // Find words in correct order (ids are 0, 1, 2)
         val word0 = viewModel.state.value.availableWords.first { it.id == 0 }
         val word1 = viewModel.state.value.availableWords.first { it.id == 1 }
@@ -90,7 +98,7 @@ class WordScrambleViewModelTest {
 
     @Test
     fun `checking incorrect sequence highlights wrong words`() {
-        val viewModel = WordScrambleViewModel(defaultArgs)
+        val viewModel = WordScrambleViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         
         // Find words
         val word0 = viewModel.state.value.availableWords.first { it.id == 0 }
@@ -114,7 +122,7 @@ class WordScrambleViewModelTest {
 
     @Test
     fun `reset restores initial state`() {
-        val viewModel = WordScrambleViewModel(defaultArgs)
+        val viewModel = WordScrambleViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         val word = viewModel.state.value.availableWords.first()
         
         viewModel.onEvent(WordScrambleEvent.PlaceWord(word))
@@ -133,7 +141,7 @@ class WordScrambleViewModelTest {
 
     @Test
     fun `showing and dismissing hint updates phase`() {
-        val viewModel = WordScrambleViewModel(defaultArgs)
+        val viewModel = WordScrambleViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         
         viewModel.onEvent(WordScrambleEvent.ShowHint)
         assertEquals(RiddlePhase.ShowingHint, viewModel.state.value.phase)

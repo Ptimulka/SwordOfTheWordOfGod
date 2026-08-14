@@ -6,5 +6,4 @@ sealed interface RepeatVerseEvent {
     data class UpdatePartialText(val text: String) : RepeatVerseEvent
     data class ProcessResult(val recognized: String) : RepeatVerseEvent
     data class ShowZoom(val index: Int?) : RepeatVerseEvent
-    data object RequestPermission : RepeatVerseEvent
 }

@@ -1,6 +1,5 @@
 package io.github.ptimulka.miecz.repositories
 
-import android.content.Context
 import android.content.SharedPreferences
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -9,7 +8,6 @@ import org.mockito.kotlin.*
 
 class UserProgressRepositoryTest {
 
-    private val context: Context = mock()
     private val prefs: SharedPreferences = mock()
     private val editor: SharedPreferences.Editor = mock()
     
@@ -26,7 +24,7 @@ class UserProgressRepositoryTest {
         whenever(editor.putString(any(), any())).thenReturn(editor)
         whenever(editor.remove(any())).thenReturn(editor)
         
-        repository = UserProgressRepository(context, prefs, timeProvider)
+        repository = UserProgressRepository(prefs, timeProvider)
     }
 
     @Test
@@ -81,7 +79,7 @@ class UserProgressRepositoryTest {
         val fakePrefs = FakeSharedPreferences()
         fakePrefs.edit().putString("retention_decay_date", "2026-08-06").putInt("retention_1", 50).apply()
         
-        val repo = UserProgressRepository(context, fakePrefs, timeProvider)
+        val repo = UserProgressRepository(fakePrefs, timeProvider)
         repo.applyDailyRetentionDecay()
         
         assertEquals(45, fakePrefs.getInt("retention_1", -1))
@@ -95,7 +93,7 @@ class UserProgressRepositoryTest {
         val fakePrefs = FakeSharedPreferences()
         fakePrefs.edit().putString("retention_decay_date", "2026-08-06").putInt("retention_1", 3).apply()
         
-        val repo = UserProgressRepository(context, fakePrefs, timeProvider)
+        val repo = UserProgressRepository(fakePrefs, timeProvider)
         repo.applyDailyRetentionDecay()
         
         assertEquals(0, fakePrefs.getInt("retention_1", -1))

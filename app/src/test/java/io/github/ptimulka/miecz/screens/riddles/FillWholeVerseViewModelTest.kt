@@ -1,5 +1,7 @@
 package io.github.ptimulka.miecz.screens.riddles
 
+import io.github.ptimulka.miecz.helpers.MainDispatcherRule
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import io.github.ptimulka.miecz.screens.riddles.fill_whole_verse.FillWholeVerseArgs
 import io.github.ptimulka.miecz.screens.riddles.fill_whole_verse.FillWholeVerseEvent
@@ -7,10 +9,16 @@ import io.github.ptimulka.miecz.screens.riddles.fill_whole_verse.FillWholeVerseV
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.mock
 
 class FillWholeVerseViewModelTest {
 
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val mnemonicRepo: MnemonicRepository = mock()
     private val defaultArgs = FillWholeVerseArgs(
         verseText = "Tak bowiem Bóg umiłował *świat* że syna swego dał aby każdy kto wierzy miał życie wieczne.",
         book = "J",
@@ -20,7 +28,7 @@ class FillWholeVerseViewModelTest {
 
     @Test
     fun `checking correct verse updates phase to success`() {
-        val viewModel = FillWholeVerseViewModel(defaultArgs)
+        val viewModel = FillWholeVerseViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         
         viewModel.onEvent(FillWholeVerseEvent.UpdateInput("Tak bowiem Bóg umiłował świat " +
                 "że syna swego dał aby każdy kto wierzy miał życie wieczne."))
@@ -33,7 +41,7 @@ class FillWholeVerseViewModelTest {
 
     @Test
     fun `checking verse without optional parts is still correct`() {
-        val viewModel = FillWholeVerseViewModel(defaultArgs)
+        val viewModel = FillWholeVerseViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         
         viewModel.onEvent(FillWholeVerseEvent.UpdateInput("Tak bowiem Bóg umiłował " +
                 "że syna swego dał aby każdy kto wierzy miał życie wieczne."))
@@ -44,7 +52,7 @@ class FillWholeVerseViewModelTest {
 
     @Test
     fun `ignores case and diacritics during check`() {
-        val viewModel = FillWholeVerseViewModel(defaultArgs)
+        val viewModel = FillWholeVerseViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         
         // Mixed case and no diacritics
         viewModel.onEvent(FillWholeVerseEvent.UpdateInput("TAK BOWIEM BOG UMILOWAL SWIAT " +
@@ -58,7 +66,7 @@ class FillWholeVerseViewModelTest {
 
     @Test
     fun `similarity threshold is respected`() {
-        val viewModel = FillWholeVerseViewModel(defaultArgs)
+        val viewModel = FillWholeVerseViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         
         // Slightly misspelled word (bowiem vs albowiem)
         // If > 90% it's correct. 
@@ -72,7 +80,7 @@ class FillWholeVerseViewModelTest {
 
     @Test
     fun `low similarity results in failure and provides diffs`() {
-        val viewModel = FillWholeVerseViewModel(defaultArgs)
+        val viewModel = FillWholeVerseViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         
         viewModel.onEvent(FillWholeVerseEvent.UpdateInput("Inny tekst."))
         viewModel.onEvent(FillWholeVerseEvent.Check)

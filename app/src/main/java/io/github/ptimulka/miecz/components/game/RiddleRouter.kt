@@ -21,6 +21,7 @@ import io.github.ptimulka.miecz.screens.riddles.repeat_verse.RepeatVerseRiddleSc
 fun RiddleRouter(
     riddle: Riddle,
     sectionId: Int,
+    riddleIndex: Int,
     sectionVerses: List<Verse>,
     assetNames: List<String> = emptyList(),
     onSuccess: (elapsedMs: Long?) -> Unit,
@@ -28,7 +29,7 @@ fun RiddleRouter(
 ) {
     val verse = riddle.verse
 
-    key(riddle.type, verse.hashCode()) {
+    key(riddle.type, verse.hashCode(), riddleIndex) {
         when (riddle.type) {
             RiddleType.FILL_WHOLE_VERSE -> {
                 val verseIndex = sectionVerses.indexOfFirst {
@@ -41,6 +42,7 @@ fun RiddleRouter(
                     number = verse.number,
                     sectionId = sectionId,
                     verseIndex = verseIndex,
+                    riddleIndex = riddleIndex,
                     assetName = assetNames.getOrNull(verseIndex),
                     onSuccess = { onSuccess(null) },
                     onShieldLoss = onShieldLoss
@@ -57,6 +59,7 @@ fun RiddleRouter(
                     number = verse.number,
                     sectionId = sectionId,
                     verseIndex = verseIndex,
+                    riddleIndex = riddleIndex,
                     assetName = assetNames.getOrNull(verseIndex),
                     onSuccess = { onSuccess(null) },
                     onShieldLoss = onShieldLoss
@@ -66,6 +69,7 @@ fun RiddleRouter(
                 RepeatVerseRiddleScreen(
                     sectionVerses = sectionVerses,
                     sectionId = sectionId,
+                    riddleIndex = riddleIndex,
                     assetNames = assetNames,
                     onSuccess = { onSuccess(null) }
                 )
@@ -74,6 +78,7 @@ fun RiddleRouter(
                 ConnectPartsRiddleScreen(
                     sectionVerses = sectionVerses,
                     sectionId = sectionId,
+                    riddleIndex = riddleIndex,
                     assetNames = assetNames,
                     onSuccess = { elapsedMs -> onSuccess(elapsedMs) }
                 )
@@ -82,6 +87,7 @@ fun RiddleRouter(
                 ConnectPairsRiddleScreen(
                     sectionVerses = sectionVerses,
                     sectionId = sectionId,
+                    riddleIndex = riddleIndex,
                     assetNames = assetNames,
                     onSuccess = { elapsedMs -> onSuccess(elapsedMs) }
                 )
@@ -100,6 +106,7 @@ fun RiddleRouter(
                     moreWords = true,
                     sectionId = sectionId,
                     verseIndex = verseIndex,
+                    riddleIndex = riddleIndex,
                     assetName = assetNames.getOrNull(verseIndex),
                     onSuccess = { onSuccess(null) },
                     onShieldLoss = onShieldLoss
@@ -119,6 +126,7 @@ fun RiddleRouter(
                     moreWords = false,
                     sectionId = sectionId,
                     verseIndex = verseIndex,
+                    riddleIndex = riddleIndex,
                     assetName = assetNames.getOrNull(verseIndex),
                     onSuccess = { onSuccess(null) },
                     onShieldLoss = onShieldLoss
@@ -142,6 +150,7 @@ fun RiddleRouter(
                     },
                     sectionId = sectionId,
                     verseIndex = verseIndex,
+                    riddleIndex = riddleIndex,
                     assetName = assetNames.getOrNull(verseIndex),
                     onSuccess = { onSuccess(null) },
                     onShieldLoss = onShieldLoss
@@ -158,6 +167,7 @@ fun RiddleRouter(
                     number = verse.number,
                     sectionId = sectionId,
                     verseIndex = verseIndex,
+                    riddleIndex = riddleIndex,
                     assetName = assetNames.getOrNull(verseIndex),
                     onSuccess = { onSuccess(null) },
                     onShieldLoss = onShieldLoss
@@ -177,6 +187,7 @@ fun RiddleRouter(
                     sectionVerses = sectionVerses,
                     sectionId = sectionId,
                     verseIndex = verseIndex,
+                    riddleIndex = riddleIndex,
                     assetName = assetNames.getOrNull(verseIndex),
                     onSuccess = { onSuccess(null) },
                     onShieldLoss = onShieldLoss
@@ -195,6 +206,7 @@ fun RiddleRouter(
                     isEasy = riddle.type == RiddleType.WORD_SCRAMBLE_EASY,
                     sectionId = sectionId,
                     verseIndex = verseIndex,
+                    riddleIndex = riddleIndex,
                     assetName = assetNames.getOrNull(verseIndex),
                     onSuccess = { onSuccess(null) },
                     onShieldLoss = onShieldLoss

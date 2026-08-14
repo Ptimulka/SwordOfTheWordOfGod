@@ -23,43 +23,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.helpers.launchGame
-import io.github.ptimulka.miecz.repositories.UserSectionRepository
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
-import io.github.ptimulka.miecz.repositories.UserVersesGroupsRepository
 
 @Composable
 fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
     val context = LocalContext.current
-    
-    val reviewName = stringResource(R.string.repeat_level_name)
-    val vm: ReviewViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return ReviewViewModel(
-                    UserProgressRepository(context),
-                    UserSectionRepository(context),
-                    UserVersesGroupsRepository(context),
-                    reviewName
-                ) as T
-            }
-        }
-    )
-
+    val vm: ReviewViewModel = hiltViewModel()
     val state by vm.state.collectAsStateWithLifecycle()
 
     // Trigger a data refresh whenever this screen enters the composition (e.g. switching tabs)
     LaunchedEffect(Unit) {
         vm.onEvent(ReviewEvent.OnResume)
     }
-    
+
     // Lifecycle handling
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -220,8 +201,8 @@ private fun ChooseRiddlesCount(selectedCount: Int, onOptionSelected: (Int) -> Un
 
 @Composable
 fun PlayForShieldsSection(
-    playForShields: Boolean, 
-    maxPossibleReward: Int, 
+    playForShields: Boolean,
+    maxPossibleReward: Int,
     onPlayForShieldsChange: (Boolean) -> Unit
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -233,7 +214,7 @@ fun PlayForShieldsSection(
         Spacer(modifier = Modifier.height(8.dp))
         PlayForShieldsSwitch(playForShields = playForShields, onPlayForShieldsChange = onPlayForShieldsChange)
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         val textColor = if(playForShields) colorResource(id = R.color.game_button_yellow_dark) else Color.Gray
         Text(
             text = stringResource(R.string.reward_for_playing, maxPossibleReward),

@@ -5,59 +5,34 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.data.WordItem
-import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
@@ -70,34 +45,30 @@ fun WordScrambleRiddleScreen(
     isEasy: Boolean,
     sectionId: Int,
     verseIndex: Int,
+    riddleIndex: Int = 0,
     assetName: String? = null,
     onSuccess: () -> Unit,
     onShieldLoss: () -> Boolean
 ) {
-    val context = LocalContext.current
+    val args = remember(verseText, book, chapter, number, isEasy, sectionId, verseIndex, riddleIndex, assetName) {
+        WordScrambleArgs(
+            verseText = verseText,
+            book = book,
+            chapter = chapter,
+            number = number,
+            isEasy = isEasy,
+            sectionId = sectionId,
+            verseIndex = verseIndex,
+            assetName = assetName,
+            hasHint = true
+        )
+    }
 
-    val vm: WordScrambleViewModel = viewModel(
-        key = "WordScrambleVM_${book}_${chapter}_${number}_${isEasy}",
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return WordScrambleViewModel(
-                    WordScrambleArgs(
-                        verseText = verseText,
-                        book = book,
-                        chapter = chapter,
-                        number = number,
-                        isEasy = isEasy,
-                        sectionId = sectionId,
-                        verseIndex = verseIndex,
-                        assetName = assetName,
-                        hasHint = true
-                    ),
-                    UserMnemonicPicturesRepository(context)
-                ) as T
-            }
-        }
-    )
+    val vm: WordScrambleViewModel = hiltViewModel<WordScrambleViewModel, WordScrambleViewModel.Factory>(
+        key = "WordScrambleVM_${book}_${chapter}_${number}_${isEasy}_${riddleIndex}"
+    ) { factory ->
+        factory.create(args)
+    }
 
     val state by vm.state.collectAsStateWithLifecycle()
     var showResultDialog by rememberSaveable { mutableStateOf(false) }
@@ -230,7 +201,6 @@ private fun ScrambleTopBar(
     }
 }
 
-@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun AnswerArea(
     modifier: Modifier,
@@ -276,7 +246,6 @@ private fun AnswerArea(
     }
 }
 
-@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun SelectionArea(modifier: Modifier, availableWords: List<WordItem>, onWordClick: (WordItem) -> Unit) {
     Box(modifier) {

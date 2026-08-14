@@ -5,10 +5,18 @@ import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.data.RiddleType
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import javax.inject.Inject
+import dagger.hilt.android.qualifiers.ApplicationContext
 
-class RiddlesOrderRepository(private val context: Context) {
+interface RiddlesOrderRepository {
+    fun getRiddlesOrder(): List<List<RiddleType>>
+}
 
-    fun getRiddlesOrder(): List<List<RiddleType>> {
+class UserRiddlesOrderRepository @Inject constructor(
+    @param:ApplicationContext private val context: Context
+) : RiddlesOrderRepository {
+
+    override fun getRiddlesOrder(): List<List<RiddleType>> {
         val riddlesOrder = mutableListOf<List<RiddleType>>()
         try {
             val inputStream = context.resources.openRawResource(R.raw.riddles_order)

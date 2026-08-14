@@ -1,15 +1,23 @@
 package io.github.ptimulka.miecz.screens.riddles
 
+import io.github.ptimulka.miecz.helpers.MainDispatcherRule
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import io.github.ptimulka.miecz.screens.riddles.multi_quiz.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.mock
 
 class MultiQuizViewModelTest {
 
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val mnemonicRepo: MnemonicRepository = mock()
     private val defaultArgs = MultiQuizArgs(
         book = "Rdz",
         chapter = 1,
@@ -19,7 +27,7 @@ class MultiQuizViewModelTest {
 
     @Test
     fun `initial state has answers and empty selections`() {
-        val viewModel = MultiQuizViewModel(defaultArgs)
+        val viewModel = MultiQuizViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         val state = viewModel.state.value
         
         assertEquals(4, state.bookAnswers.size)
@@ -29,7 +37,7 @@ class MultiQuizViewModelTest {
 
     @Test
     fun `selecting options updates state and enables check`() {
-        val viewModel = MultiQuizViewModel(defaultArgs)
+        val viewModel = MultiQuizViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         viewModel.onEvent(MultiQuizEvent.SelectBook("Rdz"))
         viewModel.onEvent(MultiQuizEvent.SelectChapter("1"))
         viewModel.onEvent(MultiQuizEvent.SelectVerse("1"))
@@ -43,7 +51,7 @@ class MultiQuizViewModelTest {
 
     @Test
     fun `checking correct answers updates phase to result success`() {
-        val viewModel = MultiQuizViewModel(defaultArgs)
+        val viewModel = MultiQuizViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         viewModel.onEvent(MultiQuizEvent.SelectBook("Rdz"))
         viewModel.onEvent(MultiQuizEvent.SelectChapter("1"))
         viewModel.onEvent(MultiQuizEvent.SelectVerse("1"))
@@ -56,7 +64,7 @@ class MultiQuizViewModelTest {
 
     @Test
     fun `checking wrong answers updates phase to result failure and highlights errors`() {
-        val viewModel = MultiQuizViewModel(defaultArgs)
+        val viewModel = MultiQuizViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         viewModel.onEvent(MultiQuizEvent.SelectBook("Wrong"))
         viewModel.onEvent(MultiQuizEvent.SelectChapter("1"))
         viewModel.onEvent(MultiQuizEvent.SelectVerse("1"))

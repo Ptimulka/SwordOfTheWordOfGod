@@ -1,14 +1,14 @@
 package io.github.ptimulka.miecz.repositories
 
-import android.content.Context
 import android.content.SharedPreferences
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-class UserProgressRepository(
-    context: Context,
-    private val prefs: SharedPreferences = context.getSharedPreferences("user_progress", Context.MODE_PRIVATE),
-    private val currentTimeProvider: () -> Long = { System.currentTimeMillis() }
+import javax.inject.Inject
+
+class UserProgressRepository @Inject constructor(
+    private val prefs: SharedPreferences,
+    private val currentTimeProvider: () -> Long
 ) : ProgressRepository {
 
     companion object {
