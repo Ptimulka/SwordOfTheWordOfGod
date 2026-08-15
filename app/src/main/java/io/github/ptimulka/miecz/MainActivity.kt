@@ -1,6 +1,7 @@
 package io.github.ptimulka.miecz
 
 import android.Manifest
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -8,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -20,26 +22,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import android.content.res.Configuration
-import androidx.compose.foundation.layout.height
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import dagger.hilt.android.AndroidEntryPoint
 import io.github.ptimulka.miecz.helpers.NotificationHelper
 import io.github.ptimulka.miecz.repositories.SettingsRepository
-import io.github.ptimulka.miecz.repositories.UserProgressRepository
+import io.github.ptimulka.miecz.screens.groups.VerseGroupsScreen
 import io.github.ptimulka.miecz.screens.main.GameLevelScreen
 import io.github.ptimulka.miecz.screens.main.MainEvent
 import io.github.ptimulka.miecz.screens.main.MainViewModel
@@ -47,9 +45,9 @@ import io.github.ptimulka.miecz.screens.main.Screen
 import io.github.ptimulka.miecz.screens.random.RandomVerseScreen
 import io.github.ptimulka.miecz.screens.review.ReviewVersesScreen
 import io.github.ptimulka.miecz.screens.settings.SettingsScreen
-import io.github.ptimulka.miecz.screens.groups.VerseGroupsScreen
 import io.github.ptimulka.miecz.ui.theme.SwordOfTheWordOfGodTheme
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,17 +77,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen() {
-    val context = LocalContext.current
-    
-    val vm: MainViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return MainViewModel(UserProgressRepository(context)) as T
-            }
-        }
-    )
-
+    val vm: MainViewModel = hiltViewModel()
     val state by vm.state.collectAsStateWithLifecycle()
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(

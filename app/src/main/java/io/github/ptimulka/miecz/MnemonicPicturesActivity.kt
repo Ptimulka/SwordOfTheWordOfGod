@@ -16,17 +16,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import io.github.ptimulka.miecz.data.Verse
-import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.screens.mnemonic.DrawingScreen
 import io.github.ptimulka.miecz.screens.mnemonic.ImageImportEditScreen
 import io.github.ptimulka.miecz.screens.mnemonic.MnemonicEffect
@@ -35,7 +31,9 @@ import io.github.ptimulka.miecz.screens.mnemonic.MnemonicPicturesListScreen
 import io.github.ptimulka.miecz.screens.mnemonic.MnemonicScreen
 import io.github.ptimulka.miecz.screens.mnemonic.MnemonicViewModel
 import io.github.ptimulka.miecz.ui.theme.SwordOfTheWordOfGodTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MnemonicPicturesActivity : ComponentActivity() {
 
     companion object {
@@ -80,17 +78,9 @@ class MnemonicPicturesActivity : ComponentActivity() {
         setContent {
             SwordOfTheWordOfGodTheme {
                 val context = LocalContext.current
-                val vm: MnemonicViewModel = viewModel(
-                    factory = object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            return MnemonicViewModel(
-                                sectionId, sectionName, verses, assetNames,
-                                UserMnemonicPicturesRepository(context)
-                            ) as T
-                        }
-                    }
-                )
+                val vm: MnemonicViewModel = hiltViewModel<MnemonicViewModel, MnemonicViewModel.Factory> { factory ->
+                    factory.create(sectionId, sectionName, verses, assetNames)
+                }
 
                 val state by vm.state.collectAsStateWithLifecycle()
 

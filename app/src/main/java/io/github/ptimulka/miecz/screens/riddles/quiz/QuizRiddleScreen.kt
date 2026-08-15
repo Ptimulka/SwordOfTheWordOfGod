@@ -22,29 +22,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
-import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
@@ -58,35 +55,31 @@ fun QuizRiddleScreen(
     sectionVerses: List<Verse> = emptyList(),
     sectionId: Int = 0,
     verseIndex: Int = 0,
+    riddleIndex: Int = 0,
     assetName: String? = null,
     onSuccess: () -> Unit,
     onShieldLoss: () -> Boolean
 ) {
-    val context = LocalContext.current
+    val args = remember(verseText, book, chapter, number, isEasy, sectionVerses, sectionId, verseIndex, riddleIndex, assetName) {
+        QuizArgs(
+            verseText = verseText,
+            book = book,
+            chapter = chapter,
+            number = number,
+            isEasy = isEasy,
+            sectionVerses = sectionVerses,
+            sectionId = sectionId,
+            verseIndex = verseIndex,
+            assetName = assetName,
+            hasHint = true
+        )
+    }
 
-    val vm: QuizViewModel = viewModel(
-        key = "QuizVM_${book}_${chapter}_${number}_${isEasy}",
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return QuizViewModel(
-                    QuizArgs(
-                        verseText = verseText,
-                        book = book,
-                        chapter = chapter,
-                        number = number,
-                        isEasy = isEasy,
-                        sectionVerses = sectionVerses,
-                        sectionId = sectionId,
-                        verseIndex = verseIndex,
-                        assetName = assetName,
-                        hasHint = true // The VM will check if it exists
-                    ),
-                    UserMnemonicPicturesRepository(context)
-                ) as T
-            }
-        }
-    )
+    val vm: QuizViewModel = hiltViewModel<QuizViewModel, QuizViewModel.Factory>(
+        key = "QuizVM_${book}_${chapter}_${number}_${isEasy}_${riddleIndex}"
+    ) { factory ->
+        factory.create(args)
+    }
 
     val state by vm.state.collectAsStateWithLifecycle()
     var showResultDialog by rememberSaveable { mutableStateOf(false) }
@@ -134,9 +127,8 @@ fun QuizRiddleScreen(
             )
         }
 
-        val hint = state.hintBitmap
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hint != null) {
-            FullscreenImageOverlay(hint) { vm.onEvent(QuizEvent.DismissHint) }
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && state.hintBitmap != null) {
+            FullscreenImageOverlay(state.hintBitmap!!) { vm.onEvent(QuizEvent.DismissHint) }
         } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,

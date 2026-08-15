@@ -20,12 +20,16 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import javax.inject.Named
 
-class ReviewViewModel(
+@HiltViewModel
+class ReviewViewModel @Inject constructor(
     private val progressRepo: ProgressRepository,
     private val sectionRepo: SectionRepository,
     private val groupsRepo: VersesGroupsRepository,
-    private val sectionName: String
+    @param:Named("reviewSectionName") private val sectionName: String
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ReviewUiState())

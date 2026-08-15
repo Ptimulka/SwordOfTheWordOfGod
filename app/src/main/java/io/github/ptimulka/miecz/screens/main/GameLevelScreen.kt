@@ -1,6 +1,9 @@
 package io.github.ptimulka.miecz.screens.main
 
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +25,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -45,13 +49,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.MnemonicPicturesActivity
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.NoShieldsDialog
@@ -59,41 +61,23 @@ import io.github.ptimulka.miecz.components.main.SectionVersesDialog
 import io.github.ptimulka.miecz.components.main.renderAllVersesLearnedSection
 import io.github.ptimulka.miecz.components.main.renderChooseNextSection
 import io.github.ptimulka.miecz.components.main.renderSection
-import io.github.ptimulka.miecz.repositories.RiddlesOrderRepository
-import io.github.ptimulka.miecz.repositories.UserSectionRepository
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
-import io.github.ptimulka.miecz.repositories.UserVersesGroupsRepository
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GameLevelScreen(contentPadding: PaddingValues = PaddingValues()) {
-    val context = LocalContext.current
-    
-    val vm: GameLevelViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return GameLevelViewModel(
-                    UserProgressRepository(context),
-                    UserSectionRepository(context),
-                    UserVersesGroupsRepository(context),
-                    RiddlesOrderRepository(context)
-                ) as T
-            }
-        }
-    )
-
+    val vm: GameLevelViewModel = hiltViewModel()
     val state by vm.state.collectAsStateWithLifecycle()
+
+    val lifecycleOwner = LocalLifecycleOwner.current
 
     // Trigger a data refresh whenever this screen enters the composition (e.g. switching tabs)
     LaunchedEffect(Unit) {
         vm.onEvent(GameLevelEvent.OnResume)
     }
-    
+
     // Lifecycle handling for app-level resume
-    val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -101,7 +85,9 @@ fun GameLevelScreen(contentPadding: PaddingValues = PaddingValues()) {
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     if (state.showChooseVerseGroups) {
@@ -122,7 +108,7 @@ private fun GameLevelMainContent(
     contentPadding: PaddingValues
 ) {
     val context = LocalContext.current
-    
+
     // Dialog with list of verses
     state.selectedSectionForDialog?.let { section ->
         SectionVersesDialog(section = section, onDismissRequest = { onEvent(GameLevelEvent.ShowSectionVerses(null)) })
@@ -146,10 +132,12 @@ private fun GameLevelMainContent(
 
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    var hasAutoScrolled by remember { mutableStateOf(false) }
 
-    LaunchedEffect(state.sections) {
-        if (state.sections.isNotEmpty()) {
-            listState.animateScrollToItem(currentScrollIndex)
+    LaunchedEffect(state.sections, state.sectionStates, currentScrollIndex) {
+        if (!hasAutoScrolled && state.sections.isNotEmpty() && state.sectionStates.isNotEmpty()) {
+            listState.scrollToItem(currentScrollIndex)
+            hasAutoScrolled = true
         }
     }
 
@@ -166,10 +154,9 @@ private fun GameLevelMainContent(
     }
 
     // Congratulation dialog
-    if (state.progress.unlockedSectionId > 0) {
+    if (state.progress.unlockedSectionId != -1) {
         SectionUnlockedDialog(
-            unlockedSectionId = state.progress.unlockedSectionId,
-            availableGroupsCount = state.progress.availableGroupsCount,
+            sectionId = state.progress.unlockedSectionId,
             onDismiss = { onEvent(GameLevelEvent.DismissUnlockedDialog) }
         )
     }
@@ -189,15 +176,13 @@ private fun GameLevelMainContent(
                     isShieldsEmpty = state.isShieldsEmpty,
                     onShowVerses = { onEvent(GameLevelEvent.ShowSectionVerses(it)) },
                     onDrawPictures = { s ->
-                        context.startActivity(
-                            MnemonicPicturesActivity.createIntent(
-                                context,
-                                s.id,
-                                s.name,
-                                ArrayList(s.verses),
-                                ArrayList(s.assetNames)
-                            )
-                        )
+                        MnemonicPicturesActivity.createIntent(
+                            context,
+                            s.id,
+                            s.name,
+                            ArrayList(s.verses),
+                            ArrayList(s.assetNames)
+                        ).let { intent -> context.startActivity(intent) }
                     },
                     onNoShieldsClick = { showNoShieldsDialog = true }
                 )
@@ -263,7 +248,7 @@ private fun GameLevelOverlays(
                 shieldsCount = state.progress.shieldsCount,
                 onDismiss = { onEvent(GameLevelEvent.ToggleShieldInfo) }
             )
-            
+
             LampInfoToast(
                 isVisible = state.isLampInfoVisible,
                 playedToday = state.progress.playedToday,
@@ -290,57 +275,11 @@ private fun GameLevelOverlays(
                 iconRes = if (state.progress.playedToday) R.drawable.buttonlamp else R.drawable.buttonlamplow,
                 value = state.progress.dayStreak.toString(),
                 onClick = { onEvent(GameLevelEvent.ToggleLampInfo) },
-                backgroundColor = if (state.progress.playedToday) 
-                    colorResource(R.color.game_button_yellow_dark) 
+                backgroundColor = if (state.progress.playedToday)
+                    colorResource(R.color.game_button_yellow_dark)
                     else colorResource(R.color.game_button_grey_dark)
             )
         }
-    }
-}
-
-@Composable
-private fun SectionUnlockedDialog(
-    unlockedSectionId: Int,
-    availableGroupsCount: Int,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = stringResource(R.string.section_unlocked_title),
-                color = colorResource(R.color.correct_answer_green),
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
-            Text(
-                if (availableGroupsCount >= 2)
-                    stringResource(R.string.section_unlocked_message, unlockedSectionId)
-                else stringResource(R.string.section_unlocked_all_message)
-            )
-        },
-        confirmButton = {
-            androidx.compose.material3.TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.ok_button))
-            }
-        }
-    )
-}
-
-@Composable
-private fun RepeatHintToast() {
-    Surface(
-        shape = RoundedCornerShape(8.dp),
-        color = colorResource(R.color.toast_text),
-        shadowElevation = 6.dp
-    ) {
-        Text(
-            text = stringResource(R.string.repeat_for_shields_hint),
-            color = Color.White,
-            fontSize = 10.sp,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
-        )
     }
 }
 
@@ -356,15 +295,14 @@ private fun ShieldInfoToast(
     } else {
         val minutes = (cooldownMs / 1000) / 60
         val seconds = (cooldownMs / 1000) % 60
-        "${stringResource(R.string.next_shield_in)}\n${String.format(Locale.getDefault(), "%02d:%02d", minutes.toInt(), seconds.toInt())}"
+        val cooldownStr = String.format(Locale.getDefault(), "%02d:%02d", minutes.toInt(), seconds.toInt())
+        "${stringResource(R.string.next_shield_in)}\n$cooldownStr"
     }
 
-    androidx.compose.animation.AnimatedVisibility(
+    AnimatedVisibility(
         visible = isVisible,
-        enter = androidx.compose.animation.fadeIn(),
-        exit = androidx.compose.animation.fadeOut(
-            animationSpec = androidx.compose.animation.core.tween(durationMillis = 3000)
-        )
+        enter = fadeIn(),
+        exit = fadeOut(animationSpec = tween(durationMillis = 3000))
     ) {
         Surface(
             color = Color.Black.copy(alpha = 0.7f),
@@ -391,13 +329,11 @@ private fun LampInfoToast(
     offsetX: androidx.compose.ui.unit.Dp,
     onDismiss: () -> Unit
 ) {
-    androidx.compose.animation.AnimatedVisibility(
+    AnimatedVisibility(
         visible = isVisible,
         modifier = Modifier.padding(start = offsetX),
-        enter = androidx.compose.animation.fadeIn(),
-        exit = androidx.compose.animation.fadeOut(
-            animationSpec = androidx.compose.animation.core.tween(durationMillis = 3000)
-        )
+        enter = fadeIn(),
+        exit = fadeOut(animationSpec = tween(durationMillis = 3000))
     ) {
         Surface(
             color = Color.Black.copy(alpha = 0.7f),
@@ -461,6 +397,22 @@ private fun ProgressPill(
 }
 
 @Composable
+private fun RepeatHintToast() {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = colorResource(R.color.game_button_yellow_dark),
+        shadowElevation = 6.dp
+    ) {
+        Text(
+            text = stringResource(R.string.repeat_for_shields_hint),
+            color = Color.White,
+            fontSize = 10.sp,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+        )
+    }
+}
+
+@Composable
 private fun JumpToCurrentButton(
     modifier: Modifier,
     onClick: () -> Unit
@@ -478,4 +430,26 @@ private fun JumpToCurrentButton(
             modifier = Modifier.size(22.dp)
         )
     }
+}
+
+@Composable
+fun SectionUnlockedDialog(sectionId: Int, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { 
+            Text(
+                stringResource(R.string.section_unlocked_title),
+                color = colorResource(R.color.correct_answer_green),
+                fontWeight = FontWeight.Bold
+            ) 
+        },
+        text = {
+            Text(stringResource(R.string.section_unlocked_message, sectionId))
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(id = R.string.ok_button))
+            }
+        }
+    )
 }

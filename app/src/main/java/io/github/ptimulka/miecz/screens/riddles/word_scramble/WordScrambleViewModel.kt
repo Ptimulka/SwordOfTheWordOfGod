@@ -2,11 +2,17 @@ package io.github.ptimulka.miecz.screens.riddles.word_scramble
 
 import io.github.ptimulka.miecz.data.WordItem
 import io.github.ptimulka.miecz.helpers.WordScramblePartBuilder
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEvent
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import kotlinx.coroutines.flow.update
 import java.util.Collections
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 
 data class WordScrambleArgs(
     val verseText: String,
@@ -20,9 +26,11 @@ data class WordScrambleArgs(
     val hasHint: Boolean = false
 )
 
-class WordScrambleViewModel(
-    private val args: WordScrambleArgs,
-    mnemonicRepo: io.github.ptimulka.miecz.repositories.MnemonicRepository? = null
+@HiltViewModel(assistedFactory = WordScrambleViewModel.Factory::class)
+class WordScrambleViewModel @AssistedInject constructor(
+    @Assisted private val args: WordScrambleArgs,
+    mnemonicRepo: MnemonicRepository,
+    ioDispatcher: CoroutineDispatcher
 ) : BaseRiddleViewModel<WordScrambleUiState>(
     initialState = WordScrambleUiState(
         book = args.book,
@@ -32,7 +40,8 @@ class WordScrambleViewModel(
     mnemonicRepo = mnemonicRepo,
     sectionId = args.sectionId,
     verseIndex = args.verseIndex,
-    assetName = args.assetName
+    assetName = args.assetName,
+    ioDispatcher = ioDispatcher
 ) {
 
     private val correctWordsStrings = WordScramblePartBuilder.build(args.verseText, args.isEasy)
@@ -129,5 +138,10 @@ class WordScrambleViewModel(
 
     override fun updateHintBitmap(state: WordScrambleUiState, bitmap: android.graphics.Bitmap?): WordScrambleUiState {
         return state.copy(hintBitmap = bitmap)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(args: WordScrambleArgs): WordScrambleViewModel
     }
 }

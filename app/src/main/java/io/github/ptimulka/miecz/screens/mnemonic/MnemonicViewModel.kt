@@ -17,14 +17,19 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 
-class MnemonicViewModel(
-    private val sectionId: Int,
-    private val sectionName: String,
-    private val verses: List<Verse>,
-    private val assetNames: List<String>,
+@HiltViewModel(assistedFactory = MnemonicViewModel.Factory::class)
+class MnemonicViewModel @AssistedInject constructor(
+    @Assisted("sectionId") private val sectionId: Int,
+    @Assisted("sectionName") private val sectionName: String,
+    @Assisted("verses") private val verses: List<Verse>,
+    @Assisted("assetNames") private val assetNames: List<String>,
     private val repository: MnemonicRepository,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -265,5 +270,15 @@ class MnemonicViewModel(
                 loadAllData()
             }
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("sectionId") sectionId: Int,
+            @Assisted("sectionName") sectionName: String,
+            @Assisted("verses") verses: List<Verse>,
+            @Assisted("assetNames") assetNames: List<String>
+        ): MnemonicViewModel
     }
 }

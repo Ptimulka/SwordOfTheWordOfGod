@@ -9,6 +9,11 @@ import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEvent
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import kotlinx.coroutines.flow.update
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 
 data class FillWholeVerseArgs(
     val verseText: String,
@@ -21,9 +26,11 @@ data class FillWholeVerseArgs(
     val hasHint: Boolean = false
 )
 
-class FillWholeVerseViewModel(
-    private val args: FillWholeVerseArgs,
-    mnemonicRepo: MnemonicRepository? = null
+@HiltViewModel(assistedFactory = FillWholeVerseViewModel.Factory::class)
+class FillWholeVerseViewModel @AssistedInject constructor(
+    @Assisted private val args: FillWholeVerseArgs,
+    mnemonicRepo: MnemonicRepository,
+    ioDispatcher: CoroutineDispatcher
 ) : BaseRiddleViewModel<FillWholeVerseUiState>(
     initialState = FillWholeVerseUiState(
         book = args.book,
@@ -33,7 +40,8 @@ class FillWholeVerseViewModel(
     mnemonicRepo = mnemonicRepo,
     sectionId = args.sectionId,
     verseIndex = args.verseIndex,
-    assetName = args.assetName
+    assetName = args.assetName,
+    ioDispatcher = ioDispatcher
 ) {
 
     fun onEvent(event: FillWholeVerseEvent) {
@@ -89,5 +97,10 @@ class FillWholeVerseViewModel(
 
     override fun updateHintBitmap(state: FillWholeVerseUiState, bitmap: Bitmap?): FillWholeVerseUiState {
         return state.copy(hintBitmap = bitmap)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(args: FillWholeVerseArgs): FillWholeVerseViewModel
     }
 }

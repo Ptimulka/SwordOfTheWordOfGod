@@ -1,14 +1,22 @@
 package io.github.ptimulka.miecz.screens.riddles
 
+import io.github.ptimulka.miecz.helpers.MainDispatcherRule
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import io.github.ptimulka.miecz.screens.riddles.fill_words.*
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.mock
 
 class FillWordsViewModelTest {
 
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+
+    private val mnemonicRepo: MnemonicRepository = mock()
     private val defaultArgs = FillWordsArgs(
         verseText = "Na początku Bóg stworzył niebo i ziemię.",
         book = "Rdz",
@@ -20,7 +28,7 @@ class FillWordsViewModelTest {
 
     @Test
     fun `initial state has correct parts and empty inputs`() {
-        val viewModel = FillWordsViewModel(defaultArgs)
+        val viewModel = FillWordsViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         val state = viewModel.state.value
         
         val fillableCount = state.verseParts.count { it is VersePart.WordToFill }
@@ -30,7 +38,7 @@ class FillWordsViewModelTest {
 
     @Test
     fun `updating input updates state and clears error`() {
-        val viewModel = FillWordsViewModel(defaultArgs)
+        val viewModel = FillWordsViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         viewModel.onEvent(FillWordsEvent.UpdateInput(0, "Test"))
         
         assertEquals("Test", viewModel.state.value.userInputs[0])
@@ -39,7 +47,7 @@ class FillWordsViewModelTest {
 
     @Test
     fun `checking correct answers updates phase to result success`() {
-        val viewModel = FillWordsViewModel(defaultArgs)
+        val viewModel = FillWordsViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         val state = viewModel.state.value
         val fillableParts = state.verseParts.filterIsInstance<VersePart.WordToFill>()
         
@@ -56,7 +64,7 @@ class FillWordsViewModelTest {
 
     @Test
     fun `checking wrong answers updates phase to result failure and marks indices`() {
-        val viewModel = FillWordsViewModel(defaultArgs)
+        val viewModel = FillWordsViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
         viewModel.onEvent(FillWordsEvent.UpdateInput(0, "Wrong"))
         viewModel.onEvent(FillWordsEvent.Check)
         

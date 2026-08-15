@@ -5,10 +5,21 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import io.github.ptimulka.miecz.R
-import io.github.ptimulka.miecz.components.game.*
+import io.github.ptimulka.miecz.GameActivity
+import io.github.ptimulka.miecz.components.game.ConnectSuccessDialog
+import io.github.ptimulka.miecz.components.game.GameExitDialog
+import io.github.ptimulka.miecz.components.game.GameSuccessDialog
+import io.github.ptimulka.miecz.components.game.GameSuccessForShieldsDialog
+import io.github.ptimulka.miecz.components.game.GameTopBar
+import io.github.ptimulka.miecz.components.game.NewRecordDialog
+import io.github.ptimulka.miecz.components.game.NewStreakRecordDialog
+import io.github.ptimulka.miecz.components.game.NoPlayingForShieldsDialog
+import io.github.ptimulka.miecz.components.game.NoShieldsDialog
+import io.github.ptimulka.miecz.components.game.RetentionGainedDialog
+import io.github.ptimulka.miecz.components.game.RiddleRouter
 
 @Composable
 fun GameScreen(
@@ -89,25 +100,27 @@ fun GameScreen(
             }
         )
 
-        // Content Area - Displays the current riddle
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .weight(1f)
         ) {
             if (state.currentIndex < state.riddles.size) {
-                RiddleRouter(
-                    riddle = state.riddles[state.currentIndex],
-                    sectionId = state.sectionId,
-                    sectionVerses = state.originalVerses,
-                    assetNames = state.assetNames,
-                    onSuccess = { elapsedMs -> onEvent(GameEvent.OnRiddleSuccess(elapsedMs)) },
-                    onShieldLoss = { 
-                        onEvent(GameEvent.OnShieldLoss)
-                        // If we are in repeat-for-shields or out of shields, it's a fatal loss (don't show local result dialog)
-                        state.sectionId == io.github.ptimulka.miecz.GameActivity.SECTION_ID_REPEAT_FOR_SHIELDS || state.shieldsCount <= 1
-                    }
-                )
+                key(state.currentIndex) {
+                    RiddleRouter(
+                        riddle = state.riddles[state.currentIndex],
+                        sectionId = state.sectionId,
+                        riddleIndex = state.currentIndex,
+                        sectionVerses = state.originalVerses,
+                        assetNames = state.assetNames,
+                        onSuccess = { elapsedMs -> onEvent(GameEvent.OnRiddleSuccess(elapsedMs)) },
+                        onShieldLoss = { 
+                            onEvent(GameEvent.OnShieldLoss)
+                            // If we are in repeat-for-shields or out of shields, it's a fatal loss (don't show local result dialog)
+                            state.sectionId == GameActivity.SECTION_ID_REPEAT_FOR_SHIELDS || state.shieldsCount <= 1
+                        }
+                    )
+                }
             }
         }
     }

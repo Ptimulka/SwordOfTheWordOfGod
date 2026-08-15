@@ -2,10 +2,16 @@ package io.github.ptimulka.miecz.screens.riddles.fill_words
 
 import io.github.ptimulka.miecz.helpers.FillWordsPartBuilder
 import io.github.ptimulka.miecz.helpers.foldPolishChars
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEvent
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import kotlinx.coroutines.flow.update
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 
 data class FillWordsArgs(
     val verseText: String,
@@ -20,9 +26,11 @@ data class FillWordsArgs(
     val hasHint: Boolean = false
 )
 
-class FillWordsViewModel(
-    private val args: FillWordsArgs,
-    mnemonicRepo: io.github.ptimulka.miecz.repositories.MnemonicRepository? = null
+@HiltViewModel(assistedFactory = FillWordsViewModel.Factory::class)
+class FillWordsViewModel @AssistedInject constructor(
+    @Assisted private val args: FillWordsArgs,
+    mnemonicRepo: MnemonicRepository,
+    ioDispatcher: CoroutineDispatcher
 ) : BaseRiddleViewModel<FillWordsUiState>(
     initialState = FillWordsUiState(
         book = args.book,
@@ -32,7 +40,8 @@ class FillWordsViewModel(
     mnemonicRepo = mnemonicRepo,
     sectionId = args.sectionId,
     verseIndex = args.verseIndex,
-    assetName = args.assetName
+    assetName = args.assetName,
+    ioDispatcher = ioDispatcher
 ) {
 
     init {
@@ -94,5 +103,10 @@ class FillWordsViewModel(
 
     override fun updateHintBitmap(state: FillWordsUiState, bitmap: android.graphics.Bitmap?): FillWordsUiState {
         return state.copy(hintBitmap = bitmap)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(args: FillWordsArgs): FillWordsViewModel
     }
 }

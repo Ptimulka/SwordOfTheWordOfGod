@@ -13,6 +13,10 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 
 private const val SIMILARITY_THRESHOLD = 50f
 
@@ -22,11 +26,12 @@ data class RepeatVerseArgs(
     val assetNames: List<String>
 )
 
-class RepeatVerseViewModel(
-    private val args: RepeatVerseArgs,
+@HiltViewModel(assistedFactory = RepeatVerseViewModel.Factory::class)
+class RepeatVerseViewModel @AssistedInject constructor(
+    @Assisted private val args: RepeatVerseArgs,
     private val progressRepository: ProgressRepository,
     private val mnemonicRepo: MnemonicRepository,
-    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val ioDispatcher: CoroutineDispatcher
 ) : BaseRiddleViewModel<RepeatVerseUiState>(
     initialState = RepeatVerseUiState(),
     mnemonicRepo = mnemonicRepo,
@@ -54,9 +59,6 @@ class RepeatVerseViewModel(
             is RepeatVerseEvent.UpdatePartialText -> _state.update { it.copy(partialText = event.text) }
             is RepeatVerseEvent.ProcessResult -> processResult(event.recognized)
             is RepeatVerseEvent.ShowZoom -> _state.update { it.copy(zoomIndex = event.index) }
-            RepeatVerseEvent.RequestPermission -> viewModelScope.launch { 
-                _effects.send(RepeatVerseEffect.RequestPermission)
-            }
         }
     }
     
@@ -126,5 +128,10 @@ class RepeatVerseViewModel(
                 maxedIndices = maxed
             )
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(args: RepeatVerseArgs): RepeatVerseViewModel
     }
 }

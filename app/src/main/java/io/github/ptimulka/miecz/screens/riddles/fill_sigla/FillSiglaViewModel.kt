@@ -7,6 +7,11 @@ import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEvent
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import kotlinx.coroutines.flow.update
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 
 data class FillSiglaArgs(
     val book: String,
@@ -19,15 +24,18 @@ data class FillSiglaArgs(
     val hasHint: Boolean = false
 )
 
-class FillSiglaViewModel(
-    private val args: FillSiglaArgs,
-    mnemonicRepo: MnemonicRepository? = null
+@HiltViewModel(assistedFactory = FillSiglaViewModel.Factory::class)
+class FillSiglaViewModel @AssistedInject constructor(
+    @Assisted private val args: FillSiglaArgs,
+    mnemonicRepo: MnemonicRepository,
+    ioDispatcher: CoroutineDispatcher
 ) : BaseRiddleViewModel<FillSiglaUiState>(
     initialState = FillSiglaUiState(),
     mnemonicRepo = mnemonicRepo,
     sectionId = args.sectionId,
     verseIndex = args.verseIndex,
-    assetName = args.assetName
+    assetName = args.assetName,
+    ioDispatcher = ioDispatcher
 ) {
 
     fun onEvent(event: FillSiglaEvent) {
@@ -70,5 +78,10 @@ class FillSiglaViewModel(
 
     override fun updateHintBitmap(state: FillSiglaUiState, bitmap: Bitmap?): FillSiglaUiState {
         return state.copy(hintBitmap = bitmap)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(args: FillSiglaArgs): FillSiglaViewModel
     }
 }

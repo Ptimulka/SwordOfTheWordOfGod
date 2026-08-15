@@ -1,53 +1,31 @@
 package io.github.ptimulka.miecz.screens.riddles.fill_sigla
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.ime
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleHint
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
 import io.github.ptimulka.miecz.components.game.VerseDisplay
-import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 
@@ -60,33 +38,29 @@ fun FillSiglaRiddleScreen(
     fillType: FillSiglaType,
     sectionId: Int = 0,
     verseIndex: Int = 0,
+    riddleIndex: Int = 0,
     assetName: String? = null,
     onSuccess: () -> Unit,
     onShieldLoss: () -> Boolean
 ) {
-    val context = LocalContext.current
+    val args = remember(book, chapter, number, fillType, sectionId, verseIndex, riddleIndex, assetName) {
+        FillSiglaArgs(
+            book = book,
+            chapter = chapter,
+            number = number,
+            fillType = fillType,
+            sectionId = sectionId,
+            verseIndex = verseIndex,
+            assetName = assetName,
+            hasHint = true
+        )
+    }
 
-    val vm: FillSiglaViewModel = viewModel(
-        key = "FillSiglaVM_${book}_${chapter}_${number}_${fillType}",
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return FillSiglaViewModel(
-                    FillSiglaArgs(
-                        book = book,
-                        chapter = chapter,
-                        number = number,
-                        fillType = fillType,
-                        sectionId = sectionId,
-                        verseIndex = verseIndex,
-                        assetName = assetName,
-                        hasHint = true
-                    ),
-                    UserMnemonicPicturesRepository(context)
-                ) as T
-            }
-        }
-    )
+    val vm: FillSiglaViewModel = hiltViewModel<FillSiglaViewModel, FillSiglaViewModel.Factory>(
+        key = "FillSiglaVM_${book}_${chapter}_${number}_${fillType}_${riddleIndex}"
+    ) { factory ->
+        factory.create(args)
+    }
 
     val state by vm.state.collectAsStateWithLifecycle()
     var showResultDialog by rememberSaveable { mutableStateOf(false) }
@@ -142,9 +116,8 @@ fun FillSiglaRiddleScreen(
             )
         }
 
-        val hint = state.hintBitmap
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hint != null) {
-            FullscreenImageOverlay(hint) { vm.onEvent(FillSiglaEvent.DismissHint) }
+        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && state.hintBitmap != null) {
+            FullscreenImageOverlay(state.hintBitmap!!) { vm.onEvent(FillSiglaEvent.DismissHint) }
         } else if (showResultDialog && phase is RiddlePhase.Result) {
             RiddleResultDialog(
                 isCorrect = phase.correct,

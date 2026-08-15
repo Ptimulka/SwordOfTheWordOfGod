@@ -5,12 +5,16 @@ import io.github.ptimulka.miecz.data.VerseGroup
 import io.github.ptimulka.miecz.helpers.parseVerse
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import javax.inject.Inject
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 interface VersesGroupsRepository {
     fun loadVerseGroups(): List<VerseGroup>
 }
 
-class UserVersesGroupsRepository(private val context: Context) : VersesGroupsRepository {
+class UserVersesGroupsRepository @Inject constructor(
+    @param:ApplicationContext private val context: Context
+) : VersesGroupsRepository {
 
     override fun loadVerseGroups(): List<VerseGroup> {
         val verseGroups = mutableListOf<VerseGroup>()

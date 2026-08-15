@@ -15,7 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -24,10 +23,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.settings.AchievementsSection
 import io.github.ptimulka.miecz.components.settings.InfoSection
@@ -35,42 +32,10 @@ import io.github.ptimulka.miecz.components.settings.NotificationSection
 import io.github.ptimulka.miecz.components.settings.ResetConfirmDialog
 import io.github.ptimulka.miecz.components.settings.ResetFinalConfirmDialog
 import io.github.ptimulka.miecz.components.settings.ResetSection
-import io.github.ptimulka.miecz.helpers.AndroidNotificationScheduler
-import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
-import io.github.ptimulka.miecz.repositories.SettingsRepository
-import io.github.ptimulka.miecz.repositories.UserProgressRepository
-import io.github.ptimulka.miecz.repositories.UserSectionRepository
-import io.github.ptimulka.miecz.repositories.UserVersesGroupsRepository
 
 @Composable
 fun SettingsScreen(innerPadding: PaddingValues) {
-    val context = LocalContext.current
-    
-    val appVersion = remember {
-        try {
-            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: ""
-        } catch (_: Exception) {
-            ""
-        }
-    }
-
-    val vm: SettingsViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return SettingsViewModel(
-                    SettingsRepository(context),
-                    UserProgressRepository(context),
-                    UserMnemonicPicturesRepository(context),
-                    UserSectionRepository(context),
-                    UserVersesGroupsRepository(context),
-                    AndroidNotificationScheduler(context),
-                    appVersion
-                ) as T
-            }
-        }
-    )
-
+    val vm: SettingsViewModel = hiltViewModel()
     val state by vm.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {

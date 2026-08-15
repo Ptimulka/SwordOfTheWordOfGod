@@ -6,6 +6,8 @@ import io.github.ptimulka.miecz.data.Section
 import io.github.ptimulka.miecz.helpers.parseVerse
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import javax.inject.Inject
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 interface SectionRepository {
     fun loadSection(resourceId: Int): Section?
@@ -13,7 +15,9 @@ interface SectionRepository {
     fun loadSectionName(sectionId: Int): String?
 }
 
-class UserSectionRepository(private val context: Context) : SectionRepository {
+class UserSectionRepository @Inject constructor(
+    @param:ApplicationContext private val context: Context
+) : SectionRepository {
 
     override fun loadSection(resourceId: Int): Section? {
         val inputStream = context.resources.openRawResource(resourceId)

@@ -3,23 +3,23 @@ package io.github.ptimulka.miecz.screens.settings
 import androidx.lifecycle.ViewModel
 import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.helpers.NotificationScheduler
-import io.github.ptimulka.miecz.repositories.MnemonicRepository
-import io.github.ptimulka.miecz.repositories.SectionRepository
-import io.github.ptimulka.miecz.repositories.SettingsRepository
-import io.github.ptimulka.miecz.repositories.UserProgressRepository
-import io.github.ptimulka.miecz.repositories.VersesGroupsRepository
+import io.github.ptimulka.miecz.repositories.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import javax.inject.Named
 
-class SettingsViewModel(
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
     private val settingsRepo: SettingsRepository,
-    private val progressRepo: UserProgressRepository,
+    private val progressRepo: ProgressRepository,
     private val mnemonicRepo: MnemonicRepository,
     private val sectionRepo: SectionRepository,
     private val groupsRepo: VersesGroupsRepository,
     private val notificationScheduler: NotificationScheduler,
-    private val appVersion: String
+    @param:Named("appVersion") private val appVersion: String
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(

@@ -18,16 +18,21 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 
-class GameViewModel(
-    private val sectionId: Int,
-    private val sectionName: String,
-    private val levelNumber: Int,
-    private val sectionVerses: List<Verse>,
-    private val assetNames: List<String>,
-    private val levelRiddleTypeNames: List<String>,
-    private val progressRepo: ProgressRepository,
-    autoStartRefreshLoop: Boolean = true
+@HiltViewModel(assistedFactory = GameViewModel.Factory::class)
+class GameViewModel @AssistedInject constructor(
+    @Assisted("sectionId") private val sectionId: Int,
+    @Assisted("sectionName") private val sectionName: String,
+    @Assisted("levelNumber") private val levelNumber: Int,
+    @Assisted("sectionVerses") private val sectionVerses: List<Verse>,
+    @Assisted("assetNames") private val assetNames: List<String>,
+    @Assisted("levelRiddleTypeNames") private val levelRiddleTypeNames: List<String>,
+    @Assisted("autoStartRefreshLoop") private val autoStartRefreshLoop: Boolean = true,
+    private val progressRepo: ProgressRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -194,5 +199,18 @@ class GameViewModel(
         } else {
             viewModelScope.launch { _effects.send(GameEffect.FinishGame) }
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            @Assisted("sectionId") sectionId: Int,
+            @Assisted("sectionName") sectionName: String,
+            @Assisted("levelNumber") levelNumber: Int,
+            @Assisted("sectionVerses") sectionVerses: List<Verse>,
+            @Assisted("assetNames") assetNames: List<String>,
+            @Assisted("levelRiddleTypeNames") levelRiddleTypeNames: List<String>,
+            @Assisted("autoStartRefreshLoop") autoStartRefreshLoop: Boolean = true
+        ): GameViewModel
     }
 }

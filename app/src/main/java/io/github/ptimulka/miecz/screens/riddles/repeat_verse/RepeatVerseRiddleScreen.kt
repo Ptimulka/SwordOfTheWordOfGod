@@ -65,15 +65,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
 import io.github.ptimulka.miecz.helpers.createPolishSpeechIntent
-import io.github.ptimulka.miecz.repositories.UserMnemonicPicturesRepository
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 
@@ -84,24 +81,21 @@ private val MAX_REPEATS = UserProgressRepository.MAX_VERSE_REPEATS_PER_DAY
 fun RepeatVerseRiddleScreen(
     sectionVerses: List<Verse>,
     sectionId: Int,
+    riddleIndex: Int = 0,
     assetNames: List<String>,
     onSuccess: () -> Unit
 ) {
     val context = LocalContext.current
 
-    val vm: RepeatVerseViewModel = viewModel(
-        key = "RepeatVerseVM_${sectionId}",
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return RepeatVerseViewModel(
-                    RepeatVerseArgs(sectionId, sectionVerses, assetNames),
-                    UserProgressRepository(context),
-                    UserMnemonicPicturesRepository(context)
-                ) as T
-            }
-        }
-    )
+    val args = remember(sectionId, sectionVerses, assetNames, riddleIndex) {
+        RepeatVerseArgs(sectionId, sectionVerses, assetNames)
+    }
+    
+    val vm: RepeatVerseViewModel = hiltViewModel<RepeatVerseViewModel, RepeatVerseViewModel.Factory>(
+        key = "RepeatVerseVM_${sectionId}_${riddleIndex}"
+    ) { factory ->
+        factory.create(args)
+    }
 
     val state by vm.state.collectAsStateWithLifecycle()
     val speechRecognizer = remember { SpeechRecognizer.createSpeechRecognizer(context) }
@@ -158,8 +152,6 @@ fun RepeatVerseRiddleScreen(
     LaunchedEffect(vm.effects) {
         vm.effects.collect { effect ->
             when (effect) {
-                RepeatVerseEffect.RequestPermission -> permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                is RepeatVerseEffect.StartListening -> startListening(effect.preferOffline)
                 is RiddleEffect.Success -> onSuccess()
             }
         }
@@ -171,7 +163,7 @@ fun RepeatVerseRiddleScreen(
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
             startListening()
         } else {
-            vm.onEvent(RepeatVerseEvent.RequestPermission)
+            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         }
     }
 
