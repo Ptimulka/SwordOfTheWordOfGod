@@ -7,6 +7,7 @@ plugins {
     id("kotlin-parcelize")
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.protobuf)
 }
 
 // Release signing credentials are read from a gitignored keystore.properties (see keystore.properties.example).
@@ -90,4 +91,25 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
+
+    implementation(libs.androidx.datastore)
+    implementation(libs.protobuf.kotlin.lite)
+}
+
+protobuf {
+    protoc {
+        artifact = libs.protobuf.protoc.get().toString()
+    }
+    generateProtoTasks {
+        all().forEach { task ->
+            task.builtins {
+                create("java") {
+                    option("lite")
+                }
+                create("kotlin") {
+                    option("lite")
+                }
+            }
+        }
+    }
 }

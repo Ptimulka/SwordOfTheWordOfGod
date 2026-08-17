@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+option java_package = "io.github.ptimulka.miecz.data";
+option java_multiple_files = true;
+
+message SectionProgress {
+  int32 retention = 1;
+  bool sigla_finished = 2;
+  bool verse_finished = 3;
+  map<int32, bool> finished_levels = 4;
+  map<string, int64> best_times = 5;
+  map<int32, int32> verse_repeat_counts_today = 6;
+  string verse_repeat_date = 7;
+  string connect_done_date_parts = 8;
+  string connect_done_date_pairs = 9;
+}
+
+message UserProgress {
+  int32 current_section_id = 1;
+  int32 shields_count = 2;
+  int64 last_shield_update_time = 3;
+  int32 level_streak = 4;
+  int32 best_level_streak = 5;
+  string last_played_date = 6;
+  int32 day_streak = 7;
+  int32 best_day_streak = 8;
+  int32 total_reviewed_verses = 9;
+  int32 total_aloud_repeats = 10;
+  string retention_decay_date = 11;
+  bool pending_repeat_hint = 12;
+  int32 pending_section_unlocked = 13;
+  int32 repeat_section_index = 14;
+  int32 repeat_verse_index = 15;
+  map<int32, SectionProgress> sections = 16;
+  map<int32, string> custom_sections = 17;
+}
