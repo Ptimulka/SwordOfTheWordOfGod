@@ -46,6 +46,10 @@ interface ProgressRepository {
     fun getCustomSectionsCount(): Int
     fun getAllUsedGroupIds(): Set<Int>
 
+    // ── Mnemonic choices ──────────────────────────────────────────────────────
+    fun getMnemonicChoice(sectionId: Int, verseIndex: Int): String?
+    fun saveMnemonicChoice(sectionId: Int, verseIndex: Int, choice: String)
+
     // ── Repeat-screen cursor ──────────────────────────────────────────────────
     fun getRepeatSectionIndex(): Int
     fun getRepeatVerseIndex(): Int

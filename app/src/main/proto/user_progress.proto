@@ -13,6 +13,7 @@ message SectionProgress {
   string verse_repeat_date = 7;
   string connect_done_date_parts = 8;
   string connect_done_date_pairs = 9;
+  map<int32, string> mnemonic_choices = 10;
 }
 
 message UserProgress {

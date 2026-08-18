@@ -224,6 +224,14 @@ class UserProgressRepository @Inject constructor(
         return usedIds
     }
 
+    override fun getMnemonicChoice(sectionId: Int, verseIndex: Int): String? {
+        return cachedProgress.sectionsMap[sectionId]?.mnemonicChoicesMap?.get(verseIndex)
+    }
+
+    override fun saveMnemonicChoice(sectionId: Int, verseIndex: Int, choice: String) {
+        updateSection(sectionId) { it.putMnemonicChoices(verseIndex, choice) }
+    }
+
     override fun getRepeatSectionIndex(): Int = cachedProgress.repeatSectionIndex
 
     override fun getRepeatVerseIndex(): Int = cachedProgress.repeatVerseIndex

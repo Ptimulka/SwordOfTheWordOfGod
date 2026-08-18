@@ -164,4 +164,13 @@ class UserProgressRepositoryTest {
         assertEquals(1, repository.getVerseRepeatCountToday(1, 1))
         assertEquals(0, repository.getVerseRepeatCountToday(1, 0))
     }
+
+    @Test
+    fun `save and load mnemonic choices`() {
+        createRepository()
+        repository.saveMnemonicChoice(1, 5, "USER")
+        
+        assertEquals("USER", repository.getMnemonicChoice(1, 5))
+        assertEquals("USER", dataFlow.value.sectionsMap[1]?.mnemonicChoicesMap?.get(5))
+    }
 }

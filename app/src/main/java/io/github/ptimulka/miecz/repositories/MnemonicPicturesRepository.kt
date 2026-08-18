@@ -15,11 +15,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 enum class ChosenPicture { NONE, DEFAULT, USER, IMPORTED }
 
 class UserMnemonicPicturesRepository @Inject constructor(
-    @param:ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context,
+    private val progressRepo: ProgressRepository
 ) : MnemonicRepository {
-
-    private val prefs: SharedPreferences =
-        context.getSharedPreferences("mnemonic_choices", Context.MODE_PRIVATE)
 
     private fun pictureFile(sectionId: Int, verseIndex: Int): File {
         val dir = File(context.filesDir, "mnemonic")
@@ -43,7 +41,7 @@ class UserMnemonicPicturesRepository @Inject constructor(
     }
 
     override fun clearAllPictures() {
-        prefs.edit().clear().apply()
+        progressRepo.clearAllProgress()
         File(context.filesDir, "mnemonic").deleteRecursively()
         File(context.filesDir, "mnemonic_imported").deleteRecursively()
     }
@@ -75,14 +73,12 @@ class UserMnemonicPicturesRepository @Inject constructor(
         }
     }
 
-    private fun choiceKey(sectionId: Int, verseIndex: Int) = "choice_${sectionId}_${verseIndex}"
-
     override fun saveChoice(sectionId: Int, verseIndex: Int, choice: ChosenPicture) {
-        prefs.edit().putString(choiceKey(sectionId, verseIndex), choice.name).apply()
+        progressRepo.saveMnemonicChoice(sectionId, verseIndex, choice.name)
     }
 
     override fun loadChoice(sectionId: Int, verseIndex: Int): ChosenPicture? {
-        val raw = prefs.getString(choiceKey(sectionId, verseIndex), null) ?: return null
+        val raw = progressRepo.getMnemonicChoice(sectionId, verseIndex) ?: return null
         return try { ChosenPicture.valueOf(raw) } catch (_: Exception) { null }
     }
 
