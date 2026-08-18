@@ -17,6 +17,10 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
+    abstract fun bindSettingsRepository(impl: UserSettingsRepository): SettingsRepository
+
+    @Binds
+    @Singleton
     abstract fun bindSectionRepository(impl: UserSectionRepository): SectionRepository
 
     @Binds

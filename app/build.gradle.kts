@@ -93,6 +93,7 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
 
     implementation(libs.androidx.datastore)
+    implementation(libs.androidx.datastore.preferences)
     implementation(libs.protobuf.kotlin.lite)
 }
 

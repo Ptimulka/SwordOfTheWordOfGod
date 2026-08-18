@@ -19,6 +19,9 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import io.github.ptimulka.miecz.data.UserProgress
 
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
+
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
@@ -36,9 +39,13 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideSettingsRepository(@ApplicationContext context: Context): SettingsRepository {
-        return SettingsRepository(context)
+    fun provideSettingsDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
+        return context.settingsDataStore
     }
+
+    private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(
+        name = "settings"
+    )
 
     @Provides
     @Singleton

@@ -47,8 +47,14 @@ import io.github.ptimulka.miecz.screens.review.ReviewVersesScreen
 import io.github.ptimulka.miecz.screens.settings.SettingsScreen
 import io.github.ptimulka.miecz.ui.theme.SwordOfTheWordOfGodTheme
 
+import javax.inject.Inject
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    
+    @Inject
+    lateinit var settingsRepo: SettingsRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -59,7 +65,6 @@ class MainActivity : ComponentActivity() {
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
 
         NotificationHelper.createNotificationChannel(this)
-        val settingsRepo = SettingsRepository(this)
         if (settingsRepo.isNotificationsEnabled()) {
             NotificationHelper.scheduleDailyNotification(
                 this,
