@@ -13,6 +13,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.*
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserProgressRepositoryTest {
@@ -109,7 +111,7 @@ class UserProgressRepositoryTest {
 
     @Test
     fun `applyDailyRetentionDecay subtracts retention after one day`() {
-        currentTime = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).parse("2026-08-07")!!.time
+        currentTime = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse("2026-08-07")!!.time
         
         dataFlow.value = dataFlow.value.toBuilder()
             .setRetentionDecayDate("2026-08-06")
@@ -125,7 +127,7 @@ class UserProgressRepositoryTest {
 
     @Test
     fun `applyDailyRetentionDecay does not drop below zero`() {
-        currentTime = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).parse("2026-08-07")!!.time
+        currentTime = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse("2026-08-07")!!.time
         
         dataFlow.value = dataFlow.value.toBuilder()
             .setRetentionDecayDate("2026-08-06")
@@ -136,5 +138,30 @@ class UserProgressRepositoryTest {
         repository.applyDailyRetentionDecay()
         
         assertEquals(0, dataFlow.value.sectionsMap[1]?.retention)
+    }
+
+    @Test
+    fun `incrementVerseRepeatToday resets counts on a new day`() {
+        val today = "2026-08-07"
+        val tomorrow = "2026-08-08"
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        
+        // 1. Set date to Today and repeat Verse 0
+        currentTime = sdf.parse(today)!!.time
+        createRepository()
+        repository.incrementVerseRepeatToday(1, 0)
+        
+        assertEquals(1, repository.getVerseRepeatCountToday(1, 0))
+        
+        // 2. Set date to Tomorrow and repeat Verse 1
+        currentTime = sdf.parse(tomorrow)!!.time
+        // cachedProgress is updated via Flow in real app, in test we re-create repo or wait
+        // But since we use UnconfinedTestDispatcher, the flow emission should be immediate
+        
+        repository.incrementVerseRepeatToday(1, 1)
+        
+        // 3. Verify Verse 1 is 1, but Verse 0 is reset to 0
+        assertEquals(1, repository.getVerseRepeatCountToday(1, 1))
+        assertEquals(0, repository.getVerseRepeatCountToday(1, 0))
     }
 }

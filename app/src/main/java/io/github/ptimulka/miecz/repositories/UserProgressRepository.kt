@@ -25,7 +25,14 @@ class UserProgressRepository @Inject constructor(
 
     companion object {
         const val MAX_SHIELDS = 5
+        private const val MIN_SHIELDS = 0
+        private const val SHIELD_REGEN_TIME_MS = 30 * 60 * 1000L // 30 minutes in milliseconds
+        
         const val MAX_VERSE_REPEATS_PER_DAY = 10
+        private const val MAX_RETENTION = 100
+        private const val RETENTION_DAILY_DECAY = 5
+        private const val RETENTION_GAIN_PER_CONNECT = 2
+        private const val RETENTION_GAIN_PER_STANDARD_LEVEL = 3
     }
 
     private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
@@ -38,6 +45,7 @@ class UserProgressRepository @Inject constructor(
     }
 
     private fun update(action: (UserProgress) -> UserProgress) {
+        cachedProgress = action(cachedProgress)
         scope.launch {
             dataStore.updateData { action(it) }
         }
@@ -97,7 +105,7 @@ class UserProgressRepository @Inject constructor(
 
     override fun addRetention(sectionId: Int, amount: Int): Int {
         val old = getRetention(sectionId)
-        val new = (old + amount).coerceIn(0, 100)
+        val new = (old + amount).coerceIn(0, MAX_RETENTION)
         if (new != old) setRetention(sectionId, new)
         return new - old
     }
@@ -114,7 +122,7 @@ class UserProgressRepository @Inject constructor(
             update { it.toBuilder().setRetentionDecayDate(today).build() }
             return
         }
-        val decay = 5 * days
+        val decay = RETENTION_DAILY_DECAY * days
         update { user ->
             val builder = user.toBuilder()
             user.sectionsMap.forEach { (id, section) ->
@@ -150,12 +158,12 @@ class UserProgressRepository @Inject constructor(
             if (riddleType == "CONNECT_PARTS") it.setConnectDoneDateParts(todayString())
             else it.setConnectDoneDatePairs(todayString())
         }
-        return addRetention(sectionId, 2)
+        return addRetention(sectionId, RETENTION_GAIN_PER_CONNECT)
     }
 
     override fun awardRetentionForStandardLevel(sectionId: Int, levelNumber: Int): Int {
         if (isLevelFinished(sectionId, levelNumber)) return 0
-        return addRetention(sectionId, 3)
+        return addRetention(sectionId, RETENTION_GAIN_PER_STANDARD_LEVEL)
     }
 
     override fun getVerseRepeatCountToday(sectionId: Int, verseIndex: Int): Int {
@@ -173,14 +181,18 @@ class UserProgressRepository @Inject constructor(
 
     override fun incrementVerseRepeatToday(sectionId: Int, verseIndex: Int): Int {
         val current = getVerseRepeatCountToday(sectionId, verseIndex)
-        val next = (current + 1).coerceAtMost(10)
+        val next = (current + 1).coerceAtMost(MAX_VERSE_REPEATS_PER_DAY)
         val delta = retentionContributionForRepeats(next) - retentionContributionForRepeats(current)
+        val today = todayString()
         
         updateSection(sectionId) { s ->
-            s.setVerseRepeatDate(todayString())
+            if (s.verseRepeatDate != today) {
+                s.clearVerseRepeatCountsToday()
+                s.setVerseRepeatDate(today)
+            }
             s.putVerseRepeatCountsToday(verseIndex, next)
             if (delta > 0) {
-                s.setRetention((s.retention + delta).coerceAtMost(100))
+                s.setRetention((s.retention + delta).coerceAtMost(MAX_RETENTION))
             }
         }
         return next
@@ -223,22 +235,23 @@ class UserProgressRepository @Inject constructor(
     override fun getShieldsCount(): Int = cachedProgress.shieldsCount
 
     override fun setShieldsCount(count: Int) {
-        update { it.toBuilder().setShieldsCount(count.coerceIn(0, 5)).build() }
+        val validatedCount = count.coerceIn(MIN_SHIELDS, MAX_SHIELDS)
+        update { it.toBuilder().setShieldsCount(validatedCount).build() }
     }
 
     override fun decreaseShields(): Int {
         val current = getShieldsCount()
-        if (current == 5) {
+        if (current == MAX_SHIELDS) {
             update { it.toBuilder().setLastShieldUpdateTime(currentTimeProvider()).build() }
         }
-        val next = (current - 1).coerceAtLeast(0)
+        val next = (current - 1).coerceAtLeast(MIN_SHIELDS)
         setShieldsCount(next)
         return next
     }
 
     override fun increaseShields(): Int {
         val current = getShieldsCount()
-        val next = (current + 1).coerceAtMost(5)
+        val next = (current + 1).coerceAtMost(MAX_SHIELDS)
         setShieldsCount(next)
         return next
     }
@@ -247,7 +260,7 @@ class UserProgressRepository @Inject constructor(
 
     override fun refreshShields(): Int {
         val currentShields = getShieldsCount()
-        if (currentShields >= 5) return 5
+        if (currentShields >= MAX_SHIELDS) return MAX_SHIELDS
 
         val lastUpdate = getLastShieldUpdateTime()
         val currentTime = currentTimeProvider()
@@ -258,18 +271,17 @@ class UserProgressRepository @Inject constructor(
         }
 
         val elapsed = currentTime - lastUpdate
-        val regenTime = 30 * 60 * 1000L
 
-        if (elapsed >= regenTime) {
-            val shieldsToAdd = (elapsed / regenTime).toInt()
-            val newCount = (currentShields + shieldsToAdd).coerceAtMost(5)
+        if (elapsed >= SHIELD_REGEN_TIME_MS) {
+            val shieldsToAdd = (elapsed / SHIELD_REGEN_TIME_MS).toInt()
+            val newCount = (currentShields + shieldsToAdd).coerceAtMost(MAX_SHIELDS)
 
             update { user ->
                 val builder = user.toBuilder().setShieldsCount(newCount)
-                if (newCount >= 5) {
+                if (newCount >= MAX_SHIELDS) {
                     builder.setLastShieldUpdateTime(0)
                 } else {
-                    builder.setLastShieldUpdateTime(lastUpdate + (shieldsToAdd * regenTime))
+                    builder.setLastShieldUpdateTime(lastUpdate + (shieldsToAdd * SHIELD_REGEN_TIME_MS))
                 }
                 builder.build()
             }
@@ -299,15 +311,14 @@ class UserProgressRepository @Inject constructor(
     }
 
     override fun getTimeToNextShield(): Long {
-        if (getShieldsCount() >= 5) return 0L
+        if (getShieldsCount() >= MAX_SHIELDS) return 0L
         val lastUpdate = getLastShieldUpdateTime()
         if (lastUpdate == 0L) return 0L
 
         val elapsed = currentTimeProvider() - lastUpdate
-        val regenTime = 30 * 60 * 1000L
-        if (elapsed >= regenTime) return 0L
+        if (elapsed >= SHIELD_REGEN_TIME_MS) return 0L
 
-        return (regenTime - (elapsed % regenTime)).coerceAtLeast(0L)
+        return (SHIELD_REGEN_TIME_MS - (elapsed % SHIELD_REGEN_TIME_MS)).coerceAtLeast(0L)
     }
 
     override fun getLevelStreak(): Int = cachedProgress.levelStreak
