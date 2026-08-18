@@ -1,7 +1,6 @@
 package io.github.ptimulka.miecz.di
 
 import android.content.Context
-import android.content.SharedPreferences
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,21 +15,37 @@ import kotlinx.coroutines.Dispatchers
 import javax.inject.Singleton
 import javax.inject.Named
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.dataStore
+import io.github.ptimulka.miecz.data.UserProgress
+
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
+
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
     @Provides
     @Singleton
-    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
-        return context.getSharedPreferences("user_progress", Context.MODE_PRIVATE)
+    fun provideUserProgressDataStore(@ApplicationContext context: Context): DataStore<UserProgress> {
+        return context.userProgressDataStore
     }
+
+    private val Context.userProgressDataStore: DataStore<UserProgress> by dataStore(
+        fileName = "user_progress.pb",
+        serializer = UserProgressSerializer
+    )
 
     @Provides
     @Singleton
-    fun provideSettingsRepository(@ApplicationContext context: Context): SettingsRepository {
-        return SettingsRepository(context)
+    fun provideSettingsDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
+        return context.settingsDataStore
     }
+
+    private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(
+        name = "settings"
+    )
 
     @Provides
     @Singleton

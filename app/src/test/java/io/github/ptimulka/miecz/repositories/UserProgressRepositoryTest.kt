@@ -1,72 +1,109 @@
 package io.github.ptimulka.miecz.repositories
 
-import android.content.SharedPreferences
+import androidx.datastore.core.DataStore
+import io.github.ptimulka.miecz.data.UserProgress
+import io.github.ptimulka.miecz.data.SectionProgress
+import io.github.ptimulka.miecz.helpers.MainDispatcherRule
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.*
+import java.text.SimpleDateFormat
+import java.util.Locale
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class UserProgressRepositoryTest {
 
-    private val prefs: SharedPreferences = mock()
-    private val editor: SharedPreferences.Editor = mock()
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
+    
+    private val testDispatcher = UnconfinedTestDispatcher()
+
+    private val dataStore: DataStore<UserProgress> = mock()
+    private val dataFlow = MutableStateFlow(UserProgressSerializer.defaultValue)
     
     private var currentTime = 1000000L
     private val timeProvider: () -> Long = { currentTime }
 
     private lateinit var repository: UserProgressRepository
 
+    private fun createRepository() {
+        // Use testDispatcher for the scope so updates are immediate
+        repository = UserProgressRepository(dataStore, timeProvider, testDispatcher)
+    }
+
     @Before
     fun setup() {
-        whenever(prefs.edit()).thenReturn(editor)
-        whenever(editor.putInt(any(), any())).thenReturn(editor)
-        whenever(editor.putLong(any(), any())).thenReturn(editor)
-        whenever(editor.putString(any(), any())).thenReturn(editor)
-        whenever(editor.remove(any())).thenReturn(editor)
-        
-        repository = UserProgressRepository(prefs, timeProvider)
+        whenever(dataStore.data).thenReturn(dataFlow)
+        runBlocking {
+            whenever(dataStore.updateData(any())).thenAnswer { invocation ->
+                val transform = invocation.getArgument<suspend (UserProgress) -> UserProgress>(0)
+                runBlocking {
+                    val next = transform(dataFlow.value)
+                    dataFlow.value = next
+                    next
+                }
+            }
+        }
     }
 
     @Test
     fun `refreshShields adds one shield after 30 minutes`() {
-        whenever(prefs.getInt(eq("shields_count"), any())).thenReturn(4)
-        whenever(prefs.getLong(eq("last_shield_update_time"), any())).thenReturn(currentTime - 30 * 60 * 1000L)
+        dataFlow.value = dataFlow.value.toBuilder()
+            .setShieldsCount(4)
+            .setLastShieldUpdateTime(currentTime - 30 * 60 * 1000L)
+            .build()
+        createRepository()
         
         val newCount = repository.refreshShields()
         
         assertEquals(5, newCount)
-        verify(editor).putInt("shields_count", 5)
-        verify(editor).remove("last_shield_update_time")
+        assertEquals(5, dataFlow.value.shieldsCount)
+        assertEquals(0L, dataFlow.value.lastShieldUpdateTime)
     }
 
     @Test
     fun `refreshShields preserves remainder time`() {
         val thirtyMins = 30 * 60 * 1000L
-        whenever(prefs.getInt(eq("shields_count"), any())).thenReturn(3)
-        whenever(prefs.getLong(eq("last_shield_update_time"), any())).thenReturn(currentTime - (thirtyMins + 5 * 60 * 1000L))
+        dataFlow.value = dataFlow.value.toBuilder()
+            .setShieldsCount(3)
+            .setLastShieldUpdateTime(currentTime - (thirtyMins + 5 * 60 * 1000L))
+            .build()
+        createRepository()
         
         val newCount = repository.refreshShields()
         
         assertEquals(4, newCount)
         val expectedNewUpdateTime = currentTime - (thirtyMins + 5 * 60 * 1000L) + thirtyMins
-        verify(editor).putLong("last_shield_update_time", expectedNewUpdateTime)
+        assertEquals(expectedNewUpdateTime, dataFlow.value.lastShieldUpdateTime)
     }
 
     @Test
     fun `refreshShields caps at MAX_SHIELDS`() {
-        whenever(prefs.getInt(eq("shields_count"), any())).thenReturn(4)
-        whenever(prefs.getLong(eq("last_shield_update_time"), any())).thenReturn(currentTime - 120 * 60 * 1000L)
+        dataFlow.value = dataFlow.value.toBuilder()
+            .setShieldsCount(4)
+            .setLastShieldUpdateTime(currentTime - 120 * 60 * 1000L)
+            .build()
+        createRepository()
         
         val newCount = repository.refreshShields()
         
         assertEquals(5, newCount)
-        verify(editor).putInt("shields_count", 5)
+        assertEquals(5, dataFlow.value.shieldsCount)
     }
 
     @Test
     fun `getTimeToNextShield returns correct remaining ms`() {
-        whenever(prefs.getInt(eq("shields_count"), any())).thenReturn(4)
-        whenever(prefs.getLong(eq("last_shield_update_time"), any())).thenReturn(currentTime - 10 * 60 * 1000L)
+        dataFlow.value = dataFlow.value.toBuilder()
+            .setShieldsCount(4)
+            .setLastShieldUpdateTime(currentTime - 10 * 60 * 1000L)
+            .build()
+        createRepository()
         
         val remaining = repository.getTimeToNextShield()
         assertEquals(20 * 60 * 1000L, remaining)
@@ -74,62 +111,66 @@ class UserProgressRepositoryTest {
 
     @Test
     fun `applyDailyRetentionDecay subtracts retention after one day`() {
-        currentTime = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).parse("2026-08-07")!!.time
+        currentTime = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse("2026-08-07")!!.time
         
-        val fakePrefs = FakeSharedPreferences()
-        fakePrefs.edit().putString("retention_decay_date", "2026-08-06").putInt("retention_1", 50).apply()
+        dataFlow.value = dataFlow.value.toBuilder()
+            .setRetentionDecayDate("2026-08-06")
+            .putSections(1, SectionProgress.newBuilder().setRetention(50).build())
+            .build()
+        createRepository()
         
-        val repo = UserProgressRepository(fakePrefs, timeProvider)
-        repo.applyDailyRetentionDecay()
+        repository.applyDailyRetentionDecay()
         
-        assertEquals(45, fakePrefs.getInt("retention_1", -1))
-        assertEquals("2026-08-07", fakePrefs.getString("retention_decay_date", ""))
+        assertEquals(45, dataFlow.value.sectionsMap[1]?.retention)
+        assertEquals("2026-08-07", dataFlow.value.retentionDecayDate)
     }
 
     @Test
     fun `applyDailyRetentionDecay does not drop below zero`() {
-        currentTime = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).parse("2026-08-07")!!.time
+        currentTime = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse("2026-08-07")!!.time
         
-        val fakePrefs = FakeSharedPreferences()
-        fakePrefs.edit().putString("retention_decay_date", "2026-08-06").putInt("retention_1", 3).apply()
+        dataFlow.value = dataFlow.value.toBuilder()
+            .setRetentionDecayDate("2026-08-06")
+            .putSections(1, SectionProgress.newBuilder().setRetention(3).build())
+            .build()
+        createRepository()
         
-        val repo = UserProgressRepository(fakePrefs, timeProvider)
-        repo.applyDailyRetentionDecay()
+        repository.applyDailyRetentionDecay()
         
-        assertEquals(0, fakePrefs.getInt("retention_1", -1))
+        assertEquals(0, dataFlow.value.sectionsMap[1]?.retention)
     }
-}
 
-class FakeSharedPreferences : SharedPreferences {
-    private val map = mutableMapOf<String, Any?>()
+    @Test
+    fun `incrementVerseRepeatToday resets counts on a new day`() {
+        val today = "2026-08-07"
+        val tomorrow = "2026-08-08"
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        
+        // 1. Set date to Today and repeat Verse 0
+        currentTime = sdf.parse(today)!!.time
+        createRepository()
+        repository.incrementVerseRepeatToday(1, 0)
+        
+        assertEquals(1, repository.getVerseRepeatCountToday(1, 0))
+        
+        // 2. Set date to Tomorrow and repeat Verse 1
+        currentTime = sdf.parse(tomorrow)!!.time
+        // cachedProgress is updated via Flow in real app, in test we re-create repo or wait
+        // But since we use UnconfinedTestDispatcher, the flow emission should be immediate
+        
+        repository.incrementVerseRepeatToday(1, 1)
+        
+        // 3. Verify Verse 1 is 1, but Verse 0 is reset to 0
+        assertEquals(1, repository.getVerseRepeatCountToday(1, 1))
+        assertEquals(0, repository.getVerseRepeatCountToday(1, 0))
+    }
 
-    override fun getAll(): MutableMap<String, *> = map
-    override fun getString(key: String?, defValue: String?): String? = map[key] as? String ?: defValue
-    override fun getStringSet(key: String?, defValues: MutableSet<String>?): MutableSet<String>? = map[key] as? MutableSet<String> ?: defValues
-    override fun getInt(key: String?, defValue: Int): Int = map[key] as? Int ?: defValue
-    override fun getLong(key: String?, defValue: Long): Long = map[key] as? Long ?: defValue
-    override fun getFloat(key: String?, defValue: Float): Float = map[key] as? Float ?: defValue
-    override fun getBoolean(key: String?, defValue: Boolean): Boolean = map[key] as? Boolean ?: defValue
-    override fun contains(key: String?): Boolean = map.containsKey(key)
-    override fun registerOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener?) {}
-    override fun unregisterOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener?) {}
-
-    override fun edit(): SharedPreferences.Editor = FakeEditor(map)
-
-    class FakeEditor(private val map: MutableMap<String, Any?>) : SharedPreferences.Editor {
-        private val temp = mutableMapOf<String, Any?>()
-        override fun putString(key: String, value: String?): SharedPreferences.Editor { temp[key] = value; return this }
-        override fun putStringSet(key: String, values: MutableSet<String>?): SharedPreferences.Editor { temp[key] = values; return this }
-        override fun putInt(key: String, value: Int): SharedPreferences.Editor { temp[key] = value; return this }
-        override fun putLong(key: String, value: Long): SharedPreferences.Editor { temp[key] = value; return this }
-        override fun putFloat(key: String, value: Float): SharedPreferences.Editor { temp[key] = value; return this }
-        override fun putBoolean(key: String, value: Boolean): SharedPreferences.Editor { temp[key] = value; return this }
-        override fun remove(key: String): SharedPreferences.Editor { temp[key] = null; return this }
-        override fun clear(): SharedPreferences.Editor { map.clear(); return this }
-        override fun commit(): Boolean { apply(); return true }
-        override fun apply() { 
-            temp.forEach { (k, v) -> if (v == null) map.remove(k) else map[k] = v }
-            temp.clear()
-        }
+    @Test
+    fun `save and load mnemonic choices`() {
+        createRepository()
+        repository.saveMnemonicChoice(1, 5, "USER")
+        
+        assertEquals("USER", repository.getMnemonicChoice(1, 5))
+        assertEquals("USER", dataFlow.value.sectionsMap[1]?.mnemonicChoicesMap?.get(5))
     }
 }
