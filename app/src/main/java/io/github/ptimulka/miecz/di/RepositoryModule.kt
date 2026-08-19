@@ -5,6 +5,9 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import io.github.ptimulka.miecz.repositories.*
+import io.github.ptimulka.miecz.repositories.content.*
+import io.github.ptimulka.miecz.repositories.game.*
+import io.github.ptimulka.miecz.repositories.meta.*
 import javax.inject.Singleton
 
 @Module
@@ -17,7 +20,31 @@ abstract class RepositoryModule {
 
     @Binds
     @Singleton
-    abstract fun bindSettingsRepository(impl: UserSettingsRepository): SettingsRepository
+    abstract fun bindShieldRepository(impl: UserShieldRepository): ShieldRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindStreakRepository(impl: UserStreakRepository): StreakRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindProgressionRepository(impl: UserProgressionRepository): ProgressionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindRetentionRepository(impl: UserRetentionRepository): RetentionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMnemonicChoiceRepository(impl: UserMnemonicChoiceRepository): MnemonicChoiceRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCustomSectionRepository(impl: UserCustomSectionRepository): CustomSectionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAchievementRepository(impl: UserAchievementRepository): AchievementRepository
 
     @Binds
     @Singleton
@@ -30,6 +57,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindMnemonicRepository(impl: UserMnemonicPicturesRepository): MnemonicRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSettingsRepository(impl: UserSettingsRepository): SettingsRepository
     
     @Binds
     @Singleton

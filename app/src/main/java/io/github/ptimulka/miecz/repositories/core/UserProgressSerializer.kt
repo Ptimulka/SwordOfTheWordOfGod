@@ -1,4 +1,4 @@
-package io.github.ptimulka.miecz.repositories
+package io.github.ptimulka.miecz.repositories.core
 
 import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.Serializer

@@ -1,22 +1,24 @@
-package io.github.ptimulka.miecz.repositories
+package io.github.ptimulka.miecz.repositories.content
 
 import android.content.ContentValues
 import android.content.Context
-import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.provider.MediaStore
 import io.github.ptimulka.miecz.data.Verse
+import io.github.ptimulka.miecz.repositories.ChosenPicture
+import io.github.ptimulka.miecz.repositories.MnemonicRepository
+import io.github.ptimulka.miecz.repositories.MnemonicChoiceRepository
+import io.github.ptimulka.miecz.repositories.ProgressionRepository
 import java.io.File
 import javax.inject.Inject
 import dagger.hilt.android.qualifiers.ApplicationContext
 
-enum class ChosenPicture { NONE, DEFAULT, USER, IMPORTED }
-
 class UserMnemonicPicturesRepository @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val progressRepo: ProgressRepository
+    private val progressionRepo: ProgressionRepository,
+    private val choiceRepo: MnemonicChoiceRepository
 ) : MnemonicRepository {
 
     private fun pictureFile(sectionId: Int, verseIndex: Int): File {
@@ -41,7 +43,7 @@ class UserMnemonicPicturesRepository @Inject constructor(
     }
 
     override fun clearAllPictures() {
-        progressRepo.clearAllProgress()
+        progressionRepo.clearAllProgress()
         File(context.filesDir, "mnemonic").deleteRecursively()
         File(context.filesDir, "mnemonic_imported").deleteRecursively()
     }
@@ -74,11 +76,11 @@ class UserMnemonicPicturesRepository @Inject constructor(
     }
 
     override fun saveChoice(sectionId: Int, verseIndex: Int, choice: ChosenPicture) {
-        progressRepo.saveMnemonicChoice(sectionId, verseIndex, choice.name)
+        choiceRepo.saveMnemonicChoice(sectionId, verseIndex, choice.name)
     }
 
     override fun loadChoice(sectionId: Int, verseIndex: Int): ChosenPicture? {
-        val raw = progressRepo.getMnemonicChoice(sectionId, verseIndex) ?: return null
+        val raw = choiceRepo.getMnemonicChoice(sectionId, verseIndex) ?: return null
         return try { ChosenPicture.valueOf(raw) } catch (_: Exception) { null }
     }
 

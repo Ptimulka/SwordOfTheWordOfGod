@@ -1,26 +1,24 @@
 package io.github.ptimulka.miecz.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.dataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.github.ptimulka.miecz.R
+import io.github.ptimulka.miecz.data.UserProgress
 import io.github.ptimulka.miecz.helpers.AndroidNotificationScheduler
 import io.github.ptimulka.miecz.helpers.NotificationScheduler
-import io.github.ptimulka.miecz.repositories.*
+import io.github.ptimulka.miecz.repositories.core.UserProgressSerializer
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import javax.inject.Singleton
 import javax.inject.Named
-
-import androidx.datastore.core.DataStore
-import androidx.datastore.dataStore
-import io.github.ptimulka.miecz.data.UserProgress
-
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.preferencesDataStore
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
