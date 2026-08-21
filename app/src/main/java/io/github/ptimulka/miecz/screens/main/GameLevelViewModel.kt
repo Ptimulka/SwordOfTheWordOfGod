@@ -17,15 +17,19 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
-@HiltViewModel
-class GameLevelViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = GameLevelViewModel.Factory::class)
+class GameLevelViewModel @AssistedInject constructor(
     private val progressRepo: ProgressRepository,
     private val sectionRepo: SectionRepository,
     private val groupsRepo: VersesGroupsRepository,
-    private val riddlesOrderRepo: RiddlesOrderRepository
+    private val riddlesOrderRepo: RiddlesOrderRepository,
+    @Assisted private val autoStartRefreshLoop: Boolean = true
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(GameLevelUiState())
@@ -37,20 +41,26 @@ class GameLevelViewModel @Inject constructor(
 
     init {
         loadInitialData()
-        startShieldRefreshLoop()
+        if (autoStartRefreshLoop) {
+            startShieldRefreshLoop()
+        }
     }
 
     private fun loadInitialData() {
-        val riddlesOrder = riddlesOrderRepo.getRiddlesOrder()
-        _state.update { it.copy(riddlesOrder = riddlesOrder) }
-        refreshProgress()
+        viewModelScope.launch {
+            val riddlesOrder = riddlesOrderRepo.getRiddlesOrder()
+            _state.update { it.copy(riddlesOrder = riddlesOrder) }
+            refreshProgress()
+        }
     }
 
     fun onEvent(event: GameLevelEvent) {
         when (event) {
             GameLevelEvent.OnResume -> {
                 progressRepo.applyDailyRetentionDecay()
-                refreshProgress()
+                viewModelScope.launch {
+                    refreshProgress()
+                }
                 checkPendingNotifications()
             }
             GameLevelEvent.ToggleShieldInfo -> toggleShieldInfo()
@@ -66,12 +76,12 @@ class GameLevelViewModel @Inject constructor(
         }
     }
 
-    private fun refreshProgress() {
+    private suspend fun refreshProgress() {
         val usedGroupIds = progressRepo.getAllUsedGroupIds()
         val allGroups = groupsRepo.loadVerseGroups()
         val baseSections = sectionRepo.loadInitialSections()
         val fullSections = buildFullSectionList(baseSections)
-        val riddlesOrder = riddlesOrderRepo.getRiddlesOrder()
+        val riddlesOrder = _state.value.riddlesOrder
 
         val sectionStates = fullSections.associate { section ->
             val finishedLevels = (1..12).filter { progressRepo.isLevelFinished(section.id, it) }.toSet()
@@ -187,11 +197,13 @@ class GameLevelViewModel @Inject constructor(
             val nextId = (_state.value.sections.lastOrNull()?.id ?: 4) + 1
             progressRepo.saveCustomSection(nextId, selection[0], selection[1])
             _state.update { it.copy(showChooseVerseGroups = false, selectedGroupIds = emptyList()) }
-            refreshProgress()
+            viewModelScope.launch {
+                refreshProgress()
+            }
         }
     }
 
-    private fun buildFullSectionList(baseSections: List<Section>): List<Section> {
+    private suspend fun buildFullSectionList(baseSections: List<Section>): List<Section> {
         val allVerseGroups = groupsRepo.loadVerseGroups()
         val customCount = progressRepo.getCustomSectionsCount()
         
@@ -279,5 +291,10 @@ class GameLevelViewModel @Inject constructor(
                 _state.update { it.copy(progress = it.progress.copy(showRepeatHint = false)) }
             }
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(autoStartRefreshLoop: Boolean = true): GameLevelViewModel
     }
 }

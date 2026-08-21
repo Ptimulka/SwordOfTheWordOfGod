@@ -20,16 +20,20 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import javax.inject.Named
 
-@HiltViewModel
-class ReviewViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = ReviewViewModel.Factory::class)
+class ReviewViewModel @AssistedInject constructor(
     private val progressRepo: ProgressRepository,
     private val sectionRepo: SectionRepository,
     private val groupsRepo: VersesGroupsRepository,
-    @param:Named("reviewSectionName") private val sectionName: String
+    @param:Named("reviewSectionName") private val sectionName: String,
+    @Assisted private val autoStartRefreshLoop: Boolean = true
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ReviewUiState())
@@ -42,7 +46,9 @@ class ReviewViewModel @Inject constructor(
 
     init {
         loadData()
-        startRefreshLoop()
+        if (autoStartRefreshLoop) {
+            startRefreshLoop()
+        }
     }
 
     fun onEvent(event: ReviewEvent) {
@@ -58,18 +64,20 @@ class ReviewViewModel @Inject constructor(
     }
 
     private fun loadData() {
-        val currentSectionId = progressRepo.getCurrentSection()
-        val knownVerses = ReviewVerseProvider.loadKnownVerses(currentSectionId, sectionRepo, progressRepo, groupsRepo)
-        val shields = progressRepo.getShieldsCount()
-        
-        _state.update { 
-            it.copy(
-                knownVersesSections = knownVerses,
-                shieldsCount = shields,
-                playForShields = if (shields >= UserProgressRepository.MAX_SHIELDS) false else it.playForShields
-            )
+        viewModelScope.launch {
+            val currentSectionId = progressRepo.getCurrentSection()
+            val knownVerses = ReviewVerseProvider.loadKnownVerses(currentSectionId, sectionRepo, progressRepo, groupsRepo)
+            val shields = progressRepo.getShieldsCount()
+            
+            _state.update { 
+                it.copy(
+                    knownVersesSections = knownVerses,
+                    shieldsCount = shields,
+                    playForShields = if (shields >= UserProgressRepository.MAX_SHIELDS) false else it.playForShields
+                )
+            }
+            updateReward()
         }
-        updateReward()
     }
 
     private fun updateReward() {
@@ -116,5 +124,10 @@ class ReviewViewModel @Inject constructor(
                 riddleTypes = riddleTypes
             ))
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(autoStartRefreshLoop: Boolean = true): ReviewViewModel
     }
 }

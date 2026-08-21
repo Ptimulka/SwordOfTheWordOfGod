@@ -11,6 +11,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -54,7 +55,7 @@ class RetentionRepositoryTest {
     }
 
     @Test
-    fun `applyDailyRetentionDecay subtracts retention after one day`() {
+    fun `applyDailyRetentionDecay subtracts retention after one day`() = runTest {
         currentTime = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse("2026-08-07")!!.time
         
         dataFlow.value = dataFlow.value.toBuilder()
@@ -69,7 +70,7 @@ class RetentionRepositoryTest {
     }
 
     @Test
-    fun `applyDailyRetentionDecay does not drop below zero`() {
+    fun `applyDailyRetentionDecay does not drop below zero`() = runTest {
         currentTime = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse("2026-08-07")!!.time
         
         dataFlow.value = dataFlow.value.toBuilder()
@@ -83,7 +84,7 @@ class RetentionRepositoryTest {
     }
 
     @Test
-    fun `incrementVerseRepeatToday resets counts on a new day`() {
+    fun `incrementVerseRepeatToday resets counts on a new day`() = runTest {
         val today = "2026-08-07"
         val tomorrow = "2026-08-08"
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())

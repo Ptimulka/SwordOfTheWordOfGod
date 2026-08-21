@@ -9,7 +9,7 @@ import io.github.ptimulka.miecz.repositories.VersesGroupsRepository
 
 object ReviewVerseProvider {
 
-    fun loadKnownVerses(
+    suspend fun loadKnownVerses(
         currentSectionId: Int,
         sectionRepository: SectionRepository,
         userProgressRepository: ProgressRepository,

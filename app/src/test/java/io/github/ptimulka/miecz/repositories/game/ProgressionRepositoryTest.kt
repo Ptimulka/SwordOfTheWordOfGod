@@ -10,6 +10,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -49,14 +50,14 @@ class ProgressionRepositoryTest {
     }
 
     @Test
-    fun `setLevelFinished updates state correctly`() {
+    fun `setLevelFinished updates state correctly`() = runTest {
         repository.setLevelFinished(1, 1, true)
         assertTrue(repository.isLevelFinished(1, 1))
         assertEquals(true, dataFlow.value.sectionsMap[1]?.finishedLevelsMap?.get(1))
     }
 
     @Test
-    fun `getFinishedLevelsCount includes levels and challenges`() {
+    fun `getFinishedLevelsCount includes levels and challenges`() = runTest {
         repository.setLevelFinished(1, 1, true)
         repository.setSiglaFinished(1, true)
         repository.setVerseFinished(1, true)

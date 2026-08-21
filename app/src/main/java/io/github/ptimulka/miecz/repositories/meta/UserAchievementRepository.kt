@@ -40,12 +40,12 @@ class UserAchievementRepository @Inject constructor(
         } else false
     }
 
-    override fun getBestTimeOverall(
+    override suspend fun getBestTimeOverall(
         riddleType: String,
         sectionRepo: SectionRepository,
         groupsRepo: VersesGroupsRepository
     ): BestTimeEntry? {
-        val verseGroups by lazy { groupsRepo.loadVerseGroups().associateBy { it.id } }
+        val verseGroups = groupsRepo.loadVerseGroups().associateBy { it.id }
         return store.latest.sectionsMap.entries
             .mapNotNull { (id, section) ->
                 val timeMs = section.bestTimesMap[riddleType] ?: return@mapNotNull null

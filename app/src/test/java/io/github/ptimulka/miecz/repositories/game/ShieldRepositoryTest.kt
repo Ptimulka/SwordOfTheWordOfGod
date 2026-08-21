@@ -10,6 +10,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -51,7 +52,7 @@ class ShieldRepositoryTest {
     }
 
     @Test
-    fun `refreshShields adds one shield after 30 minutes`() {
+    fun `refreshShields adds one shield after 30 minutes`() = runTest {
         dataFlow.value = dataFlow.value.toBuilder()
             .setShieldsCount(4)
             .setLastShieldUpdateTime(currentTime - 30 * 60 * 1000L)
@@ -65,7 +66,7 @@ class ShieldRepositoryTest {
     }
 
     @Test
-    fun `refreshShields preserves remainder time`() {
+    fun `refreshShields preserves remainder time`() = runTest {
         val thirtyMins = 30 * 60 * 1000L
         dataFlow.value = dataFlow.value.toBuilder()
             .setShieldsCount(3)
@@ -80,7 +81,7 @@ class ShieldRepositoryTest {
     }
 
     @Test
-    fun `getTimeToNextShield returns correct remaining ms`() {
+    fun `getTimeToNextShield returns correct remaining ms`() = runTest {
         dataFlow.value = dataFlow.value.toBuilder()
             .setShieldsCount(4)
             .setLastShieldUpdateTime(currentTime - 10 * 60 * 1000L)

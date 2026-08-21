@@ -26,7 +26,7 @@ class ReviewViewModelTest {
         whenever(progressRepo.getCurrentSection()).thenReturn(3)
         whenever(progressRepo.getShieldsCount()).thenReturn(3)
         
-        val viewModel = ReviewViewModel(progressRepo, sectionRepo, groupsRepo, "Review")
+        val viewModel = ReviewViewModel(progressRepo, sectionRepo, groupsRepo, "Review", false)
         
         val state = viewModel.state.value
         assertEquals(3, state.shieldsCount)
@@ -37,7 +37,7 @@ class ReviewViewModelTest {
         whenever(progressRepo.getCurrentSection()).thenReturn(3)
         whenever(progressRepo.getShieldsCount()).thenReturn(2) // 5 - 2 = 3 potential. Max reward is 2.
         
-        val viewModel = ReviewViewModel(progressRepo, sectionRepo, groupsRepo, "Review")
+        val viewModel = ReviewViewModel(progressRepo, sectionRepo, groupsRepo, "Review", false)
         viewModel.onEvent(ReviewEvent.SetCount(10))
         
         assertEquals(2, viewModel.state.value.maxPossibleReward)

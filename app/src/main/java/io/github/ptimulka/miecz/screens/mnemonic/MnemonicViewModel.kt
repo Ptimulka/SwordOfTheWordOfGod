@@ -56,7 +56,7 @@ class MnemonicViewModel @AssistedInject constructor(
                     userBitmap = repository.loadPicture(sectionId, index),
                     importedBitmap = repository.loadImportedPicture(sectionId, index),
                     defaultBitmap = repository.loadDefaultPicture(assetName),
-                    chosen = repository.loadChoice(sectionId, index)
+                    chosen = repository.loadChoice(sectionId, index) ?: ChosenPicture.DEFAULT
                 )
             }
             withContext(Dispatchers.Main) {

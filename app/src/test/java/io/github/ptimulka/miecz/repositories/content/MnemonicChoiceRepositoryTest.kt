@@ -10,6 +10,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -48,7 +49,7 @@ class MnemonicChoiceRepositoryTest {
     }
 
     @Test
-    fun `saveMnemonicChoice stores enum name correctly`() {
+    fun `saveMnemonicChoice stores enum name correctly`() = runTest {
         repository.saveMnemonicChoice(1, 0, "USER")
         
         assertEquals("USER", repository.getMnemonicChoice(1, 0))

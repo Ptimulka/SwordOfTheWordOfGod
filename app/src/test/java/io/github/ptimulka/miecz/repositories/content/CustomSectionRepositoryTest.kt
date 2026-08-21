@@ -10,6 +10,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -48,7 +49,7 @@ class CustomSectionRepositoryTest {
     }
 
     @Test
-    fun `saveCustomSection stores group IDs correctly`() {
+    fun `saveCustomSection stores group IDs correctly`() = runTest {
         repository.saveCustomSection(5, 10, 11)
         
         val pair = repository.getCustomSectionGroups(5)

@@ -1,23 +1,25 @@
 package io.github.ptimulka.miecz.screens.settings
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.helpers.NotificationScheduler
 import io.github.ptimulka.miecz.repositories.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import javax.inject.Named
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsRepo: SettingsRepository,
     private val progressRepo: ProgressRepository,
-    private val mnemonicRepo: MnemonicRepository,
     private val sectionRepo: SectionRepository,
     private val groupsRepo: VersesGroupsRepository,
+    private val settingsRepo: SettingsRepository,
+    private val mnemonicRepo: MnemonicRepository,
     private val notificationScheduler: NotificationScheduler,
     @param:Named("appVersion") private val appVersion: String
 ) : ViewModel() {
@@ -33,7 +35,9 @@ class SettingsViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     init {
-        refreshAchievements()
+        viewModelScope.launch {
+            refreshAchievements()
+        }
     }
 
     fun onEvent(event: SettingsEvent) {
@@ -62,18 +66,22 @@ class SettingsViewModel @Inject constructor(
                 progressRepo.clearAllProgress()
                 mnemonicRepo.clearAllPictures()
                 _state.update { it.copy(dialogState = SettingsDialogState.NONE) }
-                refreshAchievements()
+                viewModelScope.launch {
+                    refreshAchievements()
+                }
             }
             SettingsEvent.CancelReset -> {
                 _state.update { it.copy(dialogState = SettingsDialogState.NONE) }
             }
             SettingsEvent.OnResume -> {
-                refreshAchievements()
+                viewModelScope.launch {
+                    refreshAchievements()
+                }
             }
         }
     }
 
-    private fun refreshAchievements() {
+    private suspend fun refreshAchievements() {
         val stats = AchievementStats(
             bestParts = progressRepo.getBestTimeOverall(RiddleType.CONNECT_PARTS.name, sectionRepo, groupsRepo),
             bestPairs = progressRepo.getBestTimeOverall(RiddleType.CONNECT_PAIRS.name, sectionRepo, groupsRepo),
@@ -92,7 +100,7 @@ class SettingsViewModel @Inject constructor(
         _state.update { it.copy(achievements = stats) }
     }
 
-    private fun countLearnedVerses(): Int {
+    private suspend fun countLearnedVerses(): Int {
         var total = 0
         sectionRepo.loadInitialSections().forEach { section ->
             if (progressRepo.areSpecialChallengesFinished(section.id)) {

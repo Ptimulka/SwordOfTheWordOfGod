@@ -10,6 +10,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -53,7 +54,7 @@ class StreakRepositoryTest {
     }
 
     @Test
-    fun `updateDayStreak increments on consecutive days`() {
+    fun `updateDayStreak increments on consecutive days`() = runTest {
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         val today = "2026-08-07"
         val yesterday = "2026-08-06"

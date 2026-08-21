@@ -11,6 +11,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -50,14 +51,14 @@ class AchievementRepositoryTest {
     }
 
     @Test
-    fun `addTotalReviewedVerses updates state correctly`() {
+    fun `addTotalReviewedVerses updates state correctly`() = runTest {
         repository.addTotalReviewedVerses(10)
         assertEquals(10, repository.getTotalReviewedVerses())
         assertEquals(10, dataFlow.value.totalReviewedVerses)
     }
 
     @Test
-    fun `updateBestTime only saves if better`() {
+    fun `updateBestTime only saves if better`() = runTest {
         repository.updateBestTime(1, "CONNECT", 1000L)
         assertEquals(1000L, repository.getBestTime(1, "CONNECT"))
         

@@ -2,10 +2,12 @@ package io.github.ptimulka.miecz.screens.groups
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.ptimulka.miecz.data.Section
+import io.github.ptimulka.miecz.data.VerseGroup
 import io.github.ptimulka.miecz.repositories.MnemonicRepository
-import io.github.ptimulka.miecz.repositories.ProgressRepository
 import io.github.ptimulka.miecz.repositories.SectionRepository
 import io.github.ptimulka.miecz.repositories.VersesGroupsRepository
+import io.github.ptimulka.miecz.repositories.ProgressRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -23,38 +25,76 @@ class VerseGroupsViewModel @Inject constructor(
     @param:Named("assetList") private val assetList: Set<String>
 ) : ViewModel() {
 
-    private val allSections = sectionRepo.loadInitialSections()
-    private val allGroups = groupsRepo.loadVerseGroups()
-    private val groupToSectionMap = buildGroupToSectionMap()
-    private val groupAssetNamesMap = allGroups.associate { group ->
-        group.id to group.verses.mapIndexed { index, verse ->
-            "group%03d_%d_%s%d-%s.webp".format(
-                group.id, index + 1, verse.book, verse.chapter,
-                verse.number.replace(".", "-")
-            )
-        }
+    private val _state = MutableStateFlow(VerseGroupsUiState(existingAssets = assetList))
+    val state = _state.asStateFlow()
+
+    private var allSections: List<Section> = emptyList()
+    private var allGroups: List<VerseGroup> = emptyList()
+
+    init {
+        loadData()
     }
 
-    private val _state = MutableStateFlow(
-        VerseGroupsUiState(
-            filteredSections = allSections,
-            filteredGroups = allGroups,
-            groupToSectionMap = groupToSectionMap,
-            existingAssets = assetList,
-            groupAssetNames = groupAssetNamesMap
-        )
-    )
-    val state = _state.asStateFlow()
+    private fun loadData() {
+        viewModelScope.launch {
+            val baseSections = sectionRepo.loadInitialSections()
+            allGroups = groupsRepo.loadVerseGroups()
+            
+            val currentSectionId = progressRepo.getCurrentSection()
+            val customCount = progressRepo.getCustomSectionsCount()
+            
+            val customSections = (1..customCount).mapNotNull { index ->
+                val sectionId = 5 + index - 1
+                progressRepo.getCustomSectionGroups(sectionId)?.let { (id1, id2) ->
+                    val g1 = allGroups.find { it.id == id1 }
+                    val g2 = allGroups.find { it.id == id2 }
+                    if (g1 != null && g2 != null) {
+                        val verses = g1.verses + g2.verses
+                        Section(id = sectionId, name = "${g1.name} i ${g2.name}", verses = verses)
+                    } else null
+                }
+            }
+
+            allSections = baseSections
+
+            val groupToSection = mutableMapOf<Int, Int>()
+            val groupAssetNames = mutableMapOf<Int, List<String>>()
+
+            // Map which group belongs to which unlocked custom section
+            customSections.forEach { section ->
+                if (section.id <= currentSectionId) {
+                    progressRepo.getCustomSectionGroups(section.id)?.let { (id1, id2) ->
+                        groupToSection[id1] = section.id
+                        groupToSection[id2] = section.id
+                    }
+                }
+            }
+
+            // Map asset names for groups
+            allGroups.forEach { group ->
+                groupAssetNames[group.id] = group.verses.mapIndexed { i, v ->
+                    "group%03d_%d_%s%d-%s.webp".format(group.id, i + 1, v.book, v.chapter, v.number.replace(".", "-"))
+                }
+            }
+
+            _state.update { it.copy(
+                filteredSections = allSections,
+                filteredGroups = allGroups,
+                groupToSectionMap = groupToSection,
+                groupAssetNames = groupAssetNames
+            ) }
+        }
+    }
 
     fun onEvent(event: VerseGroupsEvent) {
         when (event) {
             is VerseGroupsEvent.UpdateSearch -> {
                 _state.update { it.copy(searchQuery = event.query) }
-                applyFilter()
+                filter(event.query)
             }
             VerseGroupsEvent.ClearSearch -> {
                 _state.update { it.copy(searchQuery = "") }
-                applyFilter()
+                filter("")
             }
             is VerseGroupsEvent.ToggleExpand -> {
                 _state.update { it.copy(expandedId = if (it.expandedId == event.id) null else event.id) }
@@ -65,13 +105,14 @@ class VerseGroupsViewModel @Inject constructor(
                     _state.update { it.copy(previewImage = bitmap) }
                 }
             }
-            VerseGroupsEvent.DismissPreview -> _state.update { it.copy(previewImage = null) }
+            VerseGroupsEvent.DismissPreview -> {
+                _state.update { it.copy(previewImage = null) }
+            }
         }
     }
 
-    private fun applyFilter() {
-        val query = _state.value.searchQuery.trim()
-        if (query.isEmpty()) {
+    private fun filter(query: String) {
+        if (query.isBlank()) {
             _state.update { it.copy(filteredSections = allSections, filteredGroups = allGroups) }
         } else {
             val filteredSections = allSections.filter { matches(it.name, it.verses, query) }
@@ -87,15 +128,5 @@ class VerseGroupsViewModel @Inject constructor(
             val cleanText = verse.text.replace('_', ' ').replace("*", "")
             sigla.contains(query, ignoreCase = true) || cleanText.contains(query, ignoreCase = true)
         }
-    }
-
-    private fun buildGroupToSectionMap(): Map<Int, Int> {
-        val count = progressRepo.getCustomSectionsCount()
-        return (1..count).flatMap { index ->
-            val sectionId = 5 + index - 1
-            progressRepo.getCustomSectionGroups(sectionId)?.let { (groupId1, groupId2) ->
-                listOf(groupId1 to sectionId, groupId2 to sectionId)
-            } ?: emptyList()
-        }.toMap()
     }
 }

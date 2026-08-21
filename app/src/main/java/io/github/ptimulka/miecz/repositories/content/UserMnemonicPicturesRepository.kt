@@ -11,6 +11,9 @@ import io.github.ptimulka.miecz.repositories.ChosenPicture
 import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.repositories.MnemonicChoiceRepository
 import io.github.ptimulka.miecz.repositories.ProgressionRepository
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import javax.inject.Inject
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -18,7 +21,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 class UserMnemonicPicturesRepository @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val progressionRepo: ProgressionRepository,
-    private val choiceRepo: MnemonicChoiceRepository
+    private val choiceRepo: MnemonicChoiceRepository,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : MnemonicRepository {
 
     private fun pictureFile(sectionId: Int, verseIndex: Int): File {
@@ -27,15 +31,15 @@ class UserMnemonicPicturesRepository @Inject constructor(
         return File(dir, "section_${sectionId}_verse_${verseIndex}.png")
     }
 
-    override fun savePicture(sectionId: Int, verseIndex: Int, bitmap: Bitmap) {
+    override suspend fun savePicture(sectionId: Int, verseIndex: Int, bitmap: Bitmap): Unit = withContext(ioDispatcher) {
         pictureFile(sectionId, verseIndex).outputStream().use {
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
         }
     }
 
-    override fun loadPicture(sectionId: Int, verseIndex: Int): Bitmap? {
+    override suspend fun loadPicture(sectionId: Int, verseIndex: Int): Bitmap? = withContext(ioDispatcher) {
         val file = pictureFile(sectionId, verseIndex)
-        return if (file.exists()) BitmapFactory.decodeFile(file.absolutePath) else null
+        if (file.exists()) BitmapFactory.decodeFile(file.absolutePath) else null
     }
 
     override fun deletePicture(sectionId: Int, verseIndex: Int) {
@@ -54,19 +58,19 @@ class UserMnemonicPicturesRepository @Inject constructor(
         return File(dir, "section_${sectionId}_verse_${verseIndex}.png")
     }
 
-    override fun saveImportedPicture(sectionId: Int, verseIndex: Int, bitmap: Bitmap) {
+    override suspend fun saveImportedPicture(sectionId: Int, verseIndex: Int, bitmap: Bitmap): Unit = withContext(ioDispatcher) {
         importedPictureFile(sectionId, verseIndex).outputStream().use {
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
         }
     }
 
-    override fun loadImportedPicture(sectionId: Int, verseIndex: Int): Bitmap? {
+    override suspend fun loadImportedPicture(sectionId: Int, verseIndex: Int): Bitmap? = withContext(ioDispatcher) {
         val file = importedPictureFile(sectionId, verseIndex)
-        return if (file.exists()) BitmapFactory.decodeFile(file.absolutePath) else null
+        if (file.exists()) BitmapFactory.decodeFile(file.absolutePath) else null
     }
 
-    override fun loadDefaultPicture(assetName: String): Bitmap? {
-        return try {
+    override suspend fun loadDefaultPicture(assetName: String): Bitmap? = withContext(ioDispatcher) {
+        try {
             context.assets.open("default_mnemonics/$assetName").use { stream ->
                 BitmapFactory.decodeStream(stream)
             }
@@ -84,11 +88,11 @@ class UserMnemonicPicturesRepository @Inject constructor(
         return try { ChosenPicture.valueOf(raw) } catch (_: Exception) { null }
     }
 
-    override fun downloadAllImages(
+    override suspend fun downloadAllImages(
         sectionId: Int,
         verses: List<Verse>,
         assetNames: List<String>
-    ): Int {
+    ): Int = withContext(ioDispatcher) {
         var count = 0
         verses.forEachIndexed { index, verse ->
             val bitmap = loadActivePicture(sectionId, index, assetNames.getOrNull(index))
@@ -97,7 +101,7 @@ class UserMnemonicPicturesRepository @Inject constructor(
             val filename = "mnemonic_${sectionId}_${sigla}.png"
             if (saveToGallery(bitmap, filename)) count++
         }
-        return count
+        count
     }
 
     private fun saveToGallery(bitmap: Bitmap, filename: String): Boolean {
@@ -127,16 +131,16 @@ class UserMnemonicPicturesRepository @Inject constructor(
         }
     }
 
-    override fun loadActivePicture(sectionId: Int, verseIndex: Int, defaultAssetName: String?): Bitmap? {
-        val userBitmap by lazy { loadPicture(sectionId, verseIndex) }
-        val importedBitmap by lazy { loadImportedPicture(sectionId, verseIndex) }
-        val defaultBitmap by lazy { defaultAssetName?.let { loadDefaultPicture(it) } }
+    override suspend fun loadActivePicture(sectionId: Int, verseIndex: Int, defaultAssetName: String?): Bitmap? {
+        val userBitmap = loadPicture(sectionId, verseIndex)
+        val importedBitmap = loadImportedPicture(sectionId, verseIndex)
+        val defaultBitmap = defaultAssetName?.let { loadDefaultPicture(it) }
         return when (loadChoice(sectionId, verseIndex)) {
-            null -> defaultBitmap ?: importedBitmap ?: userBitmap
             ChosenPicture.DEFAULT -> defaultBitmap ?: importedBitmap ?: userBitmap
             ChosenPicture.IMPORTED -> importedBitmap ?: userBitmap ?: defaultBitmap
             ChosenPicture.USER -> userBitmap ?: importedBitmap ?: defaultBitmap
             ChosenPicture.NONE -> null
+            null -> defaultBitmap ?: importedBitmap ?: userBitmap
         }
     }
 }

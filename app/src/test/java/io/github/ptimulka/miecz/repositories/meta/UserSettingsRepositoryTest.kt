@@ -8,6 +8,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -47,13 +48,13 @@ class UserSettingsRepositoryTest {
     }
 
     @Test
-    fun `isNotificationsEnabled defaults to true`() {
+    fun `isNotificationsEnabled defaults to true`() = runTest {
         whenever(mockPreferences[any<Preferences.Key<Boolean>>()]).thenReturn(null)
         assertTrue(repository.isNotificationsEnabled())
     }
 
     @Test
-    fun `getNotificationTime returns defaults`() {
+    fun `getNotificationTime returns defaults`() = runTest {
         whenever(mockPreferences[any<Preferences.Key<Int>>()]).thenReturn(null)
         assertEquals(8, repository.getNotificationHour())
         assertEquals(0, repository.getNotificationMinute())

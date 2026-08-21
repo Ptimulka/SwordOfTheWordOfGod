@@ -4,16 +4,20 @@ import android.content.Context
 import io.github.ptimulka.miecz.data.VerseGroup
 import io.github.ptimulka.miecz.helpers.parseVerse
 import io.github.ptimulka.miecz.repositories.VersesGroupsRepository
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import javax.inject.Inject
 import dagger.hilt.android.qualifiers.ApplicationContext
 
 class UserVersesGroupsRepository @Inject constructor(
-    @param:ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : VersesGroupsRepository {
 
-    override fun loadVerseGroups(): List<VerseGroup> {
+    override suspend fun loadVerseGroups(): List<VerseGroup> = withContext(ioDispatcher) {
         val verseGroups = mutableListOf<VerseGroup>()
         try {
             val assetManager = context.assets
@@ -39,6 +43,6 @@ class UserVersesGroupsRepository @Inject constructor(
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return verseGroups.sortedBy { it.id }
+        verseGroups.sortedBy { it.id }
     }
 }

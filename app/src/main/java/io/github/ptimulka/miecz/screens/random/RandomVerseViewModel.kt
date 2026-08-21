@@ -32,16 +32,16 @@ class RandomVerseViewModel @Inject constructor(
     private val _effects = Channel<RandomVerseEffect>()
     val effects = _effects.receiveAsFlow()
 
-    private val allVerses: List<Verse> by lazy {
-        repository.loadVerseGroups().flatMap { it.verses }
-    }
+    private var allVerses: List<Verse> = emptyList()
 
     private var countdownJob: Job? = null
 
     init {
-        // Only pick initial verse if we don't have one
-        if (_state.value.randomVerse == null) {
-            drawAnother(shouldAutoStart = false)
+        viewModelScope.launch {
+            allVerses = repository.loadVerseGroups().flatMap { it.verses }
+            if (_state.value.randomVerse == null) {
+                drawAnother(shouldAutoStart = false)
+            }
         }
     }
 

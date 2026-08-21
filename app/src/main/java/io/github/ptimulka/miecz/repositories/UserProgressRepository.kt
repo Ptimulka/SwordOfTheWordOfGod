@@ -94,7 +94,7 @@ class UserProgressRepository @Inject constructor(
     // ── Best times ────────────────────────────────────────────────────────────
     override fun getBestTime(sectionId: Int, riddleType: String): Long = achievementRepo.getBestTime(sectionId, riddleType)
     override fun updateBestTime(sectionId: Int, riddleType: String, elapsedMs: Long): Boolean = achievementRepo.updateBestTime(sectionId, riddleType, elapsedMs)
-    override fun getBestTimeOverall(riddleType: String, sectionRepo: SectionRepository, groupsRepo: VersesGroupsRepository): BestTimeEntry? = achievementRepo.getBestTimeOverall(riddleType, sectionRepo, groupsRepo)
+    override suspend fun getBestTimeOverall(riddleType: String, sectionRepo: SectionRepository, groupsRepo: VersesGroupsRepository): BestTimeEntry? = achievementRepo.getBestTimeOverall(riddleType, sectionRepo, groupsRepo)
 
     // ── Achievement tallies ───────────────────────────────────────────────────
     override fun getTotalReviewedVerses(): Int = achievementRepo.getTotalReviewedVerses()
