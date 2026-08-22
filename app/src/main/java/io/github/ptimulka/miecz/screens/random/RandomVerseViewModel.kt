@@ -2,6 +2,7 @@ package io.github.ptimulka.miecz.screens.random
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.ptimulka.miecz.data.Constants
 import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.data.Section
 import io.github.ptimulka.miecz.data.Verse
@@ -17,8 +18,6 @@ import kotlinx.coroutines.launch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import javax.inject.Named
-
-private const val INITIAL_COUNTDOWN = 10
 
 @HiltViewModel
 class RandomVerseViewModel @Inject constructor(
@@ -49,7 +48,7 @@ class RandomVerseViewModel @Inject constructor(
         when (event) {
             is RandomVerseEvent.EnterScreen -> {
                 if (event.isNewTabEntry) {
-                    _state.update { it.copy(countdown = INITIAL_COUNTDOWN, isCountingDown = true) }
+                    _state.update { it.copy(countdown = Constants.RANDOM_VERSE_COUNTDOWN_SECONDS, isCountingDown = true) }
                 }
                 startCountdown()
             }
@@ -71,7 +70,7 @@ class RandomVerseViewModel @Inject constructor(
         _state.update { 
             it.copy(
                 randomVerse = allVerses.random(),
-                countdown = INITIAL_COUNTDOWN,
+                countdown = Constants.RANDOM_VERSE_COUNTDOWN_SECONDS,
                 isCountingDown = shouldAutoStart
             )
         }
@@ -86,7 +85,7 @@ class RandomVerseViewModel @Inject constructor(
 
         countdownJob = viewModelScope.launch {
             while (_state.value.countdown > 0) {
-                delay(1000)
+                delay(Constants.COUNTDOWN_TICK_DURATION)
                 _state.update { it.copy(countdown = it.countdown - 1) }
             }
             finishCountdown()

@@ -230,7 +230,7 @@ class GameLevelViewModel @AssistedInject constructor(
         shieldRefreshJob?.cancel()
         shieldRefreshJob = viewModelScope.launch {
             while (isActive) {
-                delay(Constants.SHIELD_REFRESH_DELAY_MS)
+                delay(Constants.SHIELD_REFRESH_DELAY)
                 progressRepo.refreshShields()
                 refreshShieldsStatus()
             }
@@ -249,7 +249,7 @@ class GameLevelViewModel @AssistedInject constructor(
                 while (iterations < Constants.SHIELD_INFO_AUTO_HIDE_ITERATIONS) {
                     progressRepo.refreshShields()
                     refreshShieldsStatus()
-                    delay(Constants.SHIELD_INFO_REFRESH_MS)
+                    delay(Constants.SHIELD_INFO_REFRESH_INTERVAL)
                     iterations++
                 }
                 _state.update { it.copy(isShieldInfoVisible = false) }
@@ -264,7 +264,7 @@ class GameLevelViewModel @AssistedInject constructor(
         lampAutoHideJob?.cancel()
         if (nextVisible) {
             lampAutoHideJob = viewModelScope.launch {
-                delay(Constants.LAMP_INFO_AUTO_HIDE_MS)
+                delay(Constants.LAMP_INFO_AUTO_HIDE_DELAY)
                 _state.update { it.copy(isLampInfoVisible = false) }
             }
         }
@@ -287,7 +287,7 @@ class GameLevelViewModel @AssistedInject constructor(
         
         if (repeatHint) {
             viewModelScope.launch {
-                delay(Constants.REPEAT_HINT_AUTO_HIDE_MS)
+                delay(Constants.REPEAT_HINT_AUTO_HIDE_DELAY)
                 _state.update { it.copy(progress = it.progress.copy(showRepeatHint = false)) }
             }
         }

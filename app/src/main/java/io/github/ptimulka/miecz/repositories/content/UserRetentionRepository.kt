@@ -57,7 +57,7 @@ class UserRetentionRepository @Inject constructor(
             val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val f = sdf.parse(from)?.time ?: return 0
             val t = sdf.parse(to)?.time ?: return 0
-            ((t - f) / (24L * 60 * 60 * 1000)).toInt()
+            ((t - f) / Constants.DAY_DURATION.inWholeMilliseconds).toInt()
         } catch (_: Exception) {
             0
         }

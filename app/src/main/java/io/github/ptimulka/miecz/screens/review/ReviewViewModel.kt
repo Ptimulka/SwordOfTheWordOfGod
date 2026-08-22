@@ -91,7 +91,7 @@ class ReviewViewModel @AssistedInject constructor(
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
             while (isActive) {
-                delay(Constants.REVIEW_REFRESH_DELAY_MS)
+                delay(Constants.REVIEW_REFRESH_DELAY)
                 progressRepo.refreshShields()
                 loadData()
             }

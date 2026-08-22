@@ -1,5 +1,6 @@
 package io.github.ptimulka.miecz.repositories.game
 
+import io.github.ptimulka.miecz.data.Constants
 import io.github.ptimulka.miecz.repositories.ShieldRepository
 import io.github.ptimulka.miecz.repositories.core.UserProgressStore
 import javax.inject.Inject
@@ -14,7 +15,6 @@ class UserShieldRepository @Inject constructor(
     private companion object {
         const val MAX_SHIELDS = 5
         const val MIN_SHIELDS = 0
-        const val SHIELD_REGEN_TIME_MS = 30 * 60 * 1000L
     }
 
     override fun getShieldsCount(): Int = store.latest.shieldsCount
@@ -56,8 +56,9 @@ class UserShieldRepository @Inject constructor(
         }
 
         val elapsed = currentTime - lastUpdate
-        if (elapsed >= SHIELD_REGEN_TIME_MS) {
-            val shieldsToAdd = (elapsed / SHIELD_REGEN_TIME_MS).toInt()
+        val regenMillis = Constants.SHIELD_REGEN_TIME.inWholeMilliseconds
+        if (elapsed >= regenMillis) {
+            val shieldsToAdd = (elapsed / regenMillis).toInt()
             val newCount = (currentShields + shieldsToAdd).coerceAtMost(MAX_SHIELDS)
 
             store.update { user ->
@@ -65,7 +66,7 @@ class UserShieldRepository @Inject constructor(
                 if (newCount >= MAX_SHIELDS) {
                     builder.setLastShieldUpdateTime(0)
                 } else {
-                    builder.setLastShieldUpdateTime(lastUpdate + (shieldsToAdd * SHIELD_REGEN_TIME_MS))
+                    builder.setLastShieldUpdateTime(lastUpdate + (shieldsToAdd * regenMillis))
                 }
                 builder.build()
             }
@@ -80,8 +81,9 @@ class UserShieldRepository @Inject constructor(
         if (lastUpdate == 0L) return 0L
 
         val elapsed = currentTimeProvider() - lastUpdate
-        if (elapsed >= SHIELD_REGEN_TIME_MS) return 0L
+        val regenMillis = Constants.SHIELD_REGEN_TIME.inWholeMilliseconds
+        if (elapsed >= regenMillis) return 0L
 
-        return (SHIELD_REGEN_TIME_MS - (elapsed % SHIELD_REGEN_TIME_MS)).coerceAtLeast(0L)
+        return (regenMillis - (elapsed % regenMillis)).coerceAtLeast(0L)
     }
 }

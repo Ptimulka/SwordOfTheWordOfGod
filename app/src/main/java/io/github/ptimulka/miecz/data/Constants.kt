@@ -1,5 +1,10 @@
 package io.github.ptimulka.miecz.data
 
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+
 /**
  * Central repository for global constants to avoid magic numbers.
  */
@@ -10,6 +15,7 @@ object Constants {
     const val CUSTOM_SECTION_START_ID = 5
     const val VERSES_PER_SECTION = 10
     const val SPECIAL_CHALLENGE_RIDDLES_COUNT = 10
+    const val RANDOM_VERSE_COUNTDOWN_SECONDS = 10
     
     // --- Retention ---
     const val MAX_RETENTION = 100
@@ -31,14 +37,17 @@ object Constants {
     const val REPEAT_REWARD_HIGH = 3
     
     // --- Timeouts & Delays ---
-    const val SHIELD_REFRESH_DELAY_MS = 60000L
-    const val SHIELD_INFO_REFRESH_MS = 1000L
+    val SHIELD_REFRESH_DELAY = 1.minutes
+    val SHIELD_INFO_REFRESH_INTERVAL = 1.seconds
     const val SHIELD_INFO_AUTO_HIDE_ITERATIONS = 7
-    const val LAMP_INFO_AUTO_HIDE_MS = 7000L
-    const val REPEAT_HINT_AUTO_HIDE_MS = 30000L
-    const val REVIEW_REFRESH_DELAY_MS = 10000L
-    const val MATCH_ANIMATION_MS = 300L
-    const val WRONG_PAIR_LOCKOUT_MS = 2000L
+    val LAMP_INFO_AUTO_HIDE_DELAY = 7.seconds
+    val REPEAT_HINT_AUTO_HIDE_DELAY = 30.seconds
+    val REVIEW_REFRESH_DELAY = 10.seconds
+    val MATCH_ANIMATION_DURATION = 300.milliseconds
+    val WRONG_PAIR_LOCKOUT_DURATION = 2.seconds
+    val COUNTDOWN_TICK_DURATION = 1.seconds
+    val SHIELD_REGEN_TIME = 30.minutes
+    val DAY_DURATION = 1.days
     
     // --- Review Rewards ---
     const val REVIEW_BONUS_COUNT_THRESHOLD = 10

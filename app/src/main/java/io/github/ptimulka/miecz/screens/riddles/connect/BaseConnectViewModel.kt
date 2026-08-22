@@ -96,7 +96,7 @@ abstract class BaseConnectViewModel(
     private fun handleMatch(id: Int) {
         viewModelScope.launch {
             _state.update { it.copy(justMatchedId = id) }
-            delay(Constants.MATCH_ANIMATION_MS)
+            delay(Constants.MATCH_ANIMATION_DURATION)
             
             val bitmap = _state.value.buttonBitmaps[id]
             if (bitmap != null) {
@@ -141,7 +141,7 @@ abstract class BaseConnectViewModel(
     private fun handleError(left: ConnectItem, right: ConnectItem) {
         viewModelScope.launch {
             _state.update { it.copy(wrongPair = left to right, isLocked = true) }
-            delay(Constants.WRONG_PAIR_LOCKOUT_MS)
+            delay(Constants.WRONG_PAIR_LOCKOUT_DURATION)
             _state.update { it.copy(wrongPair = null, isLocked = false, selectedLeft = null, selectedRight = null) }
         }
     }
