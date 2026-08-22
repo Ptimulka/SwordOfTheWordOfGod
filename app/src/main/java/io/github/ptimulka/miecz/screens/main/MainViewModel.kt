@@ -22,9 +22,6 @@ class MainViewModel @Inject constructor(
 
     fun onEvent(event: MainEvent) {
         when (event) {
-            is MainEvent.SelectScreen -> {
-                _state.update { it.copy(selectedScreen = event.screen) }
-            }
             MainEvent.RefreshTabVisibility -> {
                 refreshVisibility()
             }
