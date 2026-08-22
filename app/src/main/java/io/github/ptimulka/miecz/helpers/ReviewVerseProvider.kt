@@ -1,6 +1,7 @@
 package io.github.ptimulka.miecz.helpers
 
 import io.github.ptimulka.miecz.R
+import io.github.ptimulka.miecz.data.Constants
 import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.repositories.ProgressRepository
@@ -9,7 +10,7 @@ import io.github.ptimulka.miecz.repositories.VersesGroupsRepository
 
 object ReviewVerseProvider {
 
-    fun loadKnownVerses(
+    suspend fun loadKnownVerses(
         currentSectionId: Int,
         sectionRepository: SectionRepository,
         userProgressRepository: ProgressRepository,
@@ -34,7 +35,7 @@ object ReviewVerseProvider {
         val customCount = userProgressRepository.getCustomSectionsCount()
         val allGroups = versesGroupsRepository.loadVerseGroups()
         for (i in 1..customCount) {
-            val sectionId = 5 + i - 1
+            val sectionId = Constants.CUSTOM_SECTION_START_ID + i - 1
             if (sectionId < currentSectionId) {
                 userProgressRepository.getCustomSectionGroups(sectionId)?.let { (id1, id2) ->
                     val g1 = allGroups.find { it.id == id1 }
@@ -73,8 +74,7 @@ object ReviewVerseProvider {
 
         (0 until selectedCount).forEach { i ->
             val currentSectionIdx = (startSectionIdx + i) % numSections
-            // Assume 10 verses per section
-            val currentVerseIdx = (startVerseIdx + (startSectionIdx + i) / numSections) % 10
+            val currentVerseIdx = (startVerseIdx + (startSectionIdx + i) / numSections) % Constants.VERSES_PER_SECTION
 
             val (sectionVerses, sectionAssetNames) = knownVersesSections[currentSectionIdx]
             val verseIndexInList = currentVerseIdx % sectionVerses.size

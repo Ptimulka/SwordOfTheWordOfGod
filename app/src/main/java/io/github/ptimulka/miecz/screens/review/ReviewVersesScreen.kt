@@ -33,7 +33,9 @@ import io.github.ptimulka.miecz.repositories.UserProgressRepository
 @Composable
 fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
     val context = LocalContext.current
-    val vm: ReviewViewModel = hiltViewModel()
+    val vm: ReviewViewModel = hiltViewModel<ReviewViewModel, ReviewViewModel.Factory> { factory ->
+        factory.create(autoStartRefreshLoop = true)
+    }
     val state by vm.state.collectAsStateWithLifecycle()
 
     // Trigger a data refresh whenever this screen enters the composition (e.g. switching tabs)

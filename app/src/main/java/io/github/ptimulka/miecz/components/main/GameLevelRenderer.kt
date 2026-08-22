@@ -27,13 +27,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.ptimulka.miecz.R
+import io.github.ptimulka.miecz.data.Constants
 import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.data.Section
 import io.github.ptimulka.miecz.helpers.formatTime
 import io.github.ptimulka.miecz.helpers.launchGame
 import io.github.ptimulka.miecz.screens.main.SectionState
-
-const val SPECIAL_CHALLENGE_RIDDLES_COUNT = 10
 
 @OptIn(ExperimentalFoundationApi::class)
 fun LazyListScope.renderSection(
@@ -321,7 +320,7 @@ private fun SpecialChallengesRow(
                         launchGame(
                             context,
                             section,
-                            ArrayList(List(SPECIAL_CHALLENGE_RIDDLES_COUNT) { RiddleType.FILL_WHOLE_SIGLA }),
+                            ArrayList(List(Constants.SPECIAL_CHALLENGE_RIDDLES_COUNT) { RiddleType.FILL_WHOLE_SIGLA }),
                             levelNumber = 0
                         )
                     }
@@ -339,7 +338,7 @@ private fun SpecialChallengesRow(
                         launchGame(
                             context,
                             section,
-                            ArrayList(List(SPECIAL_CHALLENGE_RIDDLES_COUNT) { RiddleType.FILL_WHOLE_VERSE }),
+                            ArrayList(List(Constants.SPECIAL_CHALLENGE_RIDDLES_COUNT) { RiddleType.FILL_WHOLE_VERSE }),
                             levelNumber = 0
                         )
                     }

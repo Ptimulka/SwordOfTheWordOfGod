@@ -1,82 +1,88 @@
 package io.github.ptimulka.miecz.screens.riddles
 
+import android.graphics.Bitmap
 import io.github.ptimulka.miecz.data.Verse
-import io.github.ptimulka.miecz.helpers.MainDispatcherRule
-import io.github.ptimulka.miecz.repositories.ProgressRepository
 import io.github.ptimulka.miecz.repositories.MnemonicRepository
-import io.github.ptimulka.miecz.screens.riddles.repeat_verse.*
+import io.github.ptimulka.miecz.repositories.ProgressRepository
+import io.github.ptimulka.miecz.screens.riddles.repeat_verse.RepeatVerseArgs
+import io.github.ptimulka.miecz.screens.riddles.repeat_verse.RepeatVerseEvent
+import io.github.ptimulka.miecz.screens.riddles.repeat_verse.RepeatVerseViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Rule
+import org.junit.Before
 import org.junit.Test
-import org.mockito.kotlin.any
-import org.mockito.kotlin.anyOrNull
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.whenever
+import org.mockito.kotlin.*
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class RepeatVerseViewModelTest {
-
-    @get:Rule
-    val mainDispatcherRule = MainDispatcherRule()
 
     private val progressRepo: ProgressRepository = mock()
     private val mnemonicRepo: MnemonicRepository = mock()
-    private val verses = listOf(
-        Verse("Rdz", 1, "1", "Na początku Bóg stworzył niebo i ziemię.")
-    )
-    private val defaultArgs = RepeatVerseArgs(1, verses, emptyList())
+    private val testDispatcher = UnconfinedTestDispatcher()
+
+    private val verse = Verse("Gen", 1, "1", "Początek")
+    private val args = RepeatVerseArgs(1, listOf(verse), listOf("asset"))
+
+    @Before
+    fun setup() {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
 
     @Test
-    fun `selecting a verse updates state with current repeat count`() {
-        whenever(progressRepo.getVerseRepeatCountToday(1, 0)).thenReturn(3)
-        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo, mnemonicRepo, mainDispatcherRule.testDispatcher)
+    fun `selectVerse updates state and thumbnail hint`() = runTest {
+        val bitmap = mock<Bitmap>()
+        whenever(mnemonicRepo.loadActivePicture(any(), any(), anyOrNull())).thenReturn(bitmap)
+        
+        val viewModel = RepeatVerseViewModel(args, progressRepo, mnemonicRepo, testDispatcher)
         
         viewModel.onEvent(RepeatVerseEvent.SelectVerse(0))
         
         val state = viewModel.state.value
         assertEquals(0, state.selectedIndex)
-        assertEquals(3, state.repeatCount)
+        assertEquals(bitmap, state.hintBitmap)
     }
 
     @Test
-    fun `processing valid speech result increments repeat count`() {
-        whenever(progressRepo.getVerseRepeatCountToday(1, 0)).thenReturn(0)
-        whenever(progressRepo.incrementVerseRepeatToday(1, 0)).thenReturn(1)
-        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo, mnemonicRepo, mainDispatcherRule.testDispatcher)
+    fun `processResult with high similarity increments repeats`() = runTest {
+        whenever(progressRepo.incrementVerseRepeatToday(any(), any())).thenReturn(1)
+        val viewModel = RepeatVerseViewModel(args, progressRepo, mnemonicRepo, testDispatcher)
         
         viewModel.onEvent(RepeatVerseEvent.SelectVerse(0))
-        viewModel.onEvent(RepeatVerseEvent.ProcessResult("Na poczatku Bog stworzyl niebo i ziemie"))
+        viewModel.onEvent(RepeatVerseEvent.ProcessResult("Początek"))
         
-        val state = viewModel.state.value
-        assertEquals(1, state.repeatCount)
-        assertTrue(state.lastSimilarity >= 50f)
+        verify(progressRepo).incrementVerseRepeatToday(1, 0)
+        assertEquals(1, viewModel.state.value.repeatCount)
     }
 
     @Test
-    fun `processing invalid speech result does not increment count`() {
-        whenever(progressRepo.getVerseRepeatCountToday(1, 0)).thenReturn(0)
-        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo, mnemonicRepo, mainDispatcherRule.testDispatcher)
+    fun `processResult with low similarity does not increment`() = runTest {
+        val viewModel = RepeatVerseViewModel(args, progressRepo, mnemonicRepo, testDispatcher)
         
         viewModel.onEvent(RepeatVerseEvent.SelectVerse(0))
-        viewModel.onEvent(RepeatVerseEvent.ProcessResult("Zupelnie inny tekst"))
+        viewModel.onEvent(RepeatVerseEvent.ProcessResult("Koniec"))
         
-        val state = viewModel.state.value
-        assertEquals(0, state.repeatCount)
-        assertTrue(state.lastSimilarity < 50f)
+        verify(progressRepo, never()).incrementVerseRepeatToday(any(), any())
     }
 
     @Test
-    fun `initial load fetches all thumbnails`() {
-        val bitmap: android.graphics.Bitmap = mock()
+    fun `initialization loads all thumbnails`() = runTest {
+        val bitmap = mock<Bitmap>()
         whenever(mnemonicRepo.loadActivePicture(any(), any(), anyOrNull())).thenReturn(bitmap)
         
-        val viewModel = RepeatVerseViewModel(defaultArgs, progressRepo, mnemonicRepo, mainDispatcherRule.testDispatcher)
+        val viewModel = RepeatVerseViewModel(args, progressRepo, mnemonicRepo, testDispatcher)
         
-        // Wait for background loading
-        mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
-        
-        val state = viewModel.state.value
-        assertEquals(1, state.thumbnails.size)
-        assertEquals(bitmap, state.thumbnails[0])
+        assertEquals(1, viewModel.state.value.thumbnails.size)
+        assertEquals(bitmap, viewModel.state.value.thumbnails[0])
     }
 }

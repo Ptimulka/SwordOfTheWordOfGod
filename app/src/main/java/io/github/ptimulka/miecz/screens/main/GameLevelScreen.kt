@@ -67,7 +67,9 @@ import java.util.Locale
 
 @Composable
 fun GameLevelScreen(contentPadding: PaddingValues = PaddingValues()) {
-    val vm: GameLevelViewModel = hiltViewModel()
+    val vm: GameLevelViewModel = hiltViewModel<GameLevelViewModel, GameLevelViewModel.Factory> { factory ->
+        factory.create(autoStartRefreshLoop = true)
+    }
     val state by vm.state.collectAsStateWithLifecycle()
 
     val lifecycleOwner = LocalLifecycleOwner.current

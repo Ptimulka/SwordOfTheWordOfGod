@@ -2,8 +2,13 @@ package io.github.ptimulka.miecz.screens.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.main.LevelButtonState
+import io.github.ptimulka.miecz.data.Constants
 import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.data.Section
 import io.github.ptimulka.miecz.repositories.ProgressRepository
@@ -17,15 +22,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 
-@HiltViewModel
-class GameLevelViewModel @Inject constructor(
+@HiltViewModel(assistedFactory = GameLevelViewModel.Factory::class)
+class GameLevelViewModel @AssistedInject constructor(
     private val progressRepo: ProgressRepository,
     private val sectionRepo: SectionRepository,
     private val groupsRepo: VersesGroupsRepository,
-    private val riddlesOrderRepo: RiddlesOrderRepository
+    private val riddlesOrderRepo: RiddlesOrderRepository,
+    @Assisted private val autoStartRefreshLoop: Boolean = true
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(GameLevelUiState())
@@ -37,20 +41,26 @@ class GameLevelViewModel @Inject constructor(
 
     init {
         loadInitialData()
-        startShieldRefreshLoop()
+        if (autoStartRefreshLoop) {
+            startShieldRefreshLoop()
+        }
     }
 
     private fun loadInitialData() {
-        val riddlesOrder = riddlesOrderRepo.getRiddlesOrder()
-        _state.update { it.copy(riddlesOrder = riddlesOrder) }
-        refreshProgress()
+        viewModelScope.launch {
+            val riddlesOrder = riddlesOrderRepo.getRiddlesOrder()
+            _state.update { it.copy(riddlesOrder = riddlesOrder) }
+            refreshProgress()
+        }
     }
 
     fun onEvent(event: GameLevelEvent) {
         when (event) {
             GameLevelEvent.OnResume -> {
                 progressRepo.applyDailyRetentionDecay()
-                refreshProgress()
+                viewModelScope.launch {
+                    refreshProgress()
+                }
                 checkPendingNotifications()
             }
             GameLevelEvent.ToggleShieldInfo -> toggleShieldInfo()
@@ -66,15 +76,15 @@ class GameLevelViewModel @Inject constructor(
         }
     }
 
-    private fun refreshProgress() {
+    private suspend fun refreshProgress() {
         val usedGroupIds = progressRepo.getAllUsedGroupIds()
         val allGroups = groupsRepo.loadVerseGroups()
         val baseSections = sectionRepo.loadInitialSections()
         val fullSections = buildFullSectionList(baseSections)
-        val riddlesOrder = riddlesOrderRepo.getRiddlesOrder()
+        val riddlesOrder = _state.value.riddlesOrder
 
         val sectionStates = fullSections.associate { section ->
-            val finishedLevels = (1..12).filter { progressRepo.isLevelFinished(section.id, it) }.toSet()
+            val finishedLevels = (1..Constants.LEVELS_PER_SECTION).filter { progressRepo.isLevelFinished(section.id, it) }.toSet()
             val retention = progressRepo.getRetention(section.id)
             val isSiglaFinished = progressRepo.isSiglaFinished(section.id)
             val isVerseFinished = progressRepo.isVerseFinished(section.id)
@@ -85,13 +95,13 @@ class GameLevelViewModel @Inject constructor(
             val versesMaxed = section.verses.indices.all {
                 progressRepo.retentionContributionForRepeats(
                     progressRepo.getVerseRepeatCountToday(section.id, it)
-                ) >= 3
+                ) >= Constants.REPEAT_REWARD_HIGH
             }
 
             val areChallengesFinished = isSiglaFinished && isVerseFinished
-            val effectiveRetention = if (areChallengesFinished) 100 else retention
-            val raysReach = (if (effectiveRetention >= 4) ((effectiveRetention - 4) / 8) + 1 else 0)
-                .coerceAtMost(12) // SECTION_LEVEL_COUNT
+            val effectiveRetention = if (areChallengesFinished) Constants.MAX_RETENTION else retention
+            val raysReach = (if (effectiveRetention >= Constants.RAYS_MIN_RETENTION) ((effectiveRetention - Constants.RAYS_MIN_RETENTION) / Constants.RAYS_STEP_RETENTION) + 1 else 0)
+                .coerceAtMost(Constants.LEVELS_PER_SECTION)
 
             val levels = riddlesOrder.mapIndexed { index, riddleList ->
                 val levelNumber = index + 1
@@ -172,7 +182,7 @@ class GameLevelViewModel @Inject constructor(
             val current = s.selectedGroupIds
             val next = if (current.contains(groupId)) {
                 current - groupId
-            } else if (current.size < 2) {
+            } else if (current.size < Constants.MAX_CUSTOM_SECTION_GROUPS) {
                 current + groupId
             } else {
                 current
@@ -183,20 +193,22 @@ class GameLevelViewModel @Inject constructor(
 
     private fun confirmGroupSelection() {
         val selection = _state.value.selectedGroupIds
-        if (selection.size == 2) {
-            val nextId = (_state.value.sections.lastOrNull()?.id ?: 4) + 1
+        if (selection.size == Constants.MAX_CUSTOM_SECTION_GROUPS) {
+            val nextId = (_state.value.sections.lastOrNull()?.id ?: Constants.BASE_SECTIONS_COUNT) + 1
             progressRepo.saveCustomSection(nextId, selection[0], selection[1])
             _state.update { it.copy(showChooseVerseGroups = false, selectedGroupIds = emptyList()) }
-            refreshProgress()
+            viewModelScope.launch {
+                refreshProgress()
+            }
         }
     }
 
-    private fun buildFullSectionList(baseSections: List<Section>): List<Section> {
+    private suspend fun buildFullSectionList(baseSections: List<Section>): List<Section> {
         val allVerseGroups = groupsRepo.loadVerseGroups()
         val customCount = progressRepo.getCustomSectionsCount()
         
         val customSections = (1..customCount).mapNotNull { index ->
-            val sectionId = 5 + index - 1
+            val sectionId = Constants.CUSTOM_SECTION_START_ID + index - 1
             progressRepo.getCustomSectionGroups(sectionId)?.let { (id1, id2) ->
                 val g1 = allVerseGroups.find { it.id == id1 }
                 val g2 = allVerseGroups.find { it.id == id2 }
@@ -218,7 +230,7 @@ class GameLevelViewModel @Inject constructor(
         shieldRefreshJob?.cancel()
         shieldRefreshJob = viewModelScope.launch {
             while (isActive) {
-                delay(60000)
+                delay(Constants.SHIELD_REFRESH_DELAY)
                 progressRepo.refreshShields()
                 refreshShieldsStatus()
             }
@@ -234,10 +246,10 @@ class GameLevelViewModel @Inject constructor(
             shieldAutoHideJob = viewModelScope.launch {
                 // High-frequency refresh loop while the toast is visible
                 var iterations = 0
-                while (iterations < 7) {
+                while (iterations < Constants.SHIELD_INFO_AUTO_HIDE_ITERATIONS) {
                     progressRepo.refreshShields()
                     refreshShieldsStatus()
-                    delay(1000)
+                    delay(Constants.SHIELD_INFO_REFRESH_INTERVAL)
                     iterations++
                 }
                 _state.update { it.copy(isShieldInfoVisible = false) }
@@ -252,7 +264,7 @@ class GameLevelViewModel @Inject constructor(
         lampAutoHideJob?.cancel()
         if (nextVisible) {
             lampAutoHideJob = viewModelScope.launch {
-                delay(7000)
+                delay(Constants.LAMP_INFO_AUTO_HIDE_DELAY)
                 _state.update { it.copy(isLampInfoVisible = false) }
             }
         }
@@ -275,9 +287,14 @@ class GameLevelViewModel @Inject constructor(
         
         if (repeatHint) {
             viewModelScope.launch {
-                delay(30000)
+                delay(Constants.REPEAT_HINT_AUTO_HIDE_DELAY)
                 _state.update { it.copy(progress = it.progress.copy(showRepeatHint = false)) }
             }
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(autoStartRefreshLoop: Boolean = true): GameLevelViewModel
     }
 }

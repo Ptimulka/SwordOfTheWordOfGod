@@ -1,4 +1,4 @@
-package io.github.ptimulka.miecz.repositories
+package io.github.ptimulka.miecz.repositories.meta
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import io.github.ptimulka.miecz.repositories.SettingsRepository
 import javax.inject.Inject
 
 class UserSettingsRepository @Inject constructor(

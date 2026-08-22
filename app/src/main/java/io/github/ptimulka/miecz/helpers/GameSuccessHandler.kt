@@ -3,11 +3,12 @@ package io.github.ptimulka.miecz.helpers
 import io.github.ptimulka.miecz.GameActivity.Companion.SECTION_ID_REPEAT_FOR_SHIELDS
 import io.github.ptimulka.miecz.data.Riddle
 import io.github.ptimulka.miecz.data.RiddleType
+import io.github.ptimulka.miecz.repositories.ProgressRepository
 
 fun updateProgress(
     sectionId: Int,
     levelNumber: Int,
-    userProgressRepository: io.github.ptimulka.miecz.repositories.ProgressRepository,
+    userProgressRepository: ProgressRepository,
     riddles: List<Riddle>
 ) {
     if (sectionId > 0) {

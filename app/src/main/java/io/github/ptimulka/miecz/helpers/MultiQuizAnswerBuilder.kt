@@ -1,5 +1,7 @@
 package io.github.ptimulka.miecz.helpers
 
+import io.github.ptimulka.miecz.data.Constants
+
 data class MultiQuizAnswers(
     val books: List<String>,
     val chapters: List<String>,
@@ -16,21 +18,21 @@ object MultiQuizAnswerBuilder {
         val wrongChapters = mutableSetOf<String>()
         val wrongVerses = mutableSetOf<String>()
 
-        while (wrongBooks.size < 3) {
+        while (wrongBooks.size < Constants.MULTI_QUIZ_WRONG_ANSWERS_COUNT) {
             val randomRef = BibleDataProvider.getRandomReference()
             if (randomRef.book != correctBook) {
                 wrongBooks.add(randomRef.book)
             }
         }
 
-        while (wrongChapters.size < 3) {
+        while (wrongChapters.size < Constants.MULTI_QUIZ_WRONG_ANSWERS_COUNT) {
             val randomRef = BibleDataProvider.getRandomReference()
             if (randomRef.chapter.toString() != correctChapter) {
                 wrongChapters.add(randomRef.chapter.toString())
             }
         }
 
-        while (wrongVerses.size < 3) {
+        while (wrongVerses.size < Constants.MULTI_QUIZ_WRONG_ANSWERS_COUNT) {
             val randomRef = BibleDataProvider.getRandomReference()
             val versePart = if (randomRef.endVerse != null) {
                 "${randomRef.startVerse}-${randomRef.endVerse}"

@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.calculateWordSimilarity
 import io.github.ptimulka.miecz.helpers.normalizeVerseText
-import io.github.ptimulka.miecz.repositories.ProgressRepository
 import io.github.ptimulka.miecz.repositories.MnemonicRepository
+import io.github.ptimulka.miecz.repositories.ProgressRepository
 import io.github.ptimulka.miecz.screens.riddles.base.BaseRiddleViewModel
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import kotlinx.coroutines.CoroutineDispatcher
@@ -48,7 +48,9 @@ class RepeatVerseViewModel @AssistedInject constructor(
             val thumbs = args.sectionVerses.mapIndexed { index, _ ->
                 mnemonicRepo.loadActivePicture(args.sectionId, index, args.assetNames.getOrNull(index))
             }
-            _state.update { it.copy(thumbnails = thumbs) }
+            launch(Dispatchers.Main) {
+                _state.update { it.copy(thumbnails = thumbs) }
+            }
         }
     }
 
@@ -98,7 +100,6 @@ class RepeatVerseViewModel @AssistedInject constructor(
             val newCount = progressRepository.incrementVerseRepeatToday(args.sectionId, idx)
             progressRepository.incrementTotalAloudRepeats()
             progressRepository.updateDayStreak()
-            
             _state.update { it.copy(repeatCount = newCount) }
             updateRetentionState()
         }

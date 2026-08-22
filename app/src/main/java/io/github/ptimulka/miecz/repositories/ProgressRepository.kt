@@ -1,17 +1,5 @@
 package io.github.ptimulka.miecz.repositories
 
-import android.content.Context
-
-/** The best completion time for one section, used by the achievements overview. */
-data class BestTimeEntry(val sectionId: Int, val sectionName: String, val timeMs: Long)
-
-/**
- * Abstraction over the user's saved game progress. Extracted so callers depend on this contract
- * rather than the concrete [UserProgressRepository] (which stores everything in SharedPreferences),
- * enabling test fakes and a future storage swap without touching the screens.
- *
- * This mirrors the existing public surface 1:1; behaviour lives in [UserProgressRepository].
- */
 interface ProgressRepository {
 
     // ── Section / level completion ────────────────────────────────────────────
@@ -85,7 +73,7 @@ interface ProgressRepository {
     // ── Best times ────────────────────────────────────────────────────────────
     fun getBestTime(sectionId: Int, riddleType: String): Long
     fun updateBestTime(sectionId: Int, riddleType: String, elapsedMs: Long): Boolean
-    fun getBestTimeOverall(
+    suspend fun getBestTimeOverall(
         riddleType: String,
         sectionRepo: SectionRepository,
         groupsRepo: VersesGroupsRepository
