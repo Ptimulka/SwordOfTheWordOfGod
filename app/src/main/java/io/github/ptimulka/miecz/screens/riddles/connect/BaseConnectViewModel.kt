@@ -3,6 +3,7 @@ package io.github.ptimulka.miecz.screens.riddles.connect
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.ptimulka.miecz.data.Constants
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
@@ -95,7 +96,7 @@ abstract class BaseConnectViewModel(
     private fun handleMatch(id: Int) {
         viewModelScope.launch {
             _state.update { it.copy(justMatchedId = id) }
-            delay(300) // Match animation time
+            delay(Constants.MATCH_ANIMATION_MS)
             
             val bitmap = _state.value.buttonBitmaps[id]
             if (bitmap != null) {
@@ -140,7 +141,7 @@ abstract class BaseConnectViewModel(
     private fun handleError(left: ConnectItem, right: ConnectItem) {
         viewModelScope.launch {
             _state.update { it.copy(wrongPair = left to right, isLocked = true) }
-            delay(2000) // Lockout time
+            delay(Constants.WRONG_PAIR_LOCKOUT_MS)
             _state.update { it.copy(wrongPair = null, isLocked = false, selectedLeft = null, selectedRight = null) }
         }
     }

@@ -1,5 +1,6 @@
 package io.github.ptimulka.miecz.repositories.content
 
+import io.github.ptimulka.miecz.data.Constants
 import io.github.ptimulka.miecz.repositories.RetentionRepository
 import io.github.ptimulka.miecz.repositories.core.UserProgressStore
 import java.text.SimpleDateFormat
@@ -24,7 +25,7 @@ class UserRetentionRepository @Inject constructor(
 
     override fun addRetention(sectionId: Int, amount: Int): Int {
         val old = getRetention(sectionId)
-        val new = (old + amount).coerceIn(0, 100)
+        val new = (old + amount).coerceIn(0, Constants.MAX_RETENTION)
         if (new != old) setRetention(sectionId, new)
         return new - old
     }
@@ -41,7 +42,7 @@ class UserRetentionRepository @Inject constructor(
             store.update { it.toBuilder().setRetentionDecayDate(today).build() }
             return
         }
-        val decay = 5 * days
+        val decay = Constants.RETENTION_DECAY_PER_DAY * days
         store.update { user ->
             val builder = user.toBuilder()
             user.sectionsMap.forEach { (id, section) ->
@@ -77,13 +78,13 @@ class UserRetentionRepository @Inject constructor(
             if (riddleType == "CONNECT_PARTS") it.setConnectDoneDateParts(todayString())
             else it.setConnectDoneDatePairs(todayString())
         }
-        return addRetention(sectionId, 2)
+        return addRetention(sectionId, Constants.RETENTION_REWARD_CONNECT_LEVEL)
     }
 
     override fun awardRetentionForStandardLevel(sectionId: Int, levelNumber: Int): Int {
         val finished = store.latest.sectionsMap[sectionId]?.finishedLevelsMap?.get(levelNumber) ?: false
         if (finished) return 0
-        return addRetention(sectionId, 3)
+        return addRetention(sectionId, Constants.RETENTION_REWARD_STANDARD_LEVEL)
     }
 
     override fun getVerseRepeatCountToday(sectionId: Int, verseIndex: Int): Int {
@@ -93,15 +94,15 @@ class UserRetentionRepository @Inject constructor(
     }
 
     override fun retentionContributionForRepeats(count: Int): Int = when {
-        count >= 10 -> 3
-        count >= 8 -> 2
-        count >= 5 -> 1
+        count >= Constants.REPEAT_THRESHOLD_HIGH -> Constants.REPEAT_REWARD_HIGH
+        count >= Constants.REPEAT_THRESHOLD_MEDIUM -> Constants.REPEAT_REWARD_MEDIUM
+        count >= Constants.REPEAT_THRESHOLD_LOW -> Constants.REPEAT_REWARD_LOW
         else -> 0
     }
 
     override fun incrementVerseRepeatToday(sectionId: Int, verseIndex: Int): Int {
         val current = getVerseRepeatCountToday(sectionId, verseIndex)
-        val next = (current + 1).coerceAtMost(10)
+        val next = (current + 1).coerceAtMost(Constants.MAX_VERSE_REPEATS_PER_DAY)
         val delta = retentionContributionForRepeats(next) - retentionContributionForRepeats(current)
         val today = todayString()
         
@@ -112,7 +113,7 @@ class UserRetentionRepository @Inject constructor(
             }
             s.putVerseRepeatCountsToday(verseIndex, next)
             if (delta > 0) {
-                s.setRetention((s.retention + delta).coerceAtMost(100))
+                s.setRetention((s.retention + delta).coerceAtMost(Constants.MAX_RETENTION))
             }
         }
         return next

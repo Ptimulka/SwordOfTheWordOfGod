@@ -2,6 +2,7 @@ package io.github.ptimulka.miecz.screens.groups
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.ptimulka.miecz.data.Constants
 import io.github.ptimulka.miecz.data.Section
 import io.github.ptimulka.miecz.data.VerseGroup
 import io.github.ptimulka.miecz.repositories.MnemonicRepository
@@ -44,7 +45,7 @@ class VerseGroupsViewModel @Inject constructor(
             val customCount = progressRepo.getCustomSectionsCount()
             
             val customSections = (1..customCount).mapNotNull { index ->
-                val sectionId = 5 + index - 1
+                val sectionId = Constants.CUSTOM_SECTION_START_ID + index - 1
                 progressRepo.getCustomSectionGroups(sectionId)?.let { (id1, id2) ->
                     val g1 = allGroups.find { it.id == id1 }
                     val g2 = allGroups.find { it.id == id2 }

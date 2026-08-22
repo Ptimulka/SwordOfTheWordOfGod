@@ -2,8 +2,13 @@ package io.github.ptimulka.miecz.screens.review
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.ptimulka.miecz.GameActivity.Companion.SECTION_ID_REPEAT_FOR_SHIELDS
 import io.github.ptimulka.miecz.GameActivity.Companion.SECTION_ID_REPEAT_NORMAL
+import io.github.ptimulka.miecz.data.Constants
 import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.data.Section
 import io.github.ptimulka.miecz.helpers.ReviewVerseProvider
@@ -20,11 +25,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import javax.inject.Named
 
 @HiltViewModel(assistedFactory = ReviewViewModel.Factory::class)
@@ -82,7 +82,7 @@ class ReviewViewModel @AssistedInject constructor(
 
     private fun updateReward() {
         val s = _state.value
-        val rewardCount = if (s.selectedCount == 10) 2 else 1
+        val rewardCount = if (s.selectedCount == Constants.REVIEW_BONUS_COUNT_THRESHOLD) Constants.REVIEW_REWARD_BONUS else Constants.REVIEW_REWARD_DEFAULT
         val maxPossibleReward = (UserProgressRepository.MAX_SHIELDS - s.shieldsCount).coerceAtLeast(0).coerceAtMost(rewardCount)
         _state.update { it.copy(maxPossibleReward = maxPossibleReward) }
     }
@@ -91,7 +91,7 @@ class ReviewViewModel @AssistedInject constructor(
         refreshJob?.cancel()
         refreshJob = viewModelScope.launch {
             while (isActive) {
-                delay(10000)
+                delay(Constants.REVIEW_REFRESH_DELAY_MS)
                 progressRepo.refreshShields()
                 loadData()
             }
