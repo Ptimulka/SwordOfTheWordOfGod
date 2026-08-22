@@ -139,29 +139,38 @@ fun FillWholeVerseRiddleScreen(
             )
         }
 
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && state.hintBitmap != null) {
-            FullscreenImageOverlay(state.hintBitmap!!) { vm.onEvent(FillWholeVerseEvent.DismissHint) }
-        } else if (showResultDialog && phase is RiddlePhase.Result) {
-            RiddleResultDialog(
-                isCorrect = phase.correct,
-                dismissable = false,
-                onConfirm = { vm.onEvent(FillWholeVerseEvent.DismissResult) },
-                extraContent = {
-                    if (state.similarityScore < 100f) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(stringResource(R.string.similarity_score, state.similarityScore))
-                        Text(
-                            text = stringResource(id = R.string.required_similarity_info),
-                            fontSize = 12.sp,
-                            color = Color.Gray
-                        )
-                        if (state.similarityScore >= 50f) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            DiffView(diffs = state.diffs)
+        when (phase) {
+            is RiddlePhase.ShowingHint -> {
+                FullscreenImageOverlay(phase.bitmap) { vm.onEvent(FillWholeVerseEvent.DismissHint) }
+            }
+            is RiddlePhase.ShowingReward -> {
+                FullscreenImageOverlay(phase.bitmap) { vm.onEvent(FillWholeVerseEvent.DismissHint) }
+            }
+            is RiddlePhase.Result -> {
+                if (showResultDialog) {
+                    RiddleResultDialog(
+                        isCorrect = phase.correct,
+                        dismissable = false,
+                        onConfirm = { vm.onEvent(FillWholeVerseEvent.DismissResult) },
+                        extraContent = {
+                            if (state.similarityScore < 100f) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(stringResource(R.string.similarity_score, state.similarityScore))
+                                Text(
+                                    text = stringResource(id = R.string.required_similarity_info),
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                                if (state.similarityScore >= 50f) {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    DiffView(diffs = state.diffs)
+                                }
+                            }
                         }
-                    }
+                    )
                 }
-            )
+            }
+            else -> {}
         }
     }
 }

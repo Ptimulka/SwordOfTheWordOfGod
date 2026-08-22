@@ -114,14 +114,22 @@ fun WordScrambleRiddleScreen(
             )
         }
 
-        val hint = state.hintBitmap
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && hint != null) {
-            FullscreenImageOverlay(hint) { vm.onEvent(WordScrambleEvent.DismissHint) }
-        } else if (showResultDialog && phase is RiddlePhase.Result) {
-            RiddleResultDialog(
-                isCorrect = phase.correct,
-                onConfirm = { vm.onEvent(WordScrambleEvent.DismissResult) }
-            )
+        when (phase) {
+            is RiddlePhase.ShowingHint -> {
+                FullscreenImageOverlay(phase.bitmap) { vm.onEvent(WordScrambleEvent.DismissHint) }
+            }
+            is RiddlePhase.ShowingReward -> {
+                FullscreenImageOverlay(phase.bitmap) { vm.onEvent(WordScrambleEvent.DismissHint) }
+            }
+            is RiddlePhase.Result -> {
+                if (showResultDialog) {
+                    RiddleResultDialog(
+                        isCorrect = phase.correct,
+                        onConfirm = { vm.onEvent(WordScrambleEvent.DismissResult) }
+                    )
+                }
+            }
+            else -> {}
         }
     }
 }

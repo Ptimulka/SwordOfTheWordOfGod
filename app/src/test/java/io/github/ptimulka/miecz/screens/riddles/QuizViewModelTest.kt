@@ -87,7 +87,9 @@ class QuizViewModelTest {
         viewModel.onEvent(QuizEvent.Select("Rdz 1,1"))
         viewModel.onEvent(QuizEvent.Check)
         
-        assertEquals(RiddlePhase.ShowingReward, viewModel.state.value.phase)
+        val phase = viewModel.state.value.phase
+        assertTrue(phase is RiddlePhase.ShowingReward)
+        assertEquals(bitmap, (phase as RiddlePhase.ShowingReward).bitmap)
     }
 
     @Test
