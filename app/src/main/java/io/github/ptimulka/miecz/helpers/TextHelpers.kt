@@ -38,7 +38,7 @@ fun calculateWordSimilarity(list1: List<String>, list2: List<String>): Float {
         lcs[i][j] = if (list1[i - 1] == list2[j - 1]) lcs[i - 1][j - 1] + 1
                     else maxOf(lcs[i - 1][j], lcs[i][j - 1])
     }
-    return (2f * lcs[n][m]) / (n + m) * 100f
+    return ((2f * lcs[n][m]) / (n + m)) * 100f
 }
 
 fun buildAnnotatedVerseText(verseText: String) = buildAnnotatedString {

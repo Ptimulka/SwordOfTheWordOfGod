@@ -64,6 +64,7 @@ import io.github.ptimulka.miecz.components.main.renderSection
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
 import kotlinx.coroutines.launch
 import java.util.Locale
+import androidx.compose.ui.platform.LocalLocale
 
 @Composable
 fun GameLevelScreen(contentPadding: PaddingValues = PaddingValues()) {
@@ -123,13 +124,33 @@ private fun GameLevelMainContent(
     }
 
     // Jump to current section logic
-    val currentScrollIndex = remember(state.sections, state.progress.currentSectionId, state.riddlesOrder) {
-        var totalRows = 0
-        for (section in state.sections) {
-            if (section.id == state.progress.currentSectionId) break
-            totalRows += 1 + 1 + state.riddlesOrder.size + 1
+    val currentScrollIndex by remember(state.sections, state.progress.currentSectionId, state.riddlesOrder) {
+        derivedStateOf {
+            val targetId = state.progress.currentSectionId
+            var totalRows = 0
+            var found = false
+            
+            // The number of levels is key. If riddlesOrder is not yet loaded, 
+            // we assume the standard 12 levels to avoid stale calculations.
+            val levelsPerSection = if (state.riddlesOrder.isNotEmpty()) state.riddlesOrder.size else 12
+
+            for (section in state.sections) {
+                if (section.id == targetId) {
+                    found = true
+                    break
+                }
+                // Index structure: 1 header + 1 buttons + N levels + 1 challenges = N + 3
+                totalRows += (levelsPerSection + 3)
+            }
+            
+            // If we are past the last defined section (e.g. all 4 finished),
+            // target the footer which starts after all section items.
+            if (!found && state.sections.isNotEmpty() && targetId > (state.sections.lastOrNull()?.id ?: 0)) {
+                totalRows = state.sections.size * (levelsPerSection + 3)
+            }
+            
+            totalRows
         }
-        totalRows
     }
 
     val listState = rememberLazyListState()
@@ -143,15 +164,11 @@ private fun GameLevelMainContent(
         }
     }
 
-    val showJumpButton by remember {
+    val showJumpButton by remember(listState, currentScrollIndex) {
         derivedStateOf {
-            val visibleItems = listState.layoutInfo.visibleItemsInfo
-            if (visibleItems.isEmpty()) {
-                false
-            } else {
-                val lastVisibleIndex = visibleItems.last().index
-                lastVisibleIndex < currentScrollIndex
-            }
+            // Only show if the target is further down than the first visible item
+            // and the target index is valid (beyond Section 1 start)
+            (currentScrollIndex > 0) && (listState.firstVisibleItemIndex < currentScrollIndex)
         }
     }
 
@@ -297,7 +314,7 @@ private fun ShieldInfoToast(
     } else {
         val minutes = (cooldownMs / 1000) / 60
         val seconds = (cooldownMs / 1000) % 60
-        val cooldownStr = String.format(Locale.getDefault(), "%02d:%02d", minutes.toInt(), seconds.toInt())
+        val cooldownStr = String.format(LocalLocale.current.platformLocale, "%02d:%02d", minutes.toInt(), seconds.toInt())
         "${stringResource(R.string.next_shield_in)}\n$cooldownStr"
     }
 

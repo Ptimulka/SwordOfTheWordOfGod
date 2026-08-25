@@ -31,49 +31,43 @@ fun GameScreen(
     when (val dialog = state.dialogState) {
         GameDialogState.ExitConfirmation -> {
             GameExitDialog(
-                onDismiss = { onEvent(GameEvent.CancelDialog) },
-                onConfirm = { onEvent(GameEvent.ConfirmDialog) }
-            )
+                onDismiss = { onEvent(GameEvent.CancelDialog) }
+            ) { onEvent(GameEvent.ConfirmDialog) }
         }
         GameDialogState.NoShields -> {
-            NoShieldsDialog(onConfirm = { onEvent(GameEvent.ConfirmDialog) })
+            NoShieldsDialog { onEvent(GameEvent.ConfirmDialog) }
         }
         GameDialogState.NoMoreShieldsPlay -> {
-            NoPlayingForShieldsDialog(onConfirm = { onEvent(GameEvent.ConfirmDialog) })
+            NoPlayingForShieldsDialog { onEvent(GameEvent.ConfirmDialog) }
         }
         is GameDialogState.NewRecord -> {
-            NewRecordDialog(
-                timeMs = dialog.timeMs,
-                onConfirm = { onEvent(GameEvent.ConfirmDialog) }
-            )
+            NewRecordDialog(timeMs = dialog.timeMs) {
+                onEvent(GameEvent.ConfirmDialog)
+            }
         }
         is GameDialogState.NewStreak -> {
-            NewStreakRecordDialog(
-                streak = dialog.streak,
-                onConfirm = { onEvent(GameEvent.ConfirmDialog) }
-            )
+            NewStreakRecordDialog(streak = dialog.streak) {
+                onEvent(GameEvent.ConfirmDialog)
+            }
         }
         is GameDialogState.ConnectSuccess -> {
             ConnectSuccessDialog(
                 timeMs = dialog.timeMs,
-                messageRes = dialog.messageRes,
-                onConfirm = { onEvent(GameEvent.ConfirmDialog) }
-            )
+                messageRes = dialog.messageRes
+            ) { onEvent(GameEvent.ConfirmDialog) }
         }
         GameDialogState.GenericSuccess -> {
-            GameSuccessDialog(onConfirm = { onEvent(GameEvent.ConfirmDialog) })
+            GameSuccessDialog { onEvent(GameEvent.ConfirmDialog) }
         }
         is GameDialogState.SuccessForShields -> {
-            GameSuccessForShieldsDialog(
-                receivedShields = dialog.reward,
-                onConfirm = { onEvent(GameEvent.ConfirmDialog) }
-            )
+            GameSuccessForShieldsDialog(receivedShields = dialog.reward) {
+                onEvent(GameEvent.ConfirmDialog)
+            }
         }
         is GameDialogState.RetentionGained -> {
-            RetentionGainedDialog(
-                gained = dialog.percentage,
-                onConfirm = { onEvent(GameEvent.ConfirmDialog) }
-            )
+            RetentionGainedDialog(gained = dialog.percentage) {
+                onEvent(GameEvent.ConfirmDialog)
+            }
         }
         GameDialogState.None -> {}
     }
@@ -117,7 +111,7 @@ fun GameScreen(
                         onShieldLoss = { 
                             onEvent(GameEvent.OnShieldLoss)
                             // If we are in repeat-for-shields or out of shields, it's a fatal loss (don't show local result dialog)
-                            state.sectionId == GameActivity.SECTION_ID_REPEAT_FOR_SHIELDS || state.shieldsCount <= 1
+                            state.sectionId == GameActivity.SECTION_ID_REPEAT_FOR_SHIELDS || (state.shieldsCount <= 1)
                         }
                     )
                 }

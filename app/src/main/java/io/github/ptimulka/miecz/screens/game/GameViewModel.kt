@@ -2,8 +2,13 @@ package io.github.ptimulka.miecz.screens.game
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.ptimulka.miecz.GameActivity.Companion.SECTION_ID_REPEAT_FOR_SHIELDS
 import io.github.ptimulka.miecz.R
+import io.github.ptimulka.miecz.data.Constants
 import io.github.ptimulka.miecz.data.Riddle
 import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.data.Verse
@@ -18,10 +23,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
-import dagger.hilt.android.lifecycle.HiltViewModel
 
 @HiltViewModel(assistedFactory = GameViewModel.Factory::class)
 class GameViewModel @AssistedInject constructor(
@@ -84,7 +85,7 @@ class GameViewModel @AssistedInject constructor(
         shieldRefreshJob?.cancel()
         shieldRefreshJob = viewModelScope.launch {
             while (isActive) {
-                delay(60000)
+                delay(Constants.SHIELD_REFRESH_DELAY)
                 val newShields = progressRepo.refreshShields()
                 if (newShields != _state.value.shieldsCount) {
                     _state.update { it.copy(shieldsCount = newShields) }
@@ -105,7 +106,7 @@ class GameViewModel @AssistedInject constructor(
 
     private fun handleSuccess(riddleElapsedMs: Long?) {
         val s = _state.value
-        if (s.currentIndex < s.riddles.size - 1) {
+        if (s.currentIndex < (s.riddles.size - 1)) {
             _state.update { it.copy(currentIndex = it.currentIndex + 1) }
         } else {
             completeLevel(riddleElapsedMs)
@@ -116,15 +117,15 @@ class GameViewModel @AssistedInject constructor(
         progressRepo.updateDayStreak()
 
         val riddles = _state.value.riddles
-        val singleType = riddles.map { it.type }.toSet().singleOrNull()
-        val isConnect = singleType == RiddleType.CONNECT_PARTS || singleType == RiddleType.CONNECT_PAIRS
+        val singleType = riddles.asSequence().map { it.type }.distinct().singleOrNull()
+        val isConnect = (singleType == RiddleType.CONNECT_PARTS) || (singleType == RiddleType.CONNECT_PAIRS)
 
         // 1. Award retention (before updateProgress)
         var retentionGained = 0
         if (sectionId >= 1) {
             retentionGained = when {
-                isConnect -> progressRepo.awardRetentionForConnectLevel(sectionId, singleType!!.name)
-                levelNumber in 1..12 -> progressRepo.awardRetentionForStandardLevel(sectionId, levelNumber)
+                isConnect -> progressRepo.awardRetentionForConnectLevel(sectionId, singleType.name)
+                (levelNumber in 1..12) -> progressRepo.awardRetentionForStandardLevel(sectionId, levelNumber)
                 else -> 0
             }
         }
@@ -146,7 +147,7 @@ class GameViewModel @AssistedInject constructor(
         // 4. Connect/Record logic
         if (isConnect) {
             val elapsed = riddleElapsedMs ?: (System.currentTimeMillis() - startTimeMs)
-            val isNewRecord = progressRepo.updateBestTime(sectionId, singleType!!.name, elapsed)
+            val isNewRecord = progressRepo.updateBestTime(sectionId, singleType.name, elapsed)
             if (isNewRecord) {
                 dialogQueue.add(GameDialogState.NewRecord(elapsed))
             } else {
