@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -49,7 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -63,8 +64,6 @@ import io.github.ptimulka.miecz.components.main.renderChooseNextSection
 import io.github.ptimulka.miecz.components.main.renderSection
 import io.github.ptimulka.miecz.repositories.UserProgressRepository
 import kotlinx.coroutines.launch
-import java.util.Locale
-import androidx.compose.ui.platform.LocalLocale
 
 @Composable
 fun GameLevelScreen(contentPadding: PaddingValues = PaddingValues()) {

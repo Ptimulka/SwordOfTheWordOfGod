@@ -2,7 +2,7 @@ package io.github.ptimulka.miecz.helpers
 
 import android.content.ContentValues
 import android.content.Context
-import android.content.Intent
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -89,7 +89,12 @@ object AnkiExporter {
             }
 
             val uri = Uri.fromFile(file)
-            context.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri))
+            MediaScannerConnection.scanFile(
+                context,
+                arrayOf(file.absolutePath),
+                arrayOf("text/csv"),
+                null
+            )
 
             uri
         } catch (e: Exception) {
