@@ -90,9 +90,14 @@ class RepeatVerseViewModel @AssistedInject constructor(
         val verse = args.sectionVerses.getOrNull(idx) ?: return
 
         val userWords = normalizeVerseText(recognized).split(' ').filter { it.isNotEmpty() }
-        val cleanVerse = verse.text.replace("_", " ").replace("*", "")
-        val verseWords = normalizeVerseText(cleanVerse).split(' ').filter { it.isNotEmpty() }
-        val similarity = calculateWordSimilarity(userWords, verseWords)
+        val verseWithSpaces = verse.text.replace("_", " ")
+        val wordsWithOptional = normalizeVerseText(verseWithSpaces.replace("*", "")).split(' ').filter { it.isNotEmpty() }
+        val wordsWithoutOptional = normalizeVerseText(verseWithSpaces.replace(Regex("\\*.*?\\*"), "")).split(' ').filter { it.isNotEmpty() }
+
+        val similarity1 = calculateWordSimilarity(userWords, wordsWithOptional)
+        val similarity2 = calculateWordSimilarity(userWords, wordsWithoutOptional)
+
+        val similarity = if (similarity1 > similarity2) similarity1 else similarity2
 
         _state.update { it.copy(lastSimilarity = similarity, partialText = "", isListening = false) }
 
