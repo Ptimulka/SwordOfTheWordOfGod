@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import io.github.ptimulka.miecz.data.Verse
 import java.io.File
 import java.io.FileOutputStream
@@ -54,6 +55,7 @@ object AnkiExporter {
     }
 
     // Android 10+ (API 29+)
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun saveCsvApi29(context: Context, fileName: String, content: String): Uri? {
         return try {
             val resolver = context.contentResolver

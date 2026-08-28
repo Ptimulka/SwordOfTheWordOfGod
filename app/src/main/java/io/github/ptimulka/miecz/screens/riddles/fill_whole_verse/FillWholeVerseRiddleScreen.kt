@@ -208,7 +208,13 @@ private fun PortraitFillWholeVerseLayout(
         Spacer(modifier = Modifier.height(8.dp))
         RiddleHint(text = stringResource(id = R.string.no_diacritics_hint))
         Spacer(modifier = Modifier.height(8.dp))
-        RiddleCheckButton(enabled = state.userInput.isNotBlank(), onCheck = { onEvent(FillWholeVerseEvent.Check) })
+        RiddleCheckButton(
+            enabled = state.userInput.isNotBlank(),
+            onCheck = { onEvent(FillWholeVerseEvent.Check) },
+            Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        )
     }
 }
 
@@ -245,7 +251,13 @@ private fun LandscapeFillWholeVerseLayout(
         Spacer(modifier = Modifier.height(8.dp))
         RiddleHint(text = stringResource(id = R.string.no_diacritics_hint))
         Spacer(modifier = Modifier.height(8.dp))
-        RiddleCheckButton(enabled = state.userInput.isNotBlank(), onCheck = { onEvent(FillWholeVerseEvent.Check) })
+        RiddleCheckButton(
+            enabled = state.userInput.isNotBlank(),
+            onCheck = { onEvent(FillWholeVerseEvent.Check) },
+            Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        )
     }
 }
 

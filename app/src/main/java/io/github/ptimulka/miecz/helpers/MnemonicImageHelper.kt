@@ -9,6 +9,9 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.net.Uri
 import io.github.ptimulka.miecz.screens.mnemonic.DrawingStroke
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.withSave
+import androidx.core.graphics.scale
 
 object MnemonicImageHelper {
 
@@ -54,24 +57,24 @@ object MnemonicImageHelper {
         val targetWidth = 1200
         val targetHeight = 1600
 
-        val workBitmap = Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888)
+        val workBitmap = createBitmap(canvasWidth, canvasHeight)
         val workCanvas = Canvas(workBitmap)
 
         workCanvas.drawColor(Color.WHITE)
-        workCanvas.save()
+        workCanvas.withSave {
 
-        val centerX = canvasWidth / 2f
-        val centerY = canvasHeight / 2f
-        
-        workCanvas.translate(centerX + offsetX, centerY + offsetY)
-        workCanvas.rotate(rotation, 0f, 0f)
-        workCanvas.scale(scale, scale, 0f, 0f)
-        workCanvas.translate(-bitmap.width / 2f, -bitmap.height / 2f)
+            val centerX = canvasWidth / 2f
+            val centerY = canvasHeight / 2f
 
-        workCanvas.drawBitmap(bitmap, 0f, 0f, null)
-        workCanvas.restore()
+            translate(centerX + offsetX, centerY + offsetY)
+            rotate(rotation, 0f, 0f)
+            scale(scale, scale, 0f, 0f)
+            translate(-bitmap.width / 2f, -bitmap.height / 2f)
 
-        return Bitmap.createScaledBitmap(workBitmap, targetWidth, targetHeight, true)
+            drawBitmap(bitmap, 0f, 0f, null)
+        }
+
+        return workBitmap.scale(targetWidth, targetHeight)
     }
 
     fun renderDrawingToBitmap(
@@ -80,7 +83,7 @@ object MnemonicImageHelper {
         canvasWidth: Int,
         canvasHeight: Int
     ): Bitmap {
-        val bitmap = Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(canvasWidth, canvasHeight)
         val canvas = Canvas(bitmap)
         canvas.drawColor(Color.WHITE)
         
@@ -91,7 +94,7 @@ object MnemonicImageHelper {
             val dstX = (canvasWidth - dstW) / 2
             val dstY = (canvasHeight - dstH) / 2
             canvas.drawBitmap(
-                Bitmap.createScaledBitmap(bg, dstW, dstH, true),
+                bg.scale(dstW, dstH),
                 dstX.toFloat(), dstY.toFloat(), null
             )
         }
@@ -116,7 +119,7 @@ object MnemonicImageHelper {
         }
         
         // Final result should be 1200x1600 as per project standards
-        return Bitmap.createScaledBitmap(bitmap, 1200, 1600, true)
+        return bitmap.scale(1200, 1600)
     }
     
     private fun androidx.compose.ui.graphics.Color.toArgb(): Int {

@@ -161,7 +161,13 @@ private fun PortraitFillSiglaLayout(
         Spacer(Modifier.height(16.dp))
         SiglaInputArea(fillType, state.userInput, { onEvent(FillSiglaEvent.UpdateInput(it)) }, book, chapter, number)
         Spacer(Modifier.height(16.dp))
-        RiddleCheckButton(state.userInput.isNotBlank(), { onEvent(FillSiglaEvent.Check) })
+        RiddleCheckButton(
+            enabled = state.userInput.isNotBlank(),
+            onCheck = { onEvent(FillSiglaEvent.Check) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        )
     }
 }
 
@@ -195,7 +201,13 @@ private fun LandscapeFillSiglaLayout(
         ) {
             SiglaInputArea(fillType, state.userInput, { onEvent(FillSiglaEvent.UpdateInput(it)) }, book, chapter, number)
             Spacer(Modifier.height(32.dp))
-            RiddleCheckButton(state.userInput.isNotBlank(), { onEvent(FillSiglaEvent.Check) })
+            RiddleCheckButton(
+                enabled = state.userInput.isNotBlank(),
+                onCheck = { onEvent(FillSiglaEvent.Check) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            )
         }
     }
 }

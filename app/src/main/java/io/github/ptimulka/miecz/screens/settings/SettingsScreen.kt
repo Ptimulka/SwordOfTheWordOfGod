@@ -52,6 +52,7 @@ private fun SettingsContent(
     innerPadding: PaddingValues
 ) {
     val context = LocalContext.current
+    val resetProgressDone = stringResource(R.string.reset_progress_done)
 
     // Reset Dialogs
     when (state.dialogState) {
@@ -65,7 +66,7 @@ private fun SettingsContent(
             ResetFinalConfirmDialog(
                 onConfirm = { 
                     onEvent(SettingsEvent.FinalConfirmReset)
-                    Toast.makeText(context, context.getString(R.string.reset_progress_done), Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, resetProgressDone, Toast.LENGTH_LONG).show()
                 },
                 onDismiss = { onEvent(SettingsEvent.CancelReset) }
             )

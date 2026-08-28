@@ -166,7 +166,13 @@ private fun PortraitFillWholeSiglaLayout(
         Spacer(Modifier.height(16.dp))
         WholeSiglaInputArea(state, onEvent)
         Spacer(Modifier.height(16.dp))
-        RiddleCheckButton(state.allFieldsFilled, { onEvent(FillWholeSiglaEvent.Check) })
+        RiddleCheckButton(
+            enabled = state.allFieldsFilled,
+            onCheck = { onEvent(FillWholeSiglaEvent.Check) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        )
     }
 }
 
@@ -196,7 +202,13 @@ private fun LandscapeFillWholeSiglaLayout(
         ) {
             WholeSiglaInputArea(state, onEvent)
             Spacer(Modifier.height(32.dp))
-            RiddleCheckButton(state.allFieldsFilled, { onEvent(FillWholeSiglaEvent.Check) })
+            RiddleCheckButton(
+                enabled = state.allFieldsFilled,
+                onCheck = { onEvent(FillWholeSiglaEvent.Check) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            )
         }
     }
 }

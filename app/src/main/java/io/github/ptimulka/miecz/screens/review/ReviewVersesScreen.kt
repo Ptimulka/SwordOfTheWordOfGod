@@ -55,13 +55,13 @@ fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    val repeatLevelName = stringResource(R.string.repeat_level_name)
+
     LaunchedEffect(vm.effects) {
         vm.effects.collect { effect ->
             when (effect) {
                 is ReviewEffect.LaunchReview -> {
-                    val sectionWithName = effect.section.copy(
-                        name = context.getString(R.string.repeat_level_name)
-                    )
+                    val sectionWithName = effect.section.copy(name = repeatLevelName)
                     launchGame(context, sectionWithName, effect.riddleTypes, 0)
                 }
             }
