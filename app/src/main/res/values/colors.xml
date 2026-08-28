@@ -13,5 +13,4 @@
     <color name="wrong_answer_highlight">#FFCDD2</color>
     <color name="diff_delete_yellow">#FFF9C4</color>
     <color name="diff_correct_green">#C8E6C9</color>
-    <color name="toast_text">#DD1A1A1A</color>
 </resources>

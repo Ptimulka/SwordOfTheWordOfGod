@@ -94,7 +94,7 @@ object BibleDataProvider {
         // 5% chance to create a range
         if (Random.nextInt(1, 101) <= 5) {
             val range = Random.nextInt(1, 3) // 1 or 2 verses range
-            val startVerse = Random.nextInt(1, verseCount - range + 1)
+            val startVerse = Random.nextInt(1, (verseCount - range) + 1)
             if (startVerse + range <= verseCount) {
                 return BibleReference(book.sigla, chapter, startVerse, startVerse + range)
             }

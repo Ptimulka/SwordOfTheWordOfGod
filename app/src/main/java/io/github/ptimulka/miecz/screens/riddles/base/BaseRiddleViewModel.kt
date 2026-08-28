@@ -52,7 +52,12 @@ abstract class BaseRiddleViewModel<S : BaseRiddleUiState>(
                 }
                 _state.update { updatePhase(it, RiddlePhase.Answering) }
             }
-            RiddleEvent.ShowHint -> _state.update { updatePhase(it, RiddlePhase.ShowingHint) }
+            RiddleEvent.ShowHint -> {
+                val bitmap = _state.value.hintBitmap
+                if (bitmap != null) {
+                    _state.update { updatePhase(it, RiddlePhase.ShowingHint(bitmap)) }
+                }
+            }
             RiddleEvent.DismissHint -> {
                 val s = _state.value
                 if (s.phase is RiddlePhase.ShowingReward) {
@@ -74,8 +79,9 @@ abstract class BaseRiddleViewModel<S : BaseRiddleUiState>(
     }
     
     protected fun setResult(correct: Boolean, hasHint: Boolean = false) {
-        if (correct && hasHint && _state.value.hintBitmap != null) {
-            _state.update { updatePhase(it, RiddlePhase.ShowingReward) }
+        val bitmap = _state.value.hintBitmap
+        if (correct && hasHint && bitmap != null) {
+            _state.update { updatePhase(it, RiddlePhase.ShowingReward(bitmap)) }
         } else {
             _state.update { updatePhase(it, RiddlePhase.Result(correct)) }
         }

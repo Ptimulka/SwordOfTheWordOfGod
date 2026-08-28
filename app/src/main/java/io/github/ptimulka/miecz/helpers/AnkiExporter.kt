@@ -2,12 +2,13 @@ package io.github.ptimulka.miecz.helpers
 
 import android.content.ContentValues
 import android.content.Context
-import android.content.Intent
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import io.github.ptimulka.miecz.data.Verse
 import java.io.File
 import java.io.FileOutputStream
@@ -54,6 +55,7 @@ object AnkiExporter {
     }
 
     // Android 10+ (API 29+)
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun saveCsvApi29(context: Context, fileName: String, content: String): Uri? {
         return try {
             val resolver = context.contentResolver
@@ -89,7 +91,12 @@ object AnkiExporter {
             }
 
             val uri = Uri.fromFile(file)
-            context.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri))
+            MediaScannerConnection.scanFile(
+                context,
+                arrayOf(file.absolutePath),
+                arrayOf("text/csv"),
+                null
+            )
 
             uri
         } catch (e: Exception) {

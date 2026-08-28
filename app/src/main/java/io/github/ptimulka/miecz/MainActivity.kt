@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
@@ -32,8 +33,14 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.ptimulka.miecz.helpers.NotificationHelper
 import io.github.ptimulka.miecz.repositories.SettingsRepository
@@ -84,6 +91,7 @@ class MainActivity : ComponentActivity() {
 fun MainScreen() {
     val vm: MainViewModel = hiltViewModel()
     val state by vm.state.collectAsStateWithLifecycle()
+    val navController = rememberNavController()
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -97,7 +105,11 @@ fun MainScreen() {
     }
 
     val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             NavigationBar(
                 modifier = if (isLandscape) Modifier.height(64.dp) else Modifier
@@ -121,8 +133,16 @@ fun MainScreen() {
                             }
                         },
                         label = { Text(stringResource(screen.resourceId), fontSize = 9.sp) },
-                        selected = state.selectedScreen == screen,
-                        onClick = { vm.onEvent(MainEvent.SelectScreen(screen)) },
+                        selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                        onClick = {
+                            navController.navigate(screen.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = colorResource(id = R.color.game_button_yellow_dark),
                             selectedTextColor = colorResource(id = R.color.game_button_yellow_dark),
@@ -133,12 +153,15 @@ fun MainScreen() {
             }
         }
     ) { innerPadding ->
-        when (state.selectedScreen) {
-            Screen.Levels -> GameLevelScreen(innerPadding)
-            Screen.Random -> RandomVerseScreen(innerPadding)
-            Screen.Review -> ReviewVersesScreen(innerPadding)
-            Screen.VerseGroups -> VerseGroupsScreen(innerPadding)
-            Screen.Settings -> SettingsScreen(innerPadding)
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Levels.route
+        ) {
+            composable(Screen.Levels.route) { GameLevelScreen(innerPadding) }
+            composable(Screen.Random.route) { RandomVerseScreen(innerPadding) }
+            composable(Screen.Review.route) { ReviewVersesScreen(innerPadding) }
+            composable(Screen.VerseGroups.route) { VerseGroupsScreen(innerPadding) }
+            composable(Screen.Settings.route) { SettingsScreen(innerPadding) }
         }
     }
 }

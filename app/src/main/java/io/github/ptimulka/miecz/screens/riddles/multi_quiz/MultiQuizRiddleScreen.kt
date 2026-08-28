@@ -1,7 +1,17 @@
 package io.github.ptimulka.miecz.screens.riddles.multi_quiz
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -20,20 +30,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.hilt.navigation.compose.hiltViewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.components.game.RiddleCheckButton
 import io.github.ptimulka.miecz.components.game.RiddleResultDialog
-import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
 import io.github.ptimulka.miecz.screens.riddles.base.RiddleEffect
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
@@ -119,13 +127,22 @@ fun MultiQuizRiddleScreen(
             )
         }
 
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && state.hintBitmap != null) {
-            FullscreenImageOverlay(state.hintBitmap!!) { vm.onEvent(MultiQuizEvent.DismissHint) }
-        } else if (showResultDialog && phase is RiddlePhase.Result) {
-            RiddleResultDialog(
-                isCorrect = phase.correct,
-                onConfirm = { vm.onEvent(MultiQuizEvent.DismissResult) }
-            )
+        when (phase) {
+            is RiddlePhase.ShowingHint -> {
+                FullscreenImageOverlay(phase.bitmap) { vm.onEvent(MultiQuizEvent.DismissHint) }
+            }
+            is RiddlePhase.ShowingReward -> {
+                FullscreenImageOverlay(phase.bitmap) { vm.onEvent(MultiQuizEvent.DismissHint) }
+            }
+            is RiddlePhase.Result -> {
+                if (showResultDialog) {
+                    RiddleResultDialog(
+                        isCorrect = phase.correct,
+                        onConfirm = { vm.onEvent(MultiQuizEvent.DismissResult) }
+                    )
+                }
+            }
+            else -> {}
         }
     }
 }

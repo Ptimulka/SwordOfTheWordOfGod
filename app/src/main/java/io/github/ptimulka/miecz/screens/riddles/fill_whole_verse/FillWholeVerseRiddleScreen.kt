@@ -44,7 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
@@ -139,29 +139,38 @@ fun FillWholeVerseRiddleScreen(
             )
         }
 
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && state.hintBitmap != null) {
-            FullscreenImageOverlay(state.hintBitmap!!) { vm.onEvent(FillWholeVerseEvent.DismissHint) }
-        } else if (showResultDialog && phase is RiddlePhase.Result) {
-            RiddleResultDialog(
-                isCorrect = phase.correct,
-                dismissable = false,
-                onConfirm = { vm.onEvent(FillWholeVerseEvent.DismissResult) },
-                extraContent = {
-                    if (state.similarityScore < 100f) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(stringResource(R.string.similarity_score, state.similarityScore))
-                        Text(
-                            text = stringResource(id = R.string.required_similarity_info),
-                            fontSize = 12.sp,
-                            color = Color.Gray
-                        )
-                        if (state.similarityScore >= 50f) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            DiffView(diffs = state.diffs)
+        when (phase) {
+            is RiddlePhase.ShowingHint -> {
+                FullscreenImageOverlay(phase.bitmap) { vm.onEvent(FillWholeVerseEvent.DismissHint) }
+            }
+            is RiddlePhase.ShowingReward -> {
+                FullscreenImageOverlay(phase.bitmap) { vm.onEvent(FillWholeVerseEvent.DismissHint) }
+            }
+            is RiddlePhase.Result -> {
+                if (showResultDialog) {
+                    RiddleResultDialog(
+                        isCorrect = phase.correct,
+                        dismissable = false,
+                        onConfirm = { vm.onEvent(FillWholeVerseEvent.DismissResult) },
+                        extraContent = {
+                            if (state.similarityScore < 100f) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(stringResource(R.string.similarity_score, state.similarityScore))
+                                Text(
+                                    text = stringResource(id = R.string.required_similarity_info),
+                                    fontSize = 12.sp,
+                                    color = Color.Gray
+                                )
+                                if (state.similarityScore >= 50f) {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    DiffView(diffs = state.diffs)
+                                }
+                            }
                         }
-                    }
+                    )
                 }
-            )
+            }
+            else -> {}
         }
     }
 }
@@ -199,7 +208,13 @@ private fun PortraitFillWholeVerseLayout(
         Spacer(modifier = Modifier.height(8.dp))
         RiddleHint(text = stringResource(id = R.string.no_diacritics_hint))
         Spacer(modifier = Modifier.height(8.dp))
-        RiddleCheckButton(enabled = state.userInput.isNotBlank(), onCheck = { onEvent(FillWholeVerseEvent.Check) })
+        RiddleCheckButton(
+            enabled = state.userInput.isNotBlank(),
+            onCheck = { onEvent(FillWholeVerseEvent.Check) },
+            Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        )
     }
 }
 
@@ -236,7 +251,13 @@ private fun LandscapeFillWholeVerseLayout(
         Spacer(modifier = Modifier.height(8.dp))
         RiddleHint(text = stringResource(id = R.string.no_diacritics_hint))
         Spacer(modifier = Modifier.height(8.dp))
-        RiddleCheckButton(enabled = state.userInput.isNotBlank(), onCheck = { onEvent(FillWholeVerseEvent.Check) })
+        RiddleCheckButton(
+            enabled = state.userInput.isNotBlank(),
+            onCheck = { onEvent(FillWholeVerseEvent.Check) },
+            Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        )
     }
 }
 

@@ -14,6 +14,5 @@ sealed class Screen(val route: String, val resourceId: Int) : Parcelable {
 }
 
 data class MainUiState(
-    val selectedScreen: Screen = Screen.Levels,
     val isReviewTabVisible: Boolean = false
 )

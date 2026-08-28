@@ -45,7 +45,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
@@ -166,7 +166,13 @@ private fun PortraitFillWholeSiglaLayout(
         Spacer(Modifier.height(16.dp))
         WholeSiglaInputArea(state, onEvent)
         Spacer(Modifier.height(16.dp))
-        RiddleCheckButton(state.allFieldsFilled, { onEvent(FillWholeSiglaEvent.Check) })
+        RiddleCheckButton(
+            enabled = state.allFieldsFilled,
+            onCheck = { onEvent(FillWholeSiglaEvent.Check) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        )
     }
 }
 
@@ -196,7 +202,13 @@ private fun LandscapeFillWholeSiglaLayout(
         ) {
             WholeSiglaInputArea(state, onEvent)
             Spacer(Modifier.height(32.dp))
-            RiddleCheckButton(state.allFieldsFilled, { onEvent(FillWholeSiglaEvent.Check) })
+            RiddleCheckButton(
+                enabled = state.allFieldsFilled,
+                onCheck = { onEvent(FillWholeSiglaEvent.Check) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            )
         }
     }
 }

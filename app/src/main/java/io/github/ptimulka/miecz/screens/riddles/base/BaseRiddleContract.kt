@@ -1,15 +1,17 @@
 package io.github.ptimulka.miecz.screens.riddles.base
 
+import android.graphics.Bitmap
+
 sealed interface RiddlePhase {
     data object Answering : RiddlePhase
-    data object ShowingHint : RiddlePhase
-    data object ShowingReward : RiddlePhase
+    data class ShowingHint(val bitmap: Bitmap) : RiddlePhase
+    data class ShowingReward(val bitmap: Bitmap) : RiddlePhase
     data class Result(val correct: Boolean) : RiddlePhase
 }
 
 interface BaseRiddleUiState {
     val phase: RiddlePhase
-    val hintBitmap: android.graphics.Bitmap?
+    val hintBitmap: Bitmap?
 }
 
 sealed interface RiddleEvent {

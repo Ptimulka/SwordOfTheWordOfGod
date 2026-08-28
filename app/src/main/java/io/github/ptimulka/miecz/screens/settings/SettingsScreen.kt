@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.settings.AchievementsSection
 import io.github.ptimulka.miecz.components.settings.InfoSection
@@ -52,6 +52,7 @@ private fun SettingsContent(
     innerPadding: PaddingValues
 ) {
     val context = LocalContext.current
+    val resetProgressDone = stringResource(R.string.reset_progress_done)
 
     // Reset Dialogs
     when (state.dialogState) {
@@ -65,7 +66,7 @@ private fun SettingsContent(
             ResetFinalConfirmDialog(
                 onConfirm = { 
                     onEvent(SettingsEvent.FinalConfirmReset)
-                    Toast.makeText(context, context.getString(R.string.reset_progress_done), Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, resetProgressDone, Toast.LENGTH_LONG).show()
                 },
                 onDismiss = { onEvent(SettingsEvent.CancelReset) }
             )

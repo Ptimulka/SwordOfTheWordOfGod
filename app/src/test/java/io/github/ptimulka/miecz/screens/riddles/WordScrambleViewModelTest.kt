@@ -1,15 +1,20 @@
 package io.github.ptimulka.miecz.screens.riddles
 
+import android.graphics.Bitmap
 import io.github.ptimulka.miecz.helpers.MainDispatcherRule
 import io.github.ptimulka.miecz.repositories.MnemonicRepository
 import io.github.ptimulka.miecz.screens.riddles.base.RiddlePhase
 import io.github.ptimulka.miecz.screens.riddles.word_scramble.*
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class WordScrambleViewModelTest {
 
@@ -140,11 +145,18 @@ class WordScrambleViewModelTest {
     }
 
     @Test
-    fun `showing and dismissing hint updates phase`() {
-        val viewModel = WordScrambleViewModel(defaultArgs, mnemonicRepo, mainDispatcherRule.testDispatcher)
+    fun `showing and dismissing hint updates phase`() = runTest {
+        val bitmap: Bitmap = mock()
+        whenever(mnemonicRepo.loadActivePicture(any(), any(), anyOrNull())).thenReturn(bitmap)
+        
+        val viewModel = WordScrambleViewModel(defaultArgs.copy(hasHint = true), mnemonicRepo, mainDispatcherRule.testDispatcher)
+        
+        // Wait for background load
+        mainDispatcherRule.testDispatcher.scheduler.advanceUntilIdle()
         
         viewModel.onEvent(WordScrambleEvent.ShowHint)
-        assertEquals(RiddlePhase.ShowingHint, viewModel.state.value.phase)
+        assertTrue(viewModel.state.value.phase is RiddlePhase.ShowingHint)
+        assertEquals(bitmap, (viewModel.state.value.phase as RiddlePhase.ShowingHint).bitmap)
         
         viewModel.onEvent(WordScrambleEvent.DismissHint)
         assertEquals(RiddlePhase.Answering, viewModel.state.value.phase)

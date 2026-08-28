@@ -40,11 +40,10 @@
     <string name="best_time">Rekord: %1$s</string>
     <string name="retention_button_caption">Utrwalenie wersetów w sercu: %1$d%%</string>
     <string name="retention_heart_toast">Aby zwiększyć utrwalenie wersetów w sercu zagraj poziomy powyżej.</string>
-    <string name="retention_heart_toast_maxed">Niestety już dzisiaj nie możesz zwiększyć poziomu utrwalenia wersetów z sercu. Zagraj jutro.</string>
+    <string name="retention_heart_toast_maxed">Niestety już dzisiaj nie możesz zwiększyć poziomu utrwalenia wersetów w sercu. Zagraj jutro.</string>
     <string name="challenges_unlock_hint">Możesz w dowolnym momencie przejść poniższe wyzwania, aby odblokować kolejną sekcję</string>
     <string name="section_unlocked_title">Gratulacje! 🎉</string>
     <string name="section_unlocked_message">Ukończyłeś wyzwania i odblokowałeś sekcję %1$d! Możesz teraz poznawać kolejne wersety.</string>
-    <string name="section_unlocked_all_message">Nauczyłeś się wszystkich możliwych wersetów!</string>
 
     <!-- RandomVerseScreen -->
     <string name="random_screen_caption">Rozwiąż zagadki dla losowego cytatu</string>
@@ -111,7 +110,7 @@
     <string name="fill_book_caption">Uzupełnij księgę</string>
     <string name="fill_chapter_caption">Uzupełnij numer rozdziału</string>
     <string name="fill_verse_caption">Uzupełnij numer wersetu</string>
-    <string name="fill_sigla_verse_range_hint">Jeśli odpowiedzią jest zakres wersów, wystarczy że wpiszesz numer jednego z nich.</string>
+    <string name="fill_sigla_verse_range_hint">Jeśli odpowiedzią jest zakres wersów, wystarczy, że wpiszesz numer jednego z nich.</string>
 
     <!-- Word Scramble Riddle -->
     <string name="move_left_desc">Przesuń w lewo</string>
@@ -119,7 +118,7 @@
     <string name="reset_button">Reset</string>
 
     <!-- Fill Whole Sigla / Verse Riddles -->
-    <string name="fill_whole_sigla_caption">Uzupełnij księge, numer rozdziału i numer wersetu</string>
+    <string name="fill_whole_sigla_caption">Uzupełnij księgę, numer rozdziału i numer wersetu</string>
     <string name="fill_whole_sigla_button_caption">Uzupełnij wszystkie sigla</string>
     <string name="fill_whole_verse_caption">Uzupełnij cały werset</string>
     <string name="fill_whole_verse_button_caption">Uzupełnij wszystkie wersety</string>
@@ -165,7 +164,7 @@
     <string name="notification_text">Czas na dzisiejszą porcję wersetów!</string>
 
     <!-- VerseGroupsScreen (Search) -->
-    <string name="search_placeholder">Szukaj...</string>
+    <string name="search_placeholder">Szukaj…</string>
     <string name="search">Szukaj</string>
     <string name="clear_search">Wyczyść wyszukiwanie</string>
     <string name="verse_groups_sections_header">Domyślne wersety</string>

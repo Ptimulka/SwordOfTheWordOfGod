@@ -1,7 +1,6 @@
 package io.github.ptimulka.miecz.screens.main
 
 import io.github.ptimulka.miecz.repositories.ProgressRepository
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -24,15 +23,6 @@ class MainViewModelTest {
         whenever(progressRepo.getCurrentSection()).thenReturn(2)
         val viewModel = MainViewModel(progressRepo)
         assertFalse(viewModel.state.value.isReviewTabVisible)
-    }
-
-    @Test
-    fun `selectScreen updates selected tab`() {
-        val viewModel = MainViewModel(progressRepo)
-        assertEquals(Screen.Levels, viewModel.state.value.selectedScreen)
-        
-        viewModel.onEvent(MainEvent.SelectScreen(Screen.Settings))
-        assertEquals(Screen.Settings, viewModel.state.value.selectedScreen)
     }
 
     @Test

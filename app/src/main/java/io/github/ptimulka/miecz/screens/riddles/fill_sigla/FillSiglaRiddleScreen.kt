@@ -19,7 +19,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.components.game.FullscreenImageOverlay
 import io.github.ptimulka.miecz.components.game.RiddleCheckButton
@@ -116,13 +116,22 @@ fun FillSiglaRiddleScreen(
             )
         }
 
-        if ((phase is RiddlePhase.ShowingHint || phase is RiddlePhase.ShowingReward) && state.hintBitmap != null) {
-            FullscreenImageOverlay(state.hintBitmap!!) { vm.onEvent(FillSiglaEvent.DismissHint) }
-        } else if (showResultDialog && phase is RiddlePhase.Result) {
-            RiddleResultDialog(
-                isCorrect = phase.correct,
-                onConfirm = { vm.onEvent(FillSiglaEvent.DismissResult) }
-            )
+        when (phase) {
+            is RiddlePhase.ShowingHint -> {
+                FullscreenImageOverlay(phase.bitmap) { vm.onEvent(FillSiglaEvent.DismissHint) }
+            }
+            is RiddlePhase.ShowingReward -> {
+                FullscreenImageOverlay(phase.bitmap) { vm.onEvent(FillSiglaEvent.DismissHint) }
+            }
+            is RiddlePhase.Result -> {
+                if (showResultDialog) {
+                    RiddleResultDialog(
+                        isCorrect = phase.correct,
+                        onConfirm = { vm.onEvent(FillSiglaEvent.DismissResult) }
+                    )
+                }
+            }
+            else -> {}
         }
     }
 }
@@ -152,7 +161,13 @@ private fun PortraitFillSiglaLayout(
         Spacer(Modifier.height(16.dp))
         SiglaInputArea(fillType, state.userInput, { onEvent(FillSiglaEvent.UpdateInput(it)) }, book, chapter, number)
         Spacer(Modifier.height(16.dp))
-        RiddleCheckButton(state.userInput.isNotBlank(), { onEvent(FillSiglaEvent.Check) })
+        RiddleCheckButton(
+            enabled = state.userInput.isNotBlank(),
+            onCheck = { onEvent(FillSiglaEvent.Check) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        )
     }
 }
 
@@ -186,7 +201,13 @@ private fun LandscapeFillSiglaLayout(
         ) {
             SiglaInputArea(fillType, state.userInput, { onEvent(FillSiglaEvent.UpdateInput(it)) }, book, chapter, number)
             Spacer(Modifier.height(32.dp))
-            RiddleCheckButton(state.userInput.isNotBlank(), { onEvent(FillSiglaEvent.Check) })
+            RiddleCheckButton(
+                enabled = state.userInput.isNotBlank(),
+                onCheck = { onEvent(FillSiglaEvent.Check) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            )
         }
     }
 }

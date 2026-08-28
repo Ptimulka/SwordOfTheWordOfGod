@@ -34,7 +34,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import io.github.ptimulka.miecz.R
 import io.github.ptimulka.miecz.data.Verse
 import java.util.regex.Pattern
@@ -297,7 +297,7 @@ private fun VerseItem(
                             )
                             if (hasImage) {
                                 IconButton(
-                                    onClick = { onPreviewImage(assetName!!) },
+                                    onClick = { onPreviewImage(assetName) },
                                     modifier = Modifier.size(24.dp)
                                 ) {
                                     Icon(
