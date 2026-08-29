@@ -73,7 +73,7 @@ class UserRetentionRepository @Inject constructor(
     }
 
     override fun awardRetentionForConnectLevel(sectionId: Int, riddleType: String): Int {
-        if (isConnectDoneToday(sectionId, riddleType)) return 0
+        if (isConnectDoneToday(sectionId, riddleType) || areChallengesFinished(sectionId)) return 0
         store.updateSection(sectionId) {
             if (riddleType == "CONNECT_PARTS") it.setConnectDoneDateParts(todayString())
             else it.setConnectDoneDatePairs(todayString())
@@ -83,7 +83,7 @@ class UserRetentionRepository @Inject constructor(
 
     override fun awardRetentionForStandardLevel(sectionId: Int, levelNumber: Int): Int {
         val finished = store.latest.sectionsMap[sectionId]?.finishedLevelsMap?.get(levelNumber) ?: false
-        if (finished) return 0
+        if (finished || areChallengesFinished(sectionId)) return 0
         return addRetention(sectionId, Constants.RETENTION_REWARD_STANDARD_LEVEL)
     }
 
@@ -106,17 +106,24 @@ class UserRetentionRepository @Inject constructor(
         val delta = retentionContributionForRepeats(next) - retentionContributionForRepeats(current)
         val today = todayString()
         
+        val finished = areChallengesFinished(sectionId)
+
         store.updateSection(sectionId) { s ->
             if (s.verseRepeatDate != today) {
                 s.clearVerseRepeatCountsToday()
                 s.setVerseRepeatDate(today)
             }
             s.putVerseRepeatCountsToday(verseIndex, next)
-            if (delta > 0) {
+            if (delta > 0 && !finished) {
                 s.setRetention((s.retention + delta).coerceAtMost(Constants.MAX_RETENTION))
             }
         }
         return next
+    }
+
+    private fun areChallengesFinished(sectionId: Int): Boolean {
+        val section = store.latest.sectionsMap[sectionId] ?: return false
+        return section.siglaFinished && section.verseFinished
     }
 
     private fun todayString(): String {
