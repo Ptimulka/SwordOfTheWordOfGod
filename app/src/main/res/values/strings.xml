@@ -58,8 +58,10 @@
     <string name="review_screen_caption">Powtórz wersety, które już znasz</string>
     <string name="no_verses_to_review">Nie masz jeszcze żadnych ukończonych wersetów do powtórki.</string>
     <string name="select_riddles_count">Wybierz liczbę zagadek:</string>
-    <string name="play_for_shields">Graj o tarczę:</string>
-    <string name="reward_for_playing">Nagroda za bezbłędną grę: +%1$d tarcze</string>
+    <string name="play_for_shields">Graj o tarcze:</string>
+    <string name="reward_for_playing">Nagroda za bezbłędną grę: +%1$d</string>
+    <string name="currently_have">Obecnie masz:</string>
+    <string name="first_mistake_ends_game">Pierwsza pomyłka kończy grę o tarcze</string>
     <string name="start_review">Rozpocznij powtórkę</string>
 
     <!-- GameActivity & General Riddle Feedback -->

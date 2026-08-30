@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -56,6 +57,8 @@ fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
     }
 
     val repeatLevelName = stringResource(R.string.repeat_level_name)
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
     LaunchedEffect(vm.effects) {
         vm.effects.collect { effect ->
@@ -96,7 +99,7 @@ fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(if (isLandscape) 8.dp else 24.dp))
 
             if (!state.isReviewAvailable) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -107,13 +110,11 @@ fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
                     )
                 }
             } else {
-                val configuration = LocalConfiguration.current
-                val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
                 if (isLandscape) {
                     Row {
                         ChooseRiddlesCount(
                             selectedCount = state.selectedCount,
+                            isLandscape = true,
                             onOptionSelected = { vm.onEvent(ReviewEvent.SetCount(it)) }
                         )
 
@@ -122,6 +123,8 @@ fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
                             PlayForShieldsSection(
                                 playForShields = state.playForShields,
                                 maxPossibleReward = state.maxPossibleReward,
+                                shieldsCount = state.shieldsCount,
+                                isLandscape = true,
                                 onPlayForShieldsChange = { vm.onEvent(ReviewEvent.SetPlayForShields(it)) }
                             )
                         }
@@ -129,6 +132,7 @@ fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
                 } else {
                     ChooseRiddlesCount(
                         selectedCount = state.selectedCount,
+                        isLandscape = false,
                         onOptionSelected = { vm.onEvent(ReviewEvent.SetCount(it)) }
                     )
 
@@ -137,6 +141,8 @@ fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
                         PlayForShieldsSection(
                             playForShields = state.playForShields,
                             maxPossibleReward = state.maxPossibleReward,
+                            shieldsCount = state.shieldsCount,
+                            isLandscape = false,
                             onPlayForShieldsChange = { vm.onEvent(ReviewEvent.SetPlayForShields(it)) }
                         )
                     }
@@ -164,7 +170,7 @@ fun ReviewVersesScreen(contentPadding: PaddingValues = PaddingValues()) {
 }
 
 @Composable
-private fun ChooseRiddlesCount(selectedCount: Int, onOptionSelected: (Int) -> Unit) {
+private fun ChooseRiddlesCount(selectedCount: Int, isLandscape: Boolean, onOptionSelected: (Int) -> Unit) {
     val options = listOf(5, 8, 10)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
@@ -173,7 +179,7 @@ private fun ChooseRiddlesCount(selectedCount: Int, onOptionSelected: (Int) -> Un
             color = Color.Gray
         )
         Row(
-            modifier = Modifier.padding(vertical = 16.dp),
+            modifier = Modifier.padding(vertical = if (isLandscape) 8.dp else 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             options.forEach { count ->
@@ -205,6 +211,8 @@ private fun ChooseRiddlesCount(selectedCount: Int, onOptionSelected: (Int) -> Un
 fun PlayForShieldsSection(
     playForShields: Boolean,
     maxPossibleReward: Int,
+    shieldsCount: Int,
+    isLandscape: Boolean,
     onPlayForShieldsChange: (Boolean) -> Unit
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -213,16 +221,58 @@ fun PlayForShieldsSection(
             style = MaterialTheme.typography.labelLarge,
             color = Color.Gray
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(if (isLandscape) 4.dp else 8.dp))
         PlayForShieldsSwitch(playForShields = playForShields, onPlayForShieldsChange = onPlayForShieldsChange)
-        Spacer(modifier = Modifier.height(8.dp))
+        
+        Spacer(modifier = Modifier.height(if (isLandscape) 4.dp else 8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(R.string.currently_have),
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.Gray,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(
+                painter = painterResource(id = R.drawable.buttonshield),
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = Color.Unspecified
+            )
+            Spacer(modifier = Modifier.width(2.dp))
+            Text(
+                text = shieldsCount.toString(),
+                style = MaterialTheme.typography.labelSmall,
+                color = colorResource(id = R.color.game_button_yellow_dark),
+                fontWeight = FontWeight.Bold
+            )
+        }
 
         val textColor = if(playForShields) colorResource(id = R.color.game_button_yellow_dark) else Color.Gray
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(top = 4.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.reward_for_playing, maxPossibleReward),
+                style = MaterialTheme.typography.labelSmall,
+                color = textColor,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(
+                painter = painterResource(id = R.drawable.buttonshield),
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = Color.Unspecified
+            )
+        }
+
         Text(
-            text = stringResource(R.string.reward_for_playing, maxPossibleReward),
+            text = stringResource(R.string.first_mistake_ends_game),
             style = MaterialTheme.typography.labelSmall,
-            color = textColor,
-            modifier = Modifier.padding(top = 4.dp),
+            color = if(playForShields) Color.Red else Color.Gray,
+            modifier = Modifier.padding(top = 8.dp),
             fontWeight = FontWeight.Bold
         )
     }
@@ -246,8 +296,8 @@ fun PlayForShieldsSwitch(playForShields: Boolean, onPlayForShieldsChange: (Boole
                 checkedTrackColor = colorResource(id = R.color.game_button_yellow_dark),
                 checkedBorderColor = colorResource(id = R.color.game_button_yellow_dark),
                 uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = colorResource(id = R.color.game_button_yellow_dark),
-                uncheckedBorderColor = colorResource(id = R.color.game_button_yellow_dark)
+                uncheckedTrackColor = colorResource(id = R.color.game_button_grey_dark),
+                uncheckedBorderColor = colorResource(id = R.color.game_button_grey_dark)
             )
         )
         Text(
