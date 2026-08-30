@@ -235,7 +235,10 @@ private fun FillWordsContent(
 
         RiddleCheckButton(
             enabled = state.allFieldsFilled,
-            onCheck = { onEvent(FillWordsEvent.Check) }
+            onCheck = { onEvent(FillWordsEvent.Check) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
         )
     }
 }

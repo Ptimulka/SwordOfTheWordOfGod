@@ -211,7 +211,7 @@ private fun PortraitFillWholeVerseLayout(
         RiddleCheckButton(
             enabled = state.userInput.isNotBlank(),
             onCheck = { onEvent(FillWholeVerseEvent.Check) },
-            Modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
         )
