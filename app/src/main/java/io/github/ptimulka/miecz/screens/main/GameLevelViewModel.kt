@@ -77,6 +77,7 @@ class GameLevelViewModel @AssistedInject constructor(
     }
 
     private suspend fun refreshProgress() {
+        _state.update { it.copy(isLoading = true) }
         val usedGroupIds = progressRepo.getAllUsedGroupIds()
         val allGroups = groupsRepo.loadVerseGroups()
         val baseSections = sectionRepo.loadInitialSections()
@@ -163,6 +164,7 @@ class GameLevelViewModel @AssistedInject constructor(
 
         _state.update { 
             it.copy(
+                isLoading = false,
                 sections = fullSections,
                 sectionStates = sectionStates,
                 allVerseGroups = allGroups,

@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -206,20 +207,29 @@ private fun GameLevelMainContent(
                 )
             }
 
-            val lastSection = state.sections.lastOrNull()
-            val isLastFinished = lastSection != null && (state.sectionStates[lastSection.id]?.areSpecialChallengesFinished == true)
-            val nextId = (lastSection?.id ?: 4) + 1
-            val isPlaceholderLocked = !isLastFinished || nextId > state.progress.currentSectionId
+            if (!state.isLoading || state.sections.isNotEmpty()) {
+                val lastSection = state.sections.lastOrNull()
+                val isLastFinished = lastSection != null && (state.sectionStates[lastSection.id]?.areSpecialChallengesFinished == true)
+                val nextId = (lastSection?.id ?: 4) + 1
+                val isPlaceholderLocked = !isLastFinished || nextId > state.progress.currentSectionId
 
-            if (state.progress.availableGroupsCount >= 2) {
-                renderChooseNextSection(
-                    nextId = nextId,
-                    isLocked = isPlaceholderLocked,
-                    onChooseClick = { onEvent(GameLevelEvent.NavigateToChooseGroups) }
-                )
-            } else {
-                renderAllVersesLearnedSection(nextId = nextId, isLocked = isPlaceholderLocked)
+                if (state.progress.availableGroupsCount >= 2) {
+                    renderChooseNextSection(
+                        nextId = nextId,
+                        isLocked = isPlaceholderLocked,
+                        onChooseClick = { onEvent(GameLevelEvent.NavigateToChooseGroups) }
+                    )
+                } else {
+                    renderAllVersesLearnedSection(nextId = nextId, isLocked = isPlaceholderLocked)
+                }
             }
+        }
+
+        if (state.isLoading && state.sections.isEmpty()) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.Center),
+                color = colorResource(id = R.color.game_button_yellow_dark)
+            )
         }
 
         GameLevelOverlays(state, onEvent, contentPadding)

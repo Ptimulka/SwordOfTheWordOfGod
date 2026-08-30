@@ -45,6 +45,7 @@ data class SectionState(
 }
 
 data class GameLevelUiState(
+    val isLoading: Boolean = true,
     val sections: List<Section> = emptyList(),
     val sectionStates: Map<Int, SectionState> = emptyMap(),
     val riddlesOrder: List<List<RiddleType>> = emptyList(),
