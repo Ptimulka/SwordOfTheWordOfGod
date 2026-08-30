@@ -192,7 +192,7 @@ private fun LandscapeFillSiglaLayout(
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.Center
     ) {
-        VerseDisplay(Modifier.weight(2f), verseText)
+        VerseDisplay(Modifier.weight(1f), verseText)
         Spacer(Modifier.width(16.dp))
         Column(
             modifier = Modifier.weight(1f),
