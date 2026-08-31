@@ -428,8 +428,7 @@ private fun ProgressPill(
 private fun RepeatHintToast() {
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = colorResource(R.color.game_button_yellow_dark),
-        shadowElevation = 6.dp
+        color = Color.Black.copy(alpha = 0.7f)
     ) {
         Text(
             text = stringResource(R.string.repeat_for_shields_hint),
