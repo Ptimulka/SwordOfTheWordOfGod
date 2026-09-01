@@ -73,6 +73,7 @@ class GameLevelViewModel @AssistedInject constructor(
             GameLevelEvent.ConfirmGroupSelection -> confirmGroupSelection()
             is GameLevelEvent.ShowSectionVerses -> _state.update { it.copy(selectedSectionForDialog = event.section) }
             is GameLevelEvent.ToggleGroupSelection -> toggleGroupSelection(event.groupId)
+            GameLevelEvent.ClearLampAnimation -> _state.update { it.copy(animateLampProgress = false) }
         }
     }
 
@@ -288,10 +289,12 @@ class GameLevelViewModel @AssistedInject constructor(
     private fun checkPendingNotifications() {
         val repeatHint = progressRepo.consumePendingRepeatHint()
         val unlocked = progressRepo.consumePendingSectionUnlocked()
+        val streakAnimate = progressRepo.consumePendingStreakAnimation()
         
-        if (repeatHint || unlocked != -1) {
+        if (repeatHint || unlocked != -1 || streakAnimate) {
             _state.update { 
                 it.copy(
+                    animateLampProgress = streakAnimate,
                     progress = it.progress.copy(
                         showRepeatHint = repeatHint,
                         unlockedSectionId = unlocked

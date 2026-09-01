@@ -1,6 +1,9 @@
 package io.github.ptimulka.miecz.screens.main
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -39,6 +42,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -257,6 +262,30 @@ private fun GameLevelOverlays(
     val density = LocalDensity.current
     var shieldPillWidthPx by remember { mutableIntStateOf(0) }
 
+    val lampScale = remember { Animatable(1f) }
+    val lampGlowAlpha = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+
+    val triggerLampAnimation = {
+        scope.launch {
+            launch {
+                lampScale.animateTo(1.3f, animationSpec = tween(200))
+                lampScale.animateTo(1f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy))
+            }
+            launch {
+                lampGlowAlpha.animateTo(0.8f, animationSpec = tween(200))
+                lampGlowAlpha.animateTo(0f, animationSpec = tween(600))
+            }
+        }
+    }
+
+    LaunchedEffect(state.animateLampProgress) {
+        if (state.animateLampProgress) {
+            triggerLampAnimation()
+            onEvent(GameLevelEvent.ClearLampAnimation)
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -302,10 +331,23 @@ private fun GameLevelOverlays(
             ProgressPill(
                 iconRes = if (state.progress.playedToday) R.drawable.buttonlamp else R.drawable.buttonlamplow,
                 value = state.progress.dayStreak.toString(),
-                onClick = { onEvent(GameLevelEvent.ToggleLampInfo) },
+                onClick = {
+                    onEvent(GameLevelEvent.ToggleLampInfo)
+                },
+                modifier = Modifier
+                    .scale(lampScale.value)
+                    .drawBehind {
+                        if (lampGlowAlpha.value > 0f) {
+                            drawCircle(
+                                color = Color.Yellow.copy(alpha = lampGlowAlpha.value),
+                                radius = size.maxDimension * 0.7f,
+                                center = center
+                            )
+                        }
+                    },
                 backgroundColor = if (state.progress.playedToday)
                     colorResource(R.color.game_button_yellow_dark)
-                    else colorResource(R.color.game_button_grey_dark)
+                else colorResource(R.color.game_button_grey_dark)
             )
         }
     }
@@ -391,12 +433,13 @@ private fun ProgressPill(
     iconRes: Int,
     value: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     backgroundColor: Color = colorResource(id = R.color.game_button_yellow_dark),
     onSizeChanged: (androidx.compose.ui.unit.IntSize) -> Unit = {}
 ) {
     Surface(
         onClick = onClick,
-        modifier = Modifier
+        modifier = modifier
             .height(40.dp)
             .onSizeChanged { onSizeChanged(it) },
         shape = CircleShape,

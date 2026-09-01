@@ -78,6 +78,7 @@ class UserProgressRepository @Inject constructor(
     override fun consumePendingRepeatHint(): Boolean = progressionRepo.consumePendingRepeatHint()
     override fun setPendingSectionUnlocked(sectionId: Int) = progressionRepo.setPendingSectionUnlocked(sectionId)
     override fun consumePendingSectionUnlocked(): Int = progressionRepo.consumePendingSectionUnlocked()
+    override fun consumePendingStreakAnimation(): Boolean = progressionRepo.consumePendingStreakAnimation()
 
     // ── Streaks ───────────────────────────────────────────────────────────────
     override fun getLevelStreak(): Int = streakRepo.getLevelStreak()

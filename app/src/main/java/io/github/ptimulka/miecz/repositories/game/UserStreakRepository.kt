@@ -68,6 +68,7 @@ class UserStreakRepository @Inject constructor(
                 .setLastPlayedDate(today)
                 .setDayStreak(newStreak)
                 .setBestDayStreak(newBest)
+                .setPendingStreakAnimation(true)
                 .build()
         }
     }

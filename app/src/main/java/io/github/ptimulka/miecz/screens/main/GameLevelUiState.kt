@@ -52,6 +52,7 @@ data class GameLevelUiState(
     val progress: ProgressSummary = ProgressSummary(),
     val isShieldInfoVisible: Boolean = false,
     val isLampInfoVisible: Boolean = false,
+    val animateLampProgress: Boolean = false,
     val showChooseVerseGroups: Boolean = false,
     val selectedSectionForDialog: Section? = null,
     val allVerseGroups: List<VerseGroup> = emptyList(),

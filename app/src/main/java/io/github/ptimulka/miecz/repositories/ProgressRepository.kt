@@ -57,6 +57,7 @@ interface ProgressRepository {
     fun consumePendingRepeatHint(): Boolean
     fun setPendingSectionUnlocked(sectionId: Int)
     fun consumePendingSectionUnlocked(): Int
+    fun consumePendingStreakAnimation(): Boolean
 
     // ── Streaks ───────────────────────────────────────────────────────────────
     fun getLevelStreak(): Int
