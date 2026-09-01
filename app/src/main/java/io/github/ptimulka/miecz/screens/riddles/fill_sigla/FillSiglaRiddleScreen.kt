@@ -13,6 +13,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -146,6 +147,8 @@ private fun PortraitFillSiglaLayout(
     state: FillSiglaUiState,
     onEvent: (FillSiglaEvent) -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -163,7 +166,10 @@ private fun PortraitFillSiglaLayout(
         Spacer(Modifier.height(16.dp))
         RiddleCheckButton(
             enabled = state.userInput.isNotBlank(),
-            onCheck = { onEvent(FillSiglaEvent.Check) },
+            onCheck = {
+                keyboardController?.hide()
+                onEvent(FillSiglaEvent.Check)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
@@ -181,6 +187,8 @@ private fun LandscapeFillSiglaLayout(
     state: FillSiglaUiState,
     onEvent: (FillSiglaEvent) -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Row(
         modifier = Modifier
             .fillMaxSize()
@@ -203,7 +211,10 @@ private fun LandscapeFillSiglaLayout(
             Spacer(Modifier.height(32.dp))
             RiddleCheckButton(
                 enabled = state.userInput.isNotBlank(),
-                onCheck = { onEvent(FillSiglaEvent.Check) },
+                onCheck = {
+                    keyboardController?.hide()
+                    onEvent(FillSiglaEvent.Check)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)

@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -155,6 +156,8 @@ private fun FillWordsContent(
     isEasy: Boolean,
     onEvent: (FillWordsEvent) -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -235,7 +238,10 @@ private fun FillWordsContent(
 
         RiddleCheckButton(
             enabled = state.allFieldsFilled,
-            onCheck = { onEvent(FillWordsEvent.Check) },
+            onCheck = {
+                keyboardController?.hide()
+                onEvent(FillWordsEvent.Check)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)

@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -181,6 +182,8 @@ private fun PortraitFillWholeVerseLayout(
     onEvent: (FillWholeVerseEvent) -> Unit,
     speechLauncher: androidx.activity.result.ActivityResultLauncher<android.content.Intent>
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -210,7 +213,10 @@ private fun PortraitFillWholeVerseLayout(
         Spacer(modifier = Modifier.height(8.dp))
         RiddleCheckButton(
             enabled = state.userInput.isNotBlank(),
-            onCheck = { onEvent(FillWholeVerseEvent.Check) },
+            onCheck = {
+                keyboardController?.hide()
+                onEvent(FillWholeVerseEvent.Check)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
@@ -224,6 +230,8 @@ private fun LandscapeFillWholeVerseLayout(
     onEvent: (FillWholeVerseEvent) -> Unit,
     speechLauncher: androidx.activity.result.ActivityResultLauncher<android.content.Intent>
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -253,7 +261,10 @@ private fun LandscapeFillWholeVerseLayout(
         Spacer(modifier = Modifier.height(8.dp))
         RiddleCheckButton(
             enabled = state.userInput.isNotBlank(),
-            onCheck = { onEvent(FillWholeVerseEvent.Check) },
+            onCheck = {
+                keyboardController?.hide()
+                onEvent(FillWholeVerseEvent.Check)
+            },
             Modifier
                 .fillMaxWidth()
                 .height(50.dp)
