@@ -32,7 +32,9 @@ data class Verse(
     val book: String,
     val chapter: Int,
     val number: String,
-    val text: String
+    val text: String,
+    val originalSectionId: Int? = null,
+    val originalVerseIndex: Int? = null
 ) : Parcelable
 
 @Parcelize

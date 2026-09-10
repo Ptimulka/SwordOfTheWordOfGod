@@ -28,7 +28,9 @@ class UserSectionRepository @Inject constructor(
 
             val id = lines[0].trim().toIntOrNull() ?: return@withContext null
             val name = lines[1].trim()
-            val verses = lines.drop(2).mapNotNull { parseVerse(it) }
+            val verses = lines.drop(2).mapNotNull { parseVerse(it) }.mapIndexed { index, verse ->
+                verse.copy(originalSectionId = id, originalVerseIndex = index)
+            }
             
             val assetNames = verses.mapIndexed { index, verse ->
                 "section%02d_%02d_%s%d-%s.webp".format(

@@ -45,8 +45,10 @@ class RepeatVerseViewModel @AssistedInject constructor(
 
     private fun loadAllThumbnails() {
         viewModelScope.launch(ioDispatcher) {
-            val thumbs = args.sectionVerses.mapIndexed { index, _ ->
-                mnemonicRepo.loadActivePicture(args.sectionId, index, args.assetNames.getOrNull(index))
+            val thumbs = args.sectionVerses.mapIndexed { index, verse ->
+                val effectiveSectionId = verse.originalSectionId ?: args.sectionId
+                val effectiveVerseIndex = verse.originalVerseIndex ?: index
+                mnemonicRepo.loadActivePicture(effectiveSectionId, effectiveVerseIndex, args.assetNames.getOrNull(index))
             }
             launch(Dispatchers.Main) {
                 _state.update { it.copy(thumbnails = thumbs) }
