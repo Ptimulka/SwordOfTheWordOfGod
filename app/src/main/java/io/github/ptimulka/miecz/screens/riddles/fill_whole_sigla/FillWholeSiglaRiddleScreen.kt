@@ -229,6 +229,7 @@ private fun WholeSiglaInputArea(
     state: FillWholeSiglaUiState,
     onEvent: (FillWholeSiglaEvent) -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     val chapterFocusRequester = remember { FocusRequester() }
     val verseFocusRequester = remember { FocusRequester() }
 
@@ -269,6 +270,15 @@ private fun WholeSiglaInputArea(
                 onValueChange = { onEvent(FillWholeSiglaEvent.UpdateVerse(it)) },
                 isError = state.wrongIndices.contains(2),
                 keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Done,
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
+                        if (state.allFieldsFilled) {
+                            onEvent(FillWholeSiglaEvent.Check)
+                        }
+                    }
+                ),
                 focusRequester = verseFocusRequester
             )
         }
