@@ -96,11 +96,14 @@ class GameLevelViewModel @AssistedInject constructor(
             
             val verseContributions = section.verses.indices.map {
                 progressRepo.retentionContributionForRepeats(
-                    progressRepo.getVerseRepeatCountToday(section.id, it)
+                    progressRepo.getVerseRepeatCountToday(section.id, it),
+                    section.verses[it].isLong
                 )
             }
             val totalEarnedRepeats = verseContributions.sum()
-            val totalPossibleRepeats = section.verses.size * Constants.REPEAT_REWARD_HIGH
+            val totalPossibleRepeats = section.verses.sumOf {
+                if (it.isLong) Constants.REPEAT_REWARD_LONG_HIGH else Constants.REPEAT_REWARD_HIGH
+            }
             val repeatAloudPercent = if (totalPossibleRepeats > 0) {
                 (totalEarnedRepeats * 100) / totalPossibleRepeats
             } else 0

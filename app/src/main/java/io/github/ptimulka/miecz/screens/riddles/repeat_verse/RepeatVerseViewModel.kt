@@ -104,7 +104,7 @@ class RepeatVerseViewModel @AssistedInject constructor(
         _state.update { it.copy(lastSimilarity = similarity, partialText = "", isListening = false) }
 
         if (similarity >= SIMILARITY_THRESHOLD) {
-            val newCount = progressRepository.incrementVerseRepeatToday(args.sectionId, idx)
+            val newCount = progressRepository.incrementVerseRepeatToday(args.sectionId, idx, verse.isLong)
             progressRepository.incrementTotalAloudRepeats()
             progressRepository.updateDayStreak()
             _state.update { it.copy(repeatCount = newCount) }
@@ -113,12 +113,17 @@ class RepeatVerseViewModel @AssistedInject constructor(
     }
 
     private fun updateRetentionState() {
+        val selectedIdx = _state.value.selectedIndex
+        val currentVerse = selectedIdx?.let { args.sectionVerses.getOrNull(it) }
         val count = _state.value.repeatCount
-        val verseRetention = progressRepository.retentionContributionForRepeats(count)
+        val verseRetention = currentVerse?.let { 
+            progressRepository.retentionContributionForRepeats(count, it.isLong)
+        } ?: 0
         
-        val sectionRetention = args.sectionVerses.indices.sumOf {
+        val sectionRetention = args.sectionVerses.indices.sumOf { i ->
             progressRepository.retentionContributionForRepeats(
-                progressRepository.getVerseRepeatCountToday(args.sectionId, it)
+                progressRepository.getVerseRepeatCountToday(args.sectionId, i),
+                args.sectionVerses[i].isLong
             )
         }
         

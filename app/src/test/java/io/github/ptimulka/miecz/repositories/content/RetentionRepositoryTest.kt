@@ -90,13 +90,34 @@ class RetentionRepositoryTest {
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         
         currentTime = sdf.parse(today)!!.time
-        repository.incrementVerseRepeatToday(1, 0)
+        repository.incrementVerseRepeatToday(1, 0, false)
         assertEquals(1, repository.getVerseRepeatCountToday(1, 0))
         
         currentTime = sdf.parse(tomorrow)!!.time
-        repository.incrementVerseRepeatToday(1, 1)
+        repository.incrementVerseRepeatToday(1, 1, false)
         
         assertEquals(1, repository.getVerseRepeatCountToday(1, 1))
         assertEquals(0, repository.getVerseRepeatCountToday(1, 0))
+    }
+
+    @Test
+    fun `long verses award more retention`() = runTest {
+        val sectionId = 1
+        val verseIdx = 0
+        
+        // 5 repeats for short verse -> 1 point
+        repeat(4) { repository.incrementVerseRepeatToday(sectionId, verseIdx, isLongVerse = false) }
+        dataFlow.value = dataFlow.value.toBuilder().putSections(sectionId, dataFlow.value.sectionsMap[sectionId]!!.toBuilder().setRetention(0).build()).build()
+        repository.incrementVerseRepeatToday(sectionId, verseIdx, isLongVerse = false)
+        assertEquals(1, dataFlow.value.sectionsMap[sectionId]?.retention)
+
+        // Reset for long verse
+        dataFlow.value = UserProgressSerializer.defaultValue
+        
+        // 5 repeats for long verse -> 2 points
+        repeat(4) { repository.incrementVerseRepeatToday(sectionId, verseIdx, isLongVerse = true) }
+        dataFlow.value = dataFlow.value.toBuilder().putSections(sectionId, dataFlow.value.sectionsMap[sectionId]!!.toBuilder().setRetention(0).build()).build()
+        repository.incrementVerseRepeatToday(sectionId, verseIdx, isLongVerse = true)
+        assertEquals(2, dataFlow.value.sectionsMap[sectionId]?.retention)
     }
 }

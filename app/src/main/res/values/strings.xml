@@ -104,6 +104,7 @@
     <string name="repeat_verse_retention_growth">Wzrost utrwalenia w sercu:\n+%1$d%% za powyższy cytat,\n+%2$d%% za wszystkie cytaty w tej sekcji</string>
     <string name="repeat_verse_accepted">Podobieństwo: %.1f%% ✓</string>
     <string name="repeat_verse_too_low">Podobieństwo: %.1f%% — spróbuj ponownie</string>
+    <string name="long_verse_retention_info">Za powtarzanie długich wersetów na głos otrzymasz 1 punkt utrwalenia wersetów w sercu więcej, niż powtarzając zwykłe wersety.</string>
 
     <!-- Fill Sigla (Book, Chapter, Verse) Riddles -->
     <string name="book_caption">Księga</string>

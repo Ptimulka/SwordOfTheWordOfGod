@@ -93,17 +93,17 @@ class UserRetentionRepository @Inject constructor(
         return section.verseRepeatCountsTodayMap[verseIndex] ?: 0
     }
 
-    override fun retentionContributionForRepeats(count: Int): Int = when {
-        count >= Constants.REPEAT_THRESHOLD_HIGH -> Constants.REPEAT_REWARD_HIGH
-        count >= Constants.REPEAT_THRESHOLD_MEDIUM -> Constants.REPEAT_REWARD_MEDIUM
-        count >= Constants.REPEAT_THRESHOLD_LOW -> Constants.REPEAT_REWARD_LOW
+    override fun retentionContributionForRepeats(count: Int, isLongVerse: Boolean): Int = when {
+        count >= Constants.REPEAT_THRESHOLD_HIGH -> if (isLongVerse) Constants.REPEAT_REWARD_LONG_HIGH else Constants.REPEAT_REWARD_HIGH
+        count >= Constants.REPEAT_THRESHOLD_MEDIUM -> if (isLongVerse) Constants.REPEAT_REWARD_LONG_MEDIUM else Constants.REPEAT_REWARD_MEDIUM
+        count >= Constants.REPEAT_THRESHOLD_LOW -> if (isLongVerse) Constants.REPEAT_REWARD_LONG_LOW else Constants.REPEAT_REWARD_LOW
         else -> 0
     }
 
-    override fun incrementVerseRepeatToday(sectionId: Int, verseIndex: Int): Int {
+    override fun incrementVerseRepeatToday(sectionId: Int, verseIndex: Int, isLongVerse: Boolean): Int {
         val current = getVerseRepeatCountToday(sectionId, verseIndex)
         val next = (current + 1).coerceAtMost(Constants.MAX_VERSE_REPEATS_PER_DAY)
-        val delta = retentionContributionForRepeats(next) - retentionContributionForRepeats(current)
+        val delta = retentionContributionForRepeats(next, isLongVerse) - retentionContributionForRepeats(current, isLongVerse)
         val today = todayString()
         
         val finished = areChallengesFinished(sectionId)

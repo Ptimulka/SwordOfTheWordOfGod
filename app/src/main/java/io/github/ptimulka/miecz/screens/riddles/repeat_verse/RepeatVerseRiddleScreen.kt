@@ -48,6 +48,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,6 +69,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.ptimulka.miecz.R
+import io.github.ptimulka.miecz.components.game.LongVerseRetentionInfoDialog
 import io.github.ptimulka.miecz.data.Verse
 import io.github.ptimulka.miecz.helpers.buildAnnotatedVerseText
 import io.github.ptimulka.miecz.helpers.createPolishSpeechIntent
@@ -98,6 +100,7 @@ fun RepeatVerseRiddleScreen(
     }
 
     val state by vm.state.collectAsStateWithLifecycle()
+    var showLongVerseInfoDialog by rememberSaveable { mutableStateOf(false) }
     val speechRecognizer = remember { SpeechRecognizer.createSpeechRecognizer(context) }
     var lastAttemptPreferredOffline by remember { mutableStateOf(false) }
 
@@ -169,9 +172,13 @@ fun RepeatVerseRiddleScreen(
 
     Box(Modifier.fillMaxSize()) {
         if (isLandscape) {
-            LandscapeRepeatLayout(state, sectionVerses, onMicClick, vm::onEvent)
+            LandscapeRepeatLayout(state, sectionVerses, onMicClick, vm::onEvent, onLongVerseInfoClick = { showLongVerseInfoDialog = true })
         } else {
-            PortraitRepeatLayout(state, sectionVerses, onMicClick, vm::onEvent)
+            PortraitRepeatLayout(state, sectionVerses, onMicClick, vm::onEvent, onLongVerseInfoClick = { showLongVerseInfoDialog = true })
+        }
+
+        if (showLongVerseInfoDialog) {
+            LongVerseRetentionInfoDialog(onDismiss = { showLongVerseInfoDialog = false })
         }
 
         val hint = state.hintBitmap
@@ -201,7 +208,8 @@ private fun PortraitRepeatLayout(
     state: RepeatVerseUiState,
     sectionVerses: List<Verse>,
     onMicClick: () -> Unit,
-    onEvent: (RepeatVerseEvent) -> Unit
+    onEvent: (RepeatVerseEvent) -> Unit,
+    onLongVerseInfoClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -213,7 +221,8 @@ private fun PortraitRepeatLayout(
             Modifier.fillMaxWidth().weight(1f),
             state,
             sectionVerses,
-            onEvent
+            onEvent,
+            onLongVerseInfoClick = onLongVerseInfoClick
         )
         Spacer(modifier = Modifier.height(12.dp))
         
@@ -234,7 +243,8 @@ private fun LandscapeRepeatLayout(
     state: RepeatVerseUiState,
     sectionVerses: List<Verse>,
     onMicClick: () -> Unit,
-    onEvent: (RepeatVerseEvent) -> Unit
+    onEvent: (RepeatVerseEvent) -> Unit,
+    onLongVerseInfoClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -246,7 +256,8 @@ private fun LandscapeRepeatLayout(
             state,
             sectionVerses,
             onEvent,
-            isLandscape = true
+            isLandscape = true,
+            onLongVerseInfoClick = onLongVerseInfoClick
         )
         Spacer(modifier = Modifier.width(12.dp))
         Column(
@@ -272,7 +283,8 @@ private fun GalleryArea(
     state: RepeatVerseUiState,
     sectionVerses: List<Verse>,
     onEvent: (RepeatVerseEvent) -> Unit,
-    isLandscape: Boolean = false
+    isLandscape: Boolean = false,
+    onLongVerseInfoClick: () -> Unit
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(5),
@@ -286,9 +298,11 @@ private fun GalleryArea(
                 bitmap = bitmap,
                 sigla = "${verse.book} ${verse.chapter},${verse.number}",
                 isSelected = state.selectedIndex == index,
-                isMaxed = state.maxedIndices.contains(index), 
+                isMaxed = state.maxedIndices.contains(index),
+                isLong = verse.isLong,
                 onClick = { onEvent(RepeatVerseEvent.SelectVerse(index)) },
-                onZoom = { onEvent(RepeatVerseEvent.ShowZoom(index)) }
+                onZoom = { onEvent(RepeatVerseEvent.ShowZoom(index)) },
+                onLongVerseInfoClick = onLongVerseInfoClick
             )
         }
     }
@@ -421,8 +435,10 @@ private fun VerseThumbnail(
     sigla: String,
     isSelected: Boolean,
     isMaxed: Boolean,
+    isLong: Boolean,
     onClick: () -> Unit,
-    onZoom: () -> Unit
+    onZoom: () -> Unit,
+    onLongVerseInfoClick: () -> Unit
 ) {
     val accent = colorResource(R.color.game_button_yellow_dark)
     Box(
@@ -479,6 +495,19 @@ private fun VerseThumbnail(
                 )
             }
         }
+
+        if (isLong) {
+            Image(
+                painter = painterResource(id = R.drawable.buttonheart),
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(4.dp)
+                    .size(16.dp)
+                    .clickable { onLongVerseInfoClick() }
+            )
+        }
+
         if (isMaxed) {
             Box(
                 modifier = Modifier

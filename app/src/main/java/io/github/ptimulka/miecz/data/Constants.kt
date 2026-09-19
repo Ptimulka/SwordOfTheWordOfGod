@@ -28,6 +28,7 @@ object Constants {
     const val RAYS_STEP_RETENTION = 8
     
     // --- Verse Repeats ---
+    const val LONG_VERSE_WORD_THRESHOLD = 20
     const val MAX_VERSE_REPEATS_PER_DAY = 10
     const val REPEAT_THRESHOLD_LOW = 5
     const val REPEAT_THRESHOLD_MEDIUM = 8
@@ -35,6 +36,9 @@ object Constants {
     const val REPEAT_REWARD_LOW = 1
     const val REPEAT_REWARD_MEDIUM = 2
     const val REPEAT_REWARD_HIGH = 3
+    const val REPEAT_REWARD_LONG_LOW = 2
+    const val REPEAT_REWARD_LONG_MEDIUM = 3
+    const val REPEAT_REWARD_LONG_HIGH = 4
     
     // --- Timeouts & Delays ---
     val SHIELD_REFRESH_DELAY = 1.minutes

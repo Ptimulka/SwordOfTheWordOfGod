@@ -55,13 +55,14 @@ class RepeatVerseViewModelTest {
 
     @Test
     fun `processResult with high similarity increments repeats`() = runTest {
-        whenever(progressRepo.incrementVerseRepeatToday(any(), any())).thenReturn(1)
+        whenever(progressRepo.incrementVerseRepeatToday(any(), any(), any())).thenReturn(1)
+        whenever(progressRepo.retentionContributionForRepeats(any(), any())).thenReturn(0)
         val viewModel = RepeatVerseViewModel(args, progressRepo, mnemonicRepo, testDispatcher)
         
         viewModel.onEvent(RepeatVerseEvent.SelectVerse(0))
         viewModel.onEvent(RepeatVerseEvent.ProcessResult("Początek"))
         
-        verify(progressRepo).incrementVerseRepeatToday(1, 0)
+        verify(progressRepo).incrementVerseRepeatToday(eq(1), eq(0), eq(false))
         assertEquals(1, viewModel.state.value.repeatCount)
     }
 
@@ -72,7 +73,7 @@ class RepeatVerseViewModelTest {
         viewModel.onEvent(RepeatVerseEvent.SelectVerse(0))
         viewModel.onEvent(RepeatVerseEvent.ProcessResult("Koniec"))
         
-        verify(progressRepo, never()).incrementVerseRepeatToday(any(), any())
+        verify(progressRepo, never()).incrementVerseRepeatToday(any(), any(), any())
     }
 
     @Test
