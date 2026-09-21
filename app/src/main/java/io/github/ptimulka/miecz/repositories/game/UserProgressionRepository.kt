@@ -83,6 +83,12 @@ class UserProgressionRepository @Inject constructor(
         return if (id == 0) -1 else id
     }
 
+    override fun consumePendingStreakAnimation(): Boolean {
+        val has = store.latest.pendingStreakAnimation
+        if (has) store.update { it.toBuilder().setPendingStreakAnimation(false).build() }
+        return has
+    }
+
     override fun clearAllProgress() {
         store.update { UserProgressSerializer.defaultValue }
     }

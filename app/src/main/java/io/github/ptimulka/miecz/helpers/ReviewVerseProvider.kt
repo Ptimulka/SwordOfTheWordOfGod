@@ -49,7 +49,9 @@ object ReviewVerseProvider {
                         "group%03d_%d_%s%d-%s.webp".format(id2, j + 1, v.book, v.chapter, v.number.replace(".", "-"))
                     }
                     val nameMap = allVerses.zip(allNames).toMap()
-                    val sectionVerses = allVerses.distinct()
+                    val sectionVerses = allVerses.distinct().mapIndexed { index, verse ->
+                        verse.copy(originalSectionId = sectionId, originalVerseIndex = index)
+                    }
                     val sectionAssetNames = sectionVerses.map { nameMap[it] ?: "" }
                     if (sectionVerses.isNotEmpty()) {
                         sectionsList.add(sectionVerses to sectionAssetNames)

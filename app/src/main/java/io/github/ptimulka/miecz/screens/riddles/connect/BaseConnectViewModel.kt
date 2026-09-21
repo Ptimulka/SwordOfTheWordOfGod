@@ -39,7 +39,9 @@ abstract class BaseConnectViewModel(
             val bitmaps = mutableMapOf<Int, Bitmap>()
             verses.forEachIndexed { index, verse ->
                 val assetName = assetNames.getOrNull(index)
-                mnemonicRepo.loadActivePicture(sectionId, index, assetName)?.let {
+                val effectiveSectionId = verse.originalSectionId ?: sectionId
+                val effectiveVerseIndex = verse.originalVerseIndex ?: index
+                mnemonicRepo.loadActivePicture(effectiveSectionId, effectiveVerseIndex, assetName)?.let {
                     bitmaps[verse.hashCode()] = it
                 }
             }

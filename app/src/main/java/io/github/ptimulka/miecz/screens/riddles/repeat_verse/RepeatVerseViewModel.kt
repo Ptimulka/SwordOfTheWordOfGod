@@ -45,8 +45,10 @@ class RepeatVerseViewModel @AssistedInject constructor(
 
     private fun loadAllThumbnails() {
         viewModelScope.launch(ioDispatcher) {
-            val thumbs = args.sectionVerses.mapIndexed { index, _ ->
-                mnemonicRepo.loadActivePicture(args.sectionId, index, args.assetNames.getOrNull(index))
+            val thumbs = args.sectionVerses.mapIndexed { index, verse ->
+                val effectiveSectionId = verse.originalSectionId ?: args.sectionId
+                val effectiveVerseIndex = verse.originalVerseIndex ?: index
+                mnemonicRepo.loadActivePicture(effectiveSectionId, effectiveVerseIndex, args.assetNames.getOrNull(index))
             }
             launch(Dispatchers.Main) {
                 _state.update { it.copy(thumbnails = thumbs) }
@@ -90,14 +92,19 @@ class RepeatVerseViewModel @AssistedInject constructor(
         val verse = args.sectionVerses.getOrNull(idx) ?: return
 
         val userWords = normalizeVerseText(recognized).split(' ').filter { it.isNotEmpty() }
-        val cleanVerse = verse.text.replace("_", " ").replace("*", "")
-        val verseWords = normalizeVerseText(cleanVerse).split(' ').filter { it.isNotEmpty() }
-        val similarity = calculateWordSimilarity(userWords, verseWords)
+        val verseWithSpaces = verse.text.replace("_", " ")
+        val wordsWithOptional = normalizeVerseText(verseWithSpaces.replace("*", "")).split(' ').filter { it.isNotEmpty() }
+        val wordsWithoutOptional = normalizeVerseText(verseWithSpaces.replace(Regex("\\*.*?\\*"), "")).split(' ').filter { it.isNotEmpty() }
+
+        val similarity1 = calculateWordSimilarity(userWords, wordsWithOptional)
+        val similarity2 = calculateWordSimilarity(userWords, wordsWithoutOptional)
+
+        val similarity = if (similarity1 > similarity2) similarity1 else similarity2
 
         _state.update { it.copy(lastSimilarity = similarity, partialText = "", isListening = false) }
 
         if (similarity >= SIMILARITY_THRESHOLD) {
-            val newCount = progressRepository.incrementVerseRepeatToday(args.sectionId, idx)
+            val newCount = progressRepository.incrementVerseRepeatToday(args.sectionId, idx, verse.isLong)
             progressRepository.incrementTotalAloudRepeats()
             progressRepository.updateDayStreak()
             _state.update { it.copy(repeatCount = newCount) }
@@ -106,12 +113,17 @@ class RepeatVerseViewModel @AssistedInject constructor(
     }
 
     private fun updateRetentionState() {
+        val selectedIdx = _state.value.selectedIndex
+        val currentVerse = selectedIdx?.let { args.sectionVerses.getOrNull(it) }
         val count = _state.value.repeatCount
-        val verseRetention = progressRepository.retentionContributionForRepeats(count)
+        val verseRetention = currentVerse?.let { 
+            progressRepository.retentionContributionForRepeats(count, it.isLong)
+        } ?: 0
         
-        val sectionRetention = args.sectionVerses.indices.sumOf {
+        val sectionRetention = args.sectionVerses.indices.sumOf { i ->
             progressRepository.retentionContributionForRepeats(
-                progressRepository.getVerseRepeatCountToday(args.sectionId, it)
+                progressRepository.getVerseRepeatCountToday(args.sectionId, i),
+                args.sectionVerses[i].isLong
             )
         }
         

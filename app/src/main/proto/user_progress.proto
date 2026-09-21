@@ -34,4 +34,5 @@ message UserProgress {
   int32 repeat_verse_index = 15;
   map<int32, SectionProgress> sections = 16;
   map<int32, string> custom_sections = 17;
+  bool pending_streak_animation = 18;
 }

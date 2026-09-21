@@ -32,8 +32,17 @@ data class Verse(
     val book: String,
     val chapter: Int,
     val number: String,
-    val text: String
-) : Parcelable
+    val text: String,
+    val originalSectionId: Int? = null,
+    val originalVerseIndex: Int? = null
+) : Parcelable {
+    val isLong: Boolean
+        get() = text.replace("_", " ")
+            .replace(Regex("\\*.*?\\*"), "")
+            .split(Regex("\\s+"))
+            .filter { it.isNotBlank() }
+            .size >= Constants.LONG_VERSE_WORD_THRESHOLD
+}
 
 @Parcelize
 data class VerseGroup(

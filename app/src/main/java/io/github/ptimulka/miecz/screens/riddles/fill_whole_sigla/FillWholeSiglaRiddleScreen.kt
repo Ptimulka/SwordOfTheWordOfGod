@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -151,6 +152,8 @@ private fun PortraitFillWholeSiglaLayout(
     state: FillWholeSiglaUiState,
     onEvent: (FillWholeSiglaEvent) -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -168,7 +171,10 @@ private fun PortraitFillWholeSiglaLayout(
         Spacer(Modifier.height(16.dp))
         RiddleCheckButton(
             enabled = state.allFieldsFilled,
-            onCheck = { onEvent(FillWholeSiglaEvent.Check) },
+            onCheck = {
+                keyboardController?.hide()
+                onEvent(FillWholeSiglaEvent.Check)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
@@ -182,6 +188,8 @@ private fun LandscapeFillWholeSiglaLayout(
     state: FillWholeSiglaUiState,
     onEvent: (FillWholeSiglaEvent) -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Row(
         modifier = Modifier
             .fillMaxSize()
@@ -193,7 +201,7 @@ private fun LandscapeFillWholeSiglaLayout(
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.Center
     ) {
-        VerseDisplay(Modifier.weight(2f), verseText)
+        VerseDisplay(Modifier.weight(1f), verseText)
         Spacer(Modifier.width(16.dp))
         Column(
             modifier = Modifier.weight(1f),
@@ -204,7 +212,10 @@ private fun LandscapeFillWholeSiglaLayout(
             Spacer(Modifier.height(32.dp))
             RiddleCheckButton(
                 enabled = state.allFieldsFilled,
-                onCheck = { onEvent(FillWholeSiglaEvent.Check) },
+                onCheck = {
+                    keyboardController?.hide()
+                    onEvent(FillWholeSiglaEvent.Check)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
@@ -218,6 +229,7 @@ private fun WholeSiglaInputArea(
     state: FillWholeSiglaUiState,
     onEvent: (FillWholeSiglaEvent) -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     val chapterFocusRequester = remember { FocusRequester() }
     val verseFocusRequester = remember { FocusRequester() }
 
@@ -258,6 +270,15 @@ private fun WholeSiglaInputArea(
                 onValueChange = { onEvent(FillWholeSiglaEvent.UpdateVerse(it)) },
                 isError = state.wrongIndices.contains(2),
                 keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Done,
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
+                        if (state.allFieldsFilled) {
+                            onEvent(FillWholeSiglaEvent.Check)
+                        }
+                    }
+                ),
                 focusRequester = verseFocusRequester
             )
         }

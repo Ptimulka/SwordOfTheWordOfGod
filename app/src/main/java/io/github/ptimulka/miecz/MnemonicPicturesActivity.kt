@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -86,6 +87,7 @@ class MnemonicPicturesActivity : ComponentActivity() {
                 }
 
                 val state by vm.state.collectAsStateWithLifecycle()
+                val listState = rememberLazyListState()
 
                 val imageLauncher = rememberLauncherForActivityResult(
                     ActivityResultContracts.GetContent()
@@ -122,7 +124,7 @@ class MnemonicPicturesActivity : ComponentActivity() {
                 ) { innerPadding ->
                     Box(modifier = Modifier.padding(innerPadding)) {
                         when (state.currentScreen) {
-                            MnemonicScreen.LIST -> MnemonicPicturesListScreen(state, vm::onEvent)
+                            MnemonicScreen.LIST -> MnemonicPicturesListScreen(state, listState, vm::onEvent)
                             MnemonicScreen.DRAWING -> DrawingScreen(state, vm::onEvent)
                             MnemonicScreen.IMPORT -> ImageImportEditScreen(state, vm::onEvent)
                         }

@@ -12,4 +12,5 @@ sealed interface GameLevelEvent {
     data object ConfirmGroupSelection : GameLevelEvent
     data class ShowSectionVerses(val section: Section?) : GameLevelEvent
     data class ToggleGroupSelection(val groupId: Int) : GameLevelEvent
+    data object ClearLampAnimation : GameLevelEvent
 }

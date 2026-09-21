@@ -3,6 +3,7 @@ package io.github.ptimulka.miecz.screens.riddles.fill_sigla
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -13,8 +14,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -146,6 +149,8 @@ private fun PortraitFillSiglaLayout(
     state: FillSiglaUiState,
     onEvent: (FillSiglaEvent) -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -159,11 +164,29 @@ private fun PortraitFillSiglaLayout(
     ) {
         VerseDisplay(Modifier, verseText)
         Spacer(Modifier.height(16.dp))
-        SiglaInputArea(fillType, state.userInput, { onEvent(FillSiglaEvent.UpdateInput(it)) }, book, chapter, number)
+        SiglaInputArea(
+            fillType = fillType,
+            userInput = state.userInput,
+            onUserInputChanged = { onEvent(FillSiglaEvent.UpdateInput(it)) },
+            book = book,
+            chapter = chapter,
+            number = number,
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    keyboardController?.hide()
+                    if (state.userInput.isNotBlank()) {
+                        onEvent(FillSiglaEvent.Check)
+                    }
+                }
+            )
+        )
         Spacer(Modifier.height(16.dp))
         RiddleCheckButton(
             enabled = state.userInput.isNotBlank(),
-            onCheck = { onEvent(FillSiglaEvent.Check) },
+            onCheck = {
+                keyboardController?.hide()
+                onEvent(FillSiglaEvent.Check)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
@@ -181,6 +204,8 @@ private fun LandscapeFillSiglaLayout(
     state: FillSiglaUiState,
     onEvent: (FillSiglaEvent) -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Row(
         modifier = Modifier
             .fillMaxSize()
@@ -192,18 +217,36 @@ private fun LandscapeFillSiglaLayout(
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.Center
     ) {
-        VerseDisplay(Modifier.weight(2f), verseText)
+        VerseDisplay(Modifier.weight(1f), verseText)
         Spacer(Modifier.width(16.dp))
         Column(
             modifier = Modifier.weight(1f),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SiglaInputArea(fillType, state.userInput, { onEvent(FillSiglaEvent.UpdateInput(it)) }, book, chapter, number)
+            SiglaInputArea(
+                fillType = fillType,
+                userInput = state.userInput,
+                onUserInputChanged = { onEvent(FillSiglaEvent.UpdateInput(it)) },
+                book = book,
+                chapter = chapter,
+                number = number,
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        keyboardController?.hide()
+                        if (state.userInput.isNotBlank()) {
+                            onEvent(FillSiglaEvent.Check)
+                        }
+                    }
+                )
+            )
             Spacer(Modifier.height(32.dp))
             RiddleCheckButton(
                 enabled = state.userInput.isNotBlank(),
-                onCheck = { onEvent(FillSiglaEvent.Check) },
+                onCheck = {
+                    keyboardController?.hide()
+                    onEvent(FillSiglaEvent.Check)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
@@ -219,7 +262,8 @@ private fun SiglaInputArea(
     onUserInputChanged: (String) -> Unit,
     book: String,
     chapter: Int,
-    number: String
+    number: String,
+    keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
     val captionRes = when (fillType) {
         FillSiglaType.BOOK -> R.string.fill_book_caption
@@ -241,17 +285,31 @@ private fun SiglaInputArea(
         ) {
             when (fillType) {
                 FillSiglaType.BOOK -> {
-                    SiglaTextField(value = userInput, onValueChange = onUserInputChanged)
+                    SiglaTextField(
+                        value = userInput,
+                        onValueChange = onUserInputChanged,
+                        keyboardActions = keyboardActions
+                    )
                     Text(", $chapter,$number", style = MaterialTheme.typography.headlineSmall)
                 }
                 FillSiglaType.CHAPTER -> {
                     Text("$book ", style = MaterialTheme.typography.headlineSmall)
-                    SiglaTextField(value = userInput, onValueChange = onUserInputChanged, keyboardType = KeyboardType.Number)
+                    SiglaTextField(
+                        value = userInput,
+                        onValueChange = onUserInputChanged,
+                        keyboardType = KeyboardType.Number,
+                        keyboardActions = keyboardActions
+                    )
                     Text(",$number", style = MaterialTheme.typography.headlineSmall)
                 }
                 FillSiglaType.VERSE -> {
                     Text("$book $chapter,", style = MaterialTheme.typography.headlineSmall)
-                    SiglaTextField(value = userInput, onValueChange = onUserInputChanged, keyboardType = KeyboardType.Number)
+                    SiglaTextField(
+                        value = userInput,
+                        onValueChange = onUserInputChanged,
+                        keyboardType = KeyboardType.Number,
+                        keyboardActions = keyboardActions
+                    )
                 }
             }
         }
@@ -270,14 +328,16 @@ private fun SiglaInputArea(
 fun SiglaTextField(
     value: String,
     onValueChange: (String) -> Unit,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = Modifier.width(100.dp),
         textStyle = MaterialTheme.typography.headlineSmall.copy(textAlign = TextAlign.Center),
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Done),
+        keyboardActions = keyboardActions,
         singleLine = true
     )
 }

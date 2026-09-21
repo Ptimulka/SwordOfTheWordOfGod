@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -39,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -155,6 +157,8 @@ private fun FillWordsContent(
     isEasy: Boolean,
     onEvent: (FillWordsEvent) -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -192,6 +196,7 @@ private fun FillWordsContent(
             verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)
         ) {
             var inputIndex = 0
+            val wordsToFillCount = state.verseParts.count { it is VersePart.WordToFill }
             state.verseParts.forEach { part ->
                 when (part) {
                     is VersePart.StaticText -> {
@@ -204,6 +209,7 @@ private fun FillWordsContent(
                     }
                     is VersePart.WordToFill -> {
                         val currentIndex = inputIndex
+                        val isLast = currentIndex == wordsToFillCount - 1
                         CompactOutlinedTextField(
                             value = state.userInputs.getOrElse(currentIndex) { "" },
                             onValueChange = { onEvent(FillWordsEvent.UpdateInput(currentIndex, it)) },
@@ -219,7 +225,17 @@ private fun FillWordsContent(
                             modifier = Modifier
                                 .width((part.correctWord.length * 12).dp + 32.dp)
                                 .height(40.dp),
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                            keyboardOptions = KeyboardOptions(imeAction = if (isLast) ImeAction.Done else ImeAction.Next),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    if (isLast) {
+                                        keyboardController?.hide()
+                                        if (state.allFieldsFilled) {
+                                            onEvent(FillWordsEvent.Check)
+                                        }
+                                    }
+                                }
+                            )
                         )
                         inputIndex++
                     }
@@ -235,7 +251,13 @@ private fun FillWordsContent(
 
         RiddleCheckButton(
             enabled = state.allFieldsFilled,
-            onCheck = { onEvent(FillWordsEvent.Check) }
+            onCheck = {
+                keyboardController?.hide()
+                onEvent(FillWordsEvent.Check)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
         )
     }
 }
@@ -247,7 +269,8 @@ private fun CompactOutlinedTextField(
     modifier: Modifier = Modifier,
     isError: Boolean,
     placeholder: @Composable () -> Unit,
-    keyboardOptions: KeyboardOptions
+    keyboardOptions: KeyboardOptions,
+    keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -264,6 +287,7 @@ private fun CompactOutlinedTextField(
         modifier = modifier,
         singleLine = true,
         keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
         textStyle = MaterialTheme.typography.bodyMedium.copy(
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurface

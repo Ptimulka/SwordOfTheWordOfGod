@@ -212,11 +212,17 @@ private fun SectionTopButtonsArea(
             Text(text = stringResource(id = R.string.draw_pictures_button_caption), textAlign = TextAlign.Center, fontSize = 10.sp, color = Color.Gray)
         }
     }
+    val isSectionFinished = sectionState.areSpecialChallengesFinished
+    val dailyRetentionMaxed = sectionState.dailyRetentionMaxed
+    val showRetention = !isLocked && !isSectionFinished
+
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.Top) {
         SquareGameButton(
             iconRes = if (isLocked) R.drawable.buttonsquarepartslow else R.drawable.buttonsquareparts,
             labelRes = R.string.connect_parts_caption,
             isLocked = isLocked,
+            retentionPercent = sectionState.connectPartsRetentionPercent,
+            showRetentionIndicator = showRetention,
             recordText = if (bestTimeParts >= 0) stringResource(R.string.best_time, formatTime(bestTimeParts)) else null,
             onClick = {
                 launchGame(
@@ -231,6 +237,8 @@ private fun SectionTopButtonsArea(
             iconRes = if (isLocked) R.drawable.buttonsquarepairslow else R.drawable.buttonsquarepairs,
             labelRes = R.string.connect_pairs_caption,
             isLocked = isLocked,
+            retentionPercent = sectionState.connectPairsRetentionPercent,
+            showRetentionIndicator = showRetention,
             recordText = if (bestTimePairs >= 0) stringResource(R.string.best_time, formatTime(bestTimePairs)) else null,
             onClick = {
                 launchGame(
@@ -244,8 +252,6 @@ private fun SectionTopButtonsArea(
     }
     Spacer(modifier = Modifier.height(8.dp))
     val retention = sectionState.retention
-    val isSectionFinished = sectionState.areSpecialChallengesFinished
-    val dailyRetentionMaxed = sectionState.dailyRetentionMaxed
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -255,6 +261,8 @@ private fun SectionTopButtonsArea(
             iconRes = if (isLocked) R.drawable.buttonsquarespeaklow else R.drawable.buttonsquarespeak,
             labelRes = R.string.repeat_verse_button_caption,
             isLocked = isLocked,
+            retentionPercent = sectionState.repeatAloudRetentionPercent,
+            showRetentionIndicator = showRetention,
             onClick = {
                 launchGame(
                     context,

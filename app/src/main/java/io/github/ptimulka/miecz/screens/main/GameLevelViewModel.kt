@@ -73,10 +73,12 @@ class GameLevelViewModel @AssistedInject constructor(
             GameLevelEvent.ConfirmGroupSelection -> confirmGroupSelection()
             is GameLevelEvent.ShowSectionVerses -> _state.update { it.copy(selectedSectionForDialog = event.section) }
             is GameLevelEvent.ToggleGroupSelection -> toggleGroupSelection(event.groupId)
+            GameLevelEvent.ClearLampAnimation -> _state.update { it.copy(animateLampProgress = false) }
         }
     }
 
     private suspend fun refreshProgress() {
+        _state.update { it.copy(isLoading = true) }
         val usedGroupIds = progressRepo.getAllUsedGroupIds()
         val allGroups = groupsRepo.loadVerseGroups()
         val baseSections = sectionRepo.loadInitialSections()
@@ -89,14 +91,24 @@ class GameLevelViewModel @AssistedInject constructor(
             val isSiglaFinished = progressRepo.isSiglaFinished(section.id)
             val isVerseFinished = progressRepo.isVerseFinished(section.id)
             
-            val connectsDone = progressRepo.isConnectDoneToday(section.id, RiddleType.CONNECT_PARTS.name) &&
-                              progressRepo.isConnectDoneToday(section.id, RiddleType.CONNECT_PAIRS.name)
+            val isConnectPartsDoneToday = progressRepo.isConnectDoneToday(section.id, RiddleType.CONNECT_PARTS.name)
+            val isConnectPairsDoneToday = progressRepo.isConnectDoneToday(section.id, RiddleType.CONNECT_PAIRS.name)
             
-            val versesMaxed = section.verses.indices.all {
+            val verseContributions = section.verses.indices.map {
                 progressRepo.retentionContributionForRepeats(
-                    progressRepo.getVerseRepeatCountToday(section.id, it)
-                ) >= Constants.REPEAT_REWARD_HIGH
+                    progressRepo.getVerseRepeatCountToday(section.id, it),
+                    section.verses[it].isLong
+                )
             }
+            val totalEarnedRepeats = verseContributions.sum()
+            val totalPossibleRepeats = section.verses.sumOf {
+                if (it.isLong) Constants.REPEAT_REWARD_LONG_HIGH else Constants.REPEAT_REWARD_HIGH
+            }
+            val repeatAloudPercent = if (totalPossibleRepeats > 0) {
+                (totalEarnedRepeats * 100) / totalPossibleRepeats
+            } else 0
+            
+            val isRepeatAloudDoneToday = repeatAloudPercent >= 100
 
             val areChallengesFinished = isSiglaFinished && isVerseFinished
             val effectiveRetention = if (areChallengesFinished) Constants.MAX_RETENTION else retention
@@ -142,7 +154,13 @@ class GameLevelViewModel @AssistedInject constructor(
                 retention = retention,
                 isSiglaFinished = isSiglaFinished,
                 isVerseFinished = isVerseFinished,
-                dailyRetentionMaxed = connectsDone && versesMaxed,
+                dailyRetentionMaxed = isConnectPartsDoneToday && isConnectPairsDoneToday && isRepeatAloudDoneToday,
+                connectPartsRetentionPercent = if (isConnectPartsDoneToday) 100 else 0,
+                connectPairsRetentionPercent = if (isConnectPairsDoneToday) 100 else 0,
+                repeatAloudRetentionPercent = repeatAloudPercent,
+                isConnectPartsDoneToday = isConnectPartsDoneToday,
+                isConnectPairsDoneToday = isConnectPairsDoneToday,
+                isRepeatAloudDoneToday = isRepeatAloudDoneToday,
                 bestTimeParts = progressRepo.getBestTime(section.id, RiddleType.CONNECT_PARTS.name),
                 bestTimePairs = progressRepo.getBestTime(section.id, RiddleType.CONNECT_PAIRS.name)
             )
@@ -150,6 +168,7 @@ class GameLevelViewModel @AssistedInject constructor(
 
         _state.update { 
             it.copy(
+                isLoading = false,
                 sections = fullSections,
                 sectionStates = sectionStates,
                 allVerseGroups = allGroups,
@@ -273,10 +292,12 @@ class GameLevelViewModel @AssistedInject constructor(
     private fun checkPendingNotifications() {
         val repeatHint = progressRepo.consumePendingRepeatHint()
         val unlocked = progressRepo.consumePendingSectionUnlocked()
+        val streakAnimate = progressRepo.consumePendingStreakAnimation()
         
-        if (repeatHint || unlocked != -1) {
+        if (repeatHint || unlocked != -1 || streakAnimate) {
             _state.update { 
                 it.copy(
+                    animateLampProgress = streakAnimate,
                     progress = it.progress.copy(
                         showRepeatHint = repeatHint,
                         unlockedSectionId = unlocked

@@ -24,6 +24,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,10 +39,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -181,6 +185,8 @@ private fun PortraitFillWholeVerseLayout(
     onEvent: (FillWholeVerseEvent) -> Unit,
     speechLauncher: androidx.activity.result.ActivityResultLauncher<android.content.Intent>
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -200,7 +206,15 @@ private fun PortraitFillWholeVerseLayout(
             userInput = state.userInput,
             onValueChange = { onEvent(FillWholeVerseEvent.UpdateInput(it)) },
             isLandscape = false,
-            speechLauncher = speechLauncher
+            speechLauncher = speechLauncher,
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    keyboardController?.hide()
+                    if (state.userInput.isNotBlank()) {
+                        onEvent(FillWholeVerseEvent.Check)
+                    }
+                }
+            )
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -210,8 +224,11 @@ private fun PortraitFillWholeVerseLayout(
         Spacer(modifier = Modifier.height(8.dp))
         RiddleCheckButton(
             enabled = state.userInput.isNotBlank(),
-            onCheck = { onEvent(FillWholeVerseEvent.Check) },
-            Modifier
+            onCheck = {
+                keyboardController?.hide()
+                onEvent(FillWholeVerseEvent.Check)
+            },
+            modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
         )
@@ -224,6 +241,8 @@ private fun LandscapeFillWholeVerseLayout(
     onEvent: (FillWholeVerseEvent) -> Unit,
     speechLauncher: androidx.activity.result.ActivityResultLauncher<android.content.Intent>
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -243,7 +262,15 @@ private fun LandscapeFillWholeVerseLayout(
             userInput = state.userInput,
             onValueChange = { onEvent(FillWholeVerseEvent.UpdateInput(it)) },
             isLandscape = true,
-            speechLauncher = speechLauncher
+            speechLauncher = speechLauncher,
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    keyboardController?.hide()
+                    if (state.userInput.isNotBlank()) {
+                        onEvent(FillWholeVerseEvent.Check)
+                    }
+                }
+            )
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -253,7 +280,10 @@ private fun LandscapeFillWholeVerseLayout(
         Spacer(modifier = Modifier.height(8.dp))
         RiddleCheckButton(
             enabled = state.userInput.isNotBlank(),
-            onCheck = { onEvent(FillWholeVerseEvent.Check) },
+            onCheck = {
+                keyboardController?.hide()
+                onEvent(FillWholeVerseEvent.Check)
+            },
             Modifier
                 .fillMaxWidth()
                 .height(50.dp)
@@ -299,7 +329,8 @@ private fun InputArea(
     userInput: String,
     onValueChange: (String) -> Unit,
     isLandscape: Boolean,
-    speechLauncher: androidx.activity.result.ActivityResultLauncher<android.content.Intent>
+    speechLauncher: androidx.activity.result.ActivityResultLauncher<android.content.Intent>,
+    keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
     val textFieldHeight = if(isLandscape) 130.dp else 290.dp
     val extraPrompt = stringResource(R.string.speak_now)
@@ -311,6 +342,8 @@ private fun InputArea(
             .fillMaxWidth()
             .height(textFieldHeight),
         label = { Text(stringResource(id = R.string.fill_whole_verse_caption)) },
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = keyboardActions,
         trailingIcon = {
             IconButton(onClick = {
                 speechLauncher.launch(io.github.ptimulka.miecz.helpers.createPolishSpeechIntent(prompt = extraPrompt))

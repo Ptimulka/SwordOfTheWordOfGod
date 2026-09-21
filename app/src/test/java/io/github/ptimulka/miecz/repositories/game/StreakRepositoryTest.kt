@@ -70,4 +70,51 @@ class StreakRepositoryTest {
         assertEquals(2, repository.getCurrentDayStreak())
         assertEquals(today, dataFlow.value.lastPlayedDate)
     }
+
+    @Test
+    fun `getCurrentDayStreak returns 0 when more than one day passed since last played`() = runTest {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val today = "2026-08-08"
+        val lastPlayed = "2026-08-06" // Skipped 2026-08-07
+        
+        dataFlow.value = dataFlow.value.toBuilder()
+            .setLastPlayedDate(lastPlayed)
+            .setDayStreak(5)
+            .build()
+            
+        currentTime = sdf.parse(today)!!.time
+        
+        assertEquals(0, repository.getCurrentDayStreak())
+    }
+
+    @Test
+    fun `getCurrentDayStreak returns stored streak when last played yesterday`() = runTest {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val today = "2026-08-07"
+        val yesterday = "2026-08-06"
+        
+        dataFlow.value = dataFlow.value.toBuilder()
+            .setLastPlayedDate(yesterday)
+            .setDayStreak(5)
+            .build()
+            
+        currentTime = sdf.parse(today)!!.time
+        
+        assertEquals(5, repository.getCurrentDayStreak())
+    }
+
+    @Test
+    fun `getCurrentDayStreak returns stored streak when last played today`() = runTest {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val today = "2026-08-07"
+        
+        dataFlow.value = dataFlow.value.toBuilder()
+            .setLastPlayedDate(today)
+            .setDayStreak(5)
+            .build()
+            
+        currentTime = sdf.parse(today)!!.time
+        
+        assertEquals(5, repository.getCurrentDayStreak())
+    }
 }

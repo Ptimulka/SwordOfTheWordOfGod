@@ -5,6 +5,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -217,21 +219,70 @@ fun LevelButton(
 }
 
 @Composable
-fun SquareGameButton(iconRes: Int, labelRes: Int, isLocked: Boolean, recordText: String? = null, onClick: () -> Unit) {
+fun SquareGameButton(
+    iconRes: Int,
+    labelRes: Int,
+    isLocked: Boolean,
+    retentionPercent: Int = 0,
+    showRetentionIndicator: Boolean = true,
+    recordText: String? = null,
+    onClick: () -> Unit
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.width(100.dp).then(if (!isLocked) Modifier.clickable { onClick() } else Modifier)
+        modifier = Modifier
+            .width(120.dp)
+            .then(if (!isLocked) Modifier.clickable { onClick() } else Modifier)
     ) {
-        Image(painter = painterResource(id = iconRes), contentDescription = null, modifier = Modifier.size(100.dp), contentScale = ContentScale.Fit)
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = stringResource(id = labelRes),
-            textAlign = TextAlign.Center,
-            fontSize = 10.sp,
-            color = Color.Gray,
-            lineHeight = 11.sp,
-            modifier = Modifier.width(100.dp)
+        Image(
+            painter = painterResource(id = iconRes),
+            contentDescription = null,
+            modifier = Modifier.size(100.dp),
+            contentScale = ContentScale.Fit
         )
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp)
+        ) {
+            Text(
+                text = stringResource(id = labelRes),
+                textAlign = TextAlign.Center,
+                fontSize = 10.sp,
+                color = Color.Gray,
+                lineHeight = 11.sp,
+                modifier = Modifier.weight(1f, fill = false)
+            )
+            if (showRetentionIndicator) {
+                Spacer(modifier = Modifier.width(4.dp))
+                Box(modifier = Modifier.size(16.dp), contentAlignment = Alignment.Center) {
+                    Image(
+                        painter = painterResource(id = R.drawable.buttonheartlow),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Fit
+                    )
+                    val fraction = (retentionPercent.coerceIn(0, 100)) / 100f
+                    if (fraction > 0f) {
+                        Image(
+                            painter = painterResource(id = R.drawable.buttonheart),
+                            contentDescription = null,
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .drawWithContent {
+                                    clipRect(top = size.height * (1f - fraction)) {
+                                        this@drawWithContent.drawContent()
+                                    }
+                                }
+                        )
+                    }
+                }
+            }
+        }
         if (recordText != null) {
             Text(
                 text = recordText,

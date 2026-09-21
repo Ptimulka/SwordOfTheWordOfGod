@@ -22,11 +22,11 @@ interface ProgressRepository {
     fun isConnectDoneToday(sectionId: Int, riddleType: String): Boolean
     fun awardRetentionForConnectLevel(sectionId: Int, riddleType: String): Int
     fun awardRetentionForStandardLevel(sectionId: Int, levelNumber: Int): Int
-    fun retentionContributionForRepeats(count: Int): Int
+    fun retentionContributionForRepeats(count: Int, isLongVerse: Boolean = false): Int
 
     // ── Aloud verse repeats (per day) ─────────────────────────────────────────
     fun getVerseRepeatCountToday(sectionId: Int, verseIndex: Int): Int
-    fun incrementVerseRepeatToday(sectionId: Int, verseIndex: Int): Int
+    fun incrementVerseRepeatToday(sectionId: Int, verseIndex: Int, isLongVerse: Boolean = false): Int
 
     // ── Custom sections ───────────────────────────────────────────────────────
     fun saveCustomSection(sectionId: Int, groupId1: Int, groupId2: Int)
@@ -57,6 +57,7 @@ interface ProgressRepository {
     fun consumePendingRepeatHint(): Boolean
     fun setPendingSectionUnlocked(sectionId: Int)
     fun consumePendingSectionUnlocked(): Int
+    fun consumePendingStreakAnimation(): Boolean
 
     // ── Streaks ───────────────────────────────────────────────────────────────
     fun getLevelStreak(): Int

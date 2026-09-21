@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -57,6 +58,7 @@ import io.github.ptimulka.miecz.repositories.ChosenPicture
 @Composable
 fun MnemonicPicturesListScreen(
     state: MnemonicUiState,
+    listState: LazyListState,
     onEvent: (MnemonicEvent) -> Unit
 ) {
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -88,7 +90,7 @@ fun MnemonicPicturesListScreen(
                 }
             }
 
-            LazyColumn(modifier = Modifier.weight(1f)) {
+            LazyColumn(state = listState, modifier = Modifier.weight(1f)) {
                 item {
                     Text(
                         text = stringResource(R.string.mnemonic_pictures_info),
@@ -99,7 +101,10 @@ fun MnemonicPicturesListScreen(
                     )
                     HorizontalDivider()
                 }
-                itemsIndexed(state.verseData) { index, data ->
+                itemsIndexed(
+                    items = state.verseData,
+                    key = { _, data -> "${data.verse.book}_${data.verse.chapter}_${data.verse.number}" }
+                ) { index, data ->
                     val verse = data.verse
                     val sigla = "${verse.book} ${verse.chapter},${verse.number}"
                     val effectiveChosen = data.effectiveChosen

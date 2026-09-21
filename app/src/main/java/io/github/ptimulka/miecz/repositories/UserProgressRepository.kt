@@ -43,11 +43,11 @@ class UserProgressRepository @Inject constructor(
     override fun isConnectDoneToday(sectionId: Int, riddleType: String): Boolean = retentionRepo.isConnectDoneToday(sectionId, riddleType)
     override fun awardRetentionForConnectLevel(sectionId: Int, riddleType: String): Int = retentionRepo.awardRetentionForConnectLevel(sectionId, riddleType)
     override fun awardRetentionForStandardLevel(sectionId: Int, levelNumber: Int): Int = retentionRepo.awardRetentionForStandardLevel(sectionId, levelNumber)
-    override fun retentionContributionForRepeats(count: Int): Int = retentionRepo.retentionContributionForRepeats(count)
+    override fun retentionContributionForRepeats(count: Int, isLongVerse: Boolean): Int = retentionRepo.retentionContributionForRepeats(count, isLongVerse)
 
     // ── Aloud verse repeats (per day) ─────────────────────────────────────────
     override fun getVerseRepeatCountToday(sectionId: Int, verseIndex: Int): Int = retentionRepo.getVerseRepeatCountToday(sectionId, verseIndex)
-    override fun incrementVerseRepeatToday(sectionId: Int, verseIndex: Int): Int = retentionRepo.incrementVerseRepeatToday(sectionId, verseIndex)
+    override fun incrementVerseRepeatToday(sectionId: Int, verseIndex: Int, isLongVerse: Boolean): Int = retentionRepo.incrementVerseRepeatToday(sectionId, verseIndex, isLongVerse)
 
     // ── Custom sections ───────────────────────────────────────────────────────
     override fun saveCustomSection(sectionId: Int, groupId1: Int, groupId2: Int) = customSectionRepo.saveCustomSection(sectionId, groupId1, groupId2)
@@ -78,6 +78,7 @@ class UserProgressRepository @Inject constructor(
     override fun consumePendingRepeatHint(): Boolean = progressionRepo.consumePendingRepeatHint()
     override fun setPendingSectionUnlocked(sectionId: Int) = progressionRepo.setPendingSectionUnlocked(sectionId)
     override fun consumePendingSectionUnlocked(): Int = progressionRepo.consumePendingSectionUnlocked()
+    override fun consumePendingStreakAnimation(): Boolean = progressionRepo.consumePendingStreakAnimation()
 
     // ── Streaks ───────────────────────────────────────────────────────────────
     override fun getLevelStreak(): Int = streakRepo.getLevelStreak()

@@ -3,6 +3,7 @@ package io.github.ptimulka.miecz.screens.main
 import io.github.ptimulka.miecz.components.main.LevelButtonState
 import io.github.ptimulka.miecz.data.RiddleType
 import io.github.ptimulka.miecz.data.Section
+import io.github.ptimulka.miecz.data.VerseGroup
 
 data class ProgressSummary(
     val currentSectionId: Int = 1,
@@ -31,6 +32,12 @@ data class SectionState(
     val isSiglaFinished: Boolean = false,
     val isVerseFinished: Boolean = false,
     val dailyRetentionMaxed: Boolean = false,
+    val connectPartsRetentionPercent: Int = 0,
+    val connectPairsRetentionPercent: Int = 0,
+    val repeatAloudRetentionPercent: Int = 0,
+    val isConnectPartsDoneToday: Boolean = false,
+    val isConnectPairsDoneToday: Boolean = false,
+    val isRepeatAloudDoneToday: Boolean = false,
     val bestTimeParts: Long = -1L,
     val bestTimePairs: Long = -1L
 ) {
@@ -38,15 +45,17 @@ data class SectionState(
 }
 
 data class GameLevelUiState(
+    val isLoading: Boolean = true,
     val sections: List<Section> = emptyList(),
     val sectionStates: Map<Int, SectionState> = emptyMap(),
     val riddlesOrder: List<List<RiddleType>> = emptyList(),
     val progress: ProgressSummary = ProgressSummary(),
     val isShieldInfoVisible: Boolean = false,
     val isLampInfoVisible: Boolean = false,
+    val animateLampProgress: Boolean = false,
     val showChooseVerseGroups: Boolean = false,
     val selectedSectionForDialog: Section? = null,
-    val allVerseGroups: List<io.github.ptimulka.miecz.data.VerseGroup> = emptyList(),
+    val allVerseGroups: List<VerseGroup> = emptyList(),
     val usedGroupIds: Set<Int> = emptySet(),
     val selectedGroupIds: List<Int> = emptyList()
 ) {

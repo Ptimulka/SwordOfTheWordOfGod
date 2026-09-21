@@ -239,3 +239,16 @@ fun NoPlayingForShieldsDialog(onConfirm: () -> Unit) {
         }
     )
 }
+
+@Composable
+fun LongVerseRetentionInfoDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.ok_button))
+            }
+        },
+        text = { Text(stringResource(R.string.long_verse_retention_info)) }
+    )
+}

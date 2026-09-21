@@ -8,7 +8,7 @@ interface RetentionRepository {
     fun isConnectDoneToday(sectionId: Int, riddleType: String): Boolean
     fun awardRetentionForConnectLevel(sectionId: Int, riddleType: String): Int
     fun awardRetentionForStandardLevel(sectionId: Int, levelNumber: Int): Int
-    fun retentionContributionForRepeats(count: Int): Int
+    fun retentionContributionForRepeats(count: Int, isLongVerse: Boolean = false): Int
     fun getVerseRepeatCountToday(sectionId: Int, verseIndex: Int): Int
-    fun incrementVerseRepeatToday(sectionId: Int, verseIndex: Int): Int
+    fun incrementVerseRepeatToday(sectionId: Int, verseIndex: Int, isLongVerse: Boolean = false): Int
 }

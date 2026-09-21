@@ -46,6 +46,7 @@ class GameLevelViewModelTest {
         whenever(progressRepo.getCurrentDayStreak()).thenReturn(0)
         whenever(progressRepo.hasPlayedToday()).thenReturn(false)
         whenever(progressRepo.getTimeToNextShield()).thenReturn(0L)
+        whenever(progressRepo.retentionContributionForRepeats(any(), any())).thenReturn(0)
     }
 
     @Test

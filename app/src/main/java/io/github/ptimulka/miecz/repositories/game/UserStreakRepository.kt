@@ -46,7 +46,14 @@ class UserStreakRepository @Inject constructor(
 
     override fun hasPlayedToday(): Boolean = store.latest.lastPlayedDate == todayString()
 
-    override fun getCurrentDayStreak(): Int = store.latest.dayStreak
+    override fun getCurrentDayStreak(): Int {
+        val lastPlayed = store.latest.lastPlayedDate
+        return if (lastPlayed == todayString() || lastPlayed == yesterdayString()) {
+            store.latest.dayStreak
+        } else {
+            0
+        }
+    }
 
     override fun getBestDayStreak(): Int = store.latest.bestDayStreak
 
@@ -55,11 +62,7 @@ class UserStreakRepository @Inject constructor(
         val lastPlayed = store.latest.lastPlayedDate
         if (lastPlayed == today) return
 
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = currentTimeProvider()
-        cal.add(Calendar.DAY_OF_YEAR, -1)
-        val yesterday = sdf.format(cal.time)
+        val yesterday = yesterdayString()
 
         store.update { user ->
             val newStreak = if (lastPlayed == yesterday) user.dayStreak + 1 else 1
@@ -68,6 +71,7 @@ class UserStreakRepository @Inject constructor(
                 .setLastPlayedDate(today)
                 .setDayStreak(newStreak)
                 .setBestDayStreak(newBest)
+                .setPendingStreakAnimation(true)
                 .build()
         }
     }
@@ -75,5 +79,13 @@ class UserStreakRepository @Inject constructor(
     private fun todayString(): String {
         val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
         return sdf.format(Date(currentTimeProvider()))
+    }
+
+    private fun yesterdayString(): String {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val cal = Calendar.getInstance()
+        cal.timeInMillis = currentTimeProvider()
+        cal.add(Calendar.DAY_OF_YEAR, -1)
+        return sdf.format(cal.time)
     }
 }

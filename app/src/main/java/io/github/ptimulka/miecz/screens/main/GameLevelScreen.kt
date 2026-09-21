@@ -1,6 +1,9 @@
 package io.github.ptimulka.miecz.screens.main
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -21,6 +24,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -38,6 +42,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -206,20 +212,29 @@ private fun GameLevelMainContent(
                 )
             }
 
-            val lastSection = state.sections.lastOrNull()
-            val isLastFinished = lastSection != null && (state.sectionStates[lastSection.id]?.areSpecialChallengesFinished == true)
-            val nextId = (lastSection?.id ?: 4) + 1
-            val isPlaceholderLocked = !isLastFinished || nextId > state.progress.currentSectionId
+            if (!state.isLoading || state.sections.isNotEmpty()) {
+                val lastSection = state.sections.lastOrNull()
+                val isLastFinished = lastSection != null && (state.sectionStates[lastSection.id]?.areSpecialChallengesFinished == true)
+                val nextId = (lastSection?.id ?: 4) + 1
+                val isPlaceholderLocked = !isLastFinished || nextId > state.progress.currentSectionId
 
-            if (state.progress.availableGroupsCount >= 2) {
-                renderChooseNextSection(
-                    nextId = nextId,
-                    isLocked = isPlaceholderLocked,
-                    onChooseClick = { onEvent(GameLevelEvent.NavigateToChooseGroups) }
-                )
-            } else {
-                renderAllVersesLearnedSection(nextId = nextId, isLocked = isPlaceholderLocked)
+                if (state.progress.availableGroupsCount >= 2) {
+                    renderChooseNextSection(
+                        nextId = nextId,
+                        isLocked = isPlaceholderLocked,
+                        onChooseClick = { onEvent(GameLevelEvent.NavigateToChooseGroups) }
+                    )
+                } else {
+                    renderAllVersesLearnedSection(nextId = nextId, isLocked = isPlaceholderLocked)
+                }
             }
+        }
+
+        if (state.isLoading && state.sections.isEmpty()) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.Center),
+                color = colorResource(id = R.color.game_button_yellow_dark)
+            )
         }
 
         GameLevelOverlays(state, onEvent, contentPadding)
@@ -246,6 +261,30 @@ private fun GameLevelOverlays(
 ) {
     val density = LocalDensity.current
     var shieldPillWidthPx by remember { mutableIntStateOf(0) }
+
+    val lampScale = remember { Animatable(1f) }
+    val lampGlowAlpha = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+
+    val triggerLampAnimation = {
+        scope.launch {
+            launch {
+                lampScale.animateTo(1.3f, animationSpec = tween(200))
+                lampScale.animateTo(1f, animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy))
+            }
+            launch {
+                lampGlowAlpha.animateTo(0.8f, animationSpec = tween(200))
+                lampGlowAlpha.animateTo(0f, animationSpec = tween(600))
+            }
+        }
+    }
+
+    LaunchedEffect(state.animateLampProgress) {
+        if (state.animateLampProgress) {
+            triggerLampAnimation()
+            onEvent(GameLevelEvent.ClearLampAnimation)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -292,10 +331,23 @@ private fun GameLevelOverlays(
             ProgressPill(
                 iconRes = if (state.progress.playedToday) R.drawable.buttonlamp else R.drawable.buttonlamplow,
                 value = state.progress.dayStreak.toString(),
-                onClick = { onEvent(GameLevelEvent.ToggleLampInfo) },
+                onClick = {
+                    onEvent(GameLevelEvent.ToggleLampInfo)
+                },
+                modifier = Modifier
+                    .scale(lampScale.value)
+                    .drawBehind {
+                        if (lampGlowAlpha.value > 0f) {
+                            drawCircle(
+                                color = Color.Yellow.copy(alpha = lampGlowAlpha.value),
+                                radius = size.maxDimension * 0.7f,
+                                center = center
+                            )
+                        }
+                    },
                 backgroundColor = if (state.progress.playedToday)
                     colorResource(R.color.game_button_yellow_dark)
-                    else colorResource(R.color.game_button_grey_dark)
+                else colorResource(R.color.game_button_grey_dark)
             )
         }
     }
@@ -381,12 +433,13 @@ private fun ProgressPill(
     iconRes: Int,
     value: String,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     backgroundColor: Color = colorResource(id = R.color.game_button_yellow_dark),
     onSizeChanged: (androidx.compose.ui.unit.IntSize) -> Unit = {}
 ) {
     Surface(
         onClick = onClick,
-        modifier = Modifier
+        modifier = modifier
             .height(40.dp)
             .onSizeChanged { onSizeChanged(it) },
         shape = CircleShape,
@@ -418,8 +471,7 @@ private fun ProgressPill(
 private fun RepeatHintToast() {
     Surface(
         shape = RoundedCornerShape(8.dp),
-        color = colorResource(R.color.game_button_yellow_dark),
-        shadowElevation = 6.dp
+        color = Color.Black.copy(alpha = 0.7f)
     ) {
         Text(
             text = stringResource(R.string.repeat_for_shields_hint),
